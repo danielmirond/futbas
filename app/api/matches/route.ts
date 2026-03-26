@@ -61,19 +61,51 @@ export async function GET(request: Request) {
     )
   }
 
-  // Normalizar respuesta
-  type MatchRaw = Record<string, unknown>
-  let matches: MatchRaw[] = []
+  // Normalizar respuesta WOSTI
+  // Estructura: { LocalTeam: {Name}, AwayTeam: {Name}, Date: ISO, Channels: [{Name}], Competition: {Name} }
+  type WostiMatch = Record<string, unknown>
+  let rawMatches: WostiMatch[] = []
 
-  if (Array.isArray(raw))                        matches = raw as MatchRaw[]
-  else if (Array.isArray((raw as Record<string, unknown>).events))   matches = (raw as Record<string, unknown[]>).events as MatchRaw[]
-  else if (Array.isArray((raw as Record<string, unknown>).matches))  matches = (raw as Record<string, unknown[]>).matches as MatchRaw[]
-  else if (Array.isArray((raw as Record<string, unknown>).data))     matches = (raw as Record<string, unknown[]>).data as MatchRaw[]
-  else if (Array.isArray((raw as Record<string, unknown>).results))  matches = (raw as Record<string, unknown[]>).results as MatchRaw[]
+  if (Array.isArray(raw)) rawMatches = raw as WostiMatch[]
+  else if (Array.isArray((raw as Record<string, unknown>).matches)) rawMatches = (raw as Record<string, unknown[]>).matches as WostiMatch[]
+  else if (Array.isArray((raw as Record<string, unknown>).events))  rawMatches = (raw as Record<string, unknown[]>).events as WostiMatch[]
+  else if (Array.isArray((raw as Record<string, unknown>).data))    rawMatches = (raw as Record<string, unknown[]>).data as WostiMatch[]
   else {
-    // Formato desconocido — devolver raw para inspección
     return NextResponse.json({ raw, endpoint: usedEndpoint })
   }
+
+  // Normalizar cada partido al formato estándar del frontend
+  const matches = rawMatches.map((m) => {
+    const local = m.LocalTeam as Record<string, unknown> | undefined
+    const away  = m.AwayTeam  as Record<string, unknown> | undefined
+    const comp  = m.Competition as Record<string, unknown> | undefined
+    const chs   = Array.isArray(m.Channels)
+      ? (m.Channels as Record<string, unknown>[]).map(c => String(c.Name ?? ''))
+      : []
+
+    // Extraer hora local Spain (UTC+2 en verano, UTC+1 en invierno)
+    let time = '??:??'
+    if (typeof m.Date === 'string') {
+      const d = new Date(m.Date)
+      const offset = 1 // CET — ajustar a 2 en verano si hace falta
+      const localH = (d.getUTCHours() + offset + 24) % 24
+      const localM = d.getUTCMinutes()
+      time = `${String(localH).padStart(2,'0')}:${String(localM).padStart(2,'0')}`
+    }
+
+    return {
+      id:          m.Id,
+      time,
+      date:        m.Date,
+      home:        String(local?.Name ?? '—'),
+      away:        String(away?.Name  ?? '—'),
+      competition: String(comp?.Name  ?? ''),
+      channels:    chs,
+    }
+  })
+
+  // Ordenar por hora
+  matches.sort((a, b) => a.time.localeCompare(b.time))
 
   return NextResponse.json({
     matches,
