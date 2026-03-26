@@ -66,9 +66,9 @@ export default function GuiaFutbolMD() {
   const [clock, setClock]     = useState(nowStr())
   const [filter, setFilter]   = useState('all')
   const [rawMode, setRawMode] = useState(false)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [compFilter, setCompFilter] = useState('')
   const [teamFilter, setTeamFilter] = useState('')
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
     const t = setInterval(() => setClock(nowStr()), 30000)
@@ -94,8 +94,8 @@ export default function GuiaFutbolMD() {
   const dateStr  = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   const matches = data?.matches || []
-  const competitions = Array.from(new Set(matches.map(m => String(m.competition || ''))).filter(Boolean).sort()
-  const teams = Array.from(new Set(matches.reduce(function(acc, m){ return acc.concat([String(m.home||''), String(m.away||'')]); }, []))).filter(Boolean).sort()
+  const competitions = Array.from(new Set(matches.map(m => String(m.competition || '')))).filter(Boolean).sort() as string[]
+  const teams = Array.from(new Set(matches.reduce(function(acc: string[], m){ return acc.concat([String(m.home||''), String(m.away||'')]); }, [] as string[]))).filter(Boolean).sort()
   const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta', 'cuatro', 'telecinco', 'tve', 'rtve']
   const filtered = matches.filter(m => {
     const n = normalize(m)
