@@ -90,7 +90,7 @@ function isPast(time: string) {
 export default function GuiaFutbolTV() {
   const [data, setData]       = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [error, setError]     = useState<string>('')
   const [clock, setClock]     = useState(nowStr())
   const [filter, setFilter]   = useState('all')   // 'all' | 'free' | 'pay'
   const [rawMode, setRawMode] = useState(false)
@@ -102,7 +102,7 @@ export default function GuiaFutbolTV() {
 
   const load = useCallback(async (date?: string) => {
     setLoading(true)
-    setError(null)
+    setError('')
     try {
       const url = date ? `/api/matches?date=${date}` : '/api/matches'
       const res = await fetch(url)
