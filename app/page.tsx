@@ -97,6 +97,13 @@ export default function GuiaFutbolMD() {
     return () => clearInterval(t)
   }, [])
 
+  const resetAll = () => {
+    setFilter('all')
+    setCompFilter('')
+    setTeamFilter('')
+    load(new Date().toISOString().split('T')[0])
+  }
+
   const load = useCallback(async (date?: string) => {
     setLoading(true); setError('')
     if (date) setSelectedDate(date)
@@ -258,8 +265,12 @@ export default function GuiaFutbolMD() {
           })}
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
-          {(['all','free','pay'] as const).map(v => {
-            const L = { all: 'Todos', free: 'En abierto', pay: 'De pago' }
+          <button
+            onClick={resetAll}
+            style={tabBtn(filter === 'all' && !compFilter && !teamFilter)}
+          >Todos</button>
+          {(['free','pay'] as const).map(v => {
+            const L = { free: 'En abierto', pay: 'De pago' }
             return <button key={v} onClick={() => setFilter(v)} style={tabBtn(filter === v)}>{L[v]}</button>
           })}
         </div>
