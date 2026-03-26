@@ -40,6 +40,28 @@ function chColor(name: string) {
 }
 
 function pad(n: number) { return String(n).padStart(2, '0') }
+
+function toMadridDate(isoStr: unknown): string {
+  if (!isoStr || typeof isoStr !== 'string') return ''
+  return new Date(isoStr).toLocaleDateString('es-ES', {
+    timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).split('/').reverse().join('-') // DD/MM/YYYY → YYYY-MM-DD
+}
+
+function formatShortDate(isoStr: unknown): string {
+  if (!isoStr || typeof isoStr !== 'string') return ''
+  return new Date(isoStr).toLocaleDateString('es-ES', {
+    timeZone: 'Europe/Madrid', weekday: 'short', day: 'numeric', month: 'short'
+  })
+}
+
+function formatDayHeader(dateStr: string): string {
+  const today = new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-')
+  const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-')
+  const label = dateStr === today ? 'Hoy' : dateStr === tomorrow ? 'Mañana' : ''
+  const formatted = new Date(dateStr + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+  return label ? `${label} · ${formatted}` : formatted
+}
 function nowStr() { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}` }
 function isPast(time: string) { return time !== '??:??' && time < nowStr() }
 
@@ -228,10 +250,12 @@ export default function GuiaFutbolMD() {
 
       {/* CONTROLES */}
       <div style={{ padding: '10px 16px', borderBottom: `1px solid ${MD.border}`, background: MD.lightGray, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {([[today, 'Hoy'], [tomorrow, 'Mañana']] as [string,string][]).map(([d, l]) => (
-            <button key={d} onClick={() => load(d)} style={tabBtn(selectedDate === d)}>{l}</button>
-          ))}
+        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+          {Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(Date.now() + i * 86400000).toISOString().split('T')[0]
+            const label = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
+            return <button key={d} onClick={() => load(d)} style={tabBtn(selectedDate === d)}>{label}</button>
+          })}
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           {(['all','free','pay'] as const).map(v => {
@@ -298,13 +322,40 @@ export default function GuiaFutbolMD() {
           </div>
         )}
 
-        {(!loading && !error && Object.entries(grouped).length > 0) && Object.entries(grouped).map(([comp, cmatches]) => (
-          <div key={comp} style={{ marginBottom: 28 }}>
-            {/* Cabecera competición */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '7px 0', borderBottom: `2px solid ${MD.black}` }}>
-              <span style={{ fontSize: 11, fontWeight: 900, color: MD.white, background: MD.red, padding: '2px 9px', textTransform: 'uppercase', letterSpacing: 1 }}>{comp}</span>
-              <span style={{ fontSize: 11, color: MD.gray, marginLeft: 'auto' }}>{cmatches.length} partido{cmatches.length !== 1 ? 's' : ''}</span>
-            </div>
+        {(!loading && !error && Object.entries(grouped).length > 0) && (() => {
+          // Agrupar partidos por día local
+          const byDay: Record<string, MatchRaw[]> = {}
+          filtered.forEach(m => {
+            const day = toMadridDate(m.date) || 'Sin fecha'
+            if (!byDay[day]) byDay[day] = []
+            byDay[day].push(m)
+          })
+          const days = Object.keys(byDay).sort()
+          return days.map(day => {
+            const dayMatches = byDay[day]
+            // Agrupar por competición dentro del día
+            const dayGrouped: Record<string, MatchRaw[]> = {}
+            dayMatches.forEach(m => {
+              const key = normalize(m).competition || 'Otros'
+              if (!dayGrouped[key]) dayGrouped[key] = []
+              dayGrouped[key].push(m)
+            })
+            return (
+              <div key={day}>
+                {/* Separador de día */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0 12px', padding: '6px 10px', background: MD.black, borderLeft: `4px solid ${MD.red}` }}>
+                  <span style={{ fontSize: 12, fontWeight: 900, color: MD.white, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    📅 {formatDayHeader(day)}
+                  </span>
+                  <span style={{ fontSize: 10, color: '#aaa', marginLeft: 'auto' }}>{dayMatches.length} partido{dayMatches.length !== 1 ? 's' : ''}</span>
+                </div>
+                {Object.entries(dayGrouped).map(([comp, cmatches]) => (
+                <div key={comp} style={{ marginBottom: 20 }}>
+                  {/* Cabecera competición */}
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '7px 0', borderBottom: `2px solid ${MD.black}` }}>
+                    <span style={{ fontSize: 11, fontWeight: 900, color: MD.white, background: MD.red, padding: '2px 9px', textTransform: 'uppercase', letterSpacing: 1 }}>{comp}</span>
+                    <span style={{ fontSize: 11, color: MD.gray, marginLeft: 'auto' }}>{cmatches.length} partido{cmatches.length !== 1 ? 's' : ''}</span>
+                  </div>
 
             {cmatches.map((m, i) => {
               const n = normalize(m)
@@ -315,7 +366,9 @@ export default function GuiaFutbolMD() {
                   {/* Hora */}
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 15, color: past ? MD.gray : MD.red, fontStyle: 'italic', fontVariantNumeric: 'tabular-nums' }}>{n.time}</div>
-                    {past && <div style={{ fontSize: 9, color: MD.gray, textTransform: 'uppercase', letterSpacing: 0.5 }}>Jugado</div>}
+                    <div style={{ fontSize: 9, color: MD.gray, textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 1 }}>
+                      {past ? 'Jugado' : formatShortDate(m.date)}
+                    </div>
                   </div>
 
                   {/* Equipos */}
@@ -354,8 +407,12 @@ export default function GuiaFutbolMD() {
                 </div>
               )
             })}
-          </div>
-        ))}
+                </div>
+                ))}
+              </div>
+            )
+          })
+        })()}
       </div>
 
       {/* FOOTER */}
