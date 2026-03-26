@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-// ─── TIPOS ────────────────────────────────────────────────────
 type MatchRaw = Record<string, unknown>
 
 interface ApiResponse {
@@ -14,55 +13,42 @@ interface ApiResponse {
   date?: string
 }
 
-// ─── NORMALIZAR PARTIDO ───────────────────────────────────────
 function normalize(m: MatchRaw) {
   const str = (v: unknown): string => (typeof v === 'string' ? v : '')
-
-  const time  = str(m.time)  || str(m.hora)       || str(m.hour)  || '??:??'
-  const home  = str(m.homeTeam) || str(m.home_team) || str(m.local) || str(m.home) || '—'
-  const away  = str(m.awayTeam) || str(m.away_team) || str(m.visitante) || str(m.away) || '—'
-  const competition = str(m.competition) || str(m.competicion) || str(m.league) || str(m.liga) || ''
-
-  let channels: string[] = []
-  if (Array.isArray(m.channels))       channels = (m.channels as unknown[]).map(String)
-  else if (Array.isArray(m.canales))   channels = (m.canales as unknown[]).map(String)
-  else if (Array.isArray(m.tv))        channels = (m.tv as unknown[]).map(String)
-  else if (typeof m.tv === 'string' && m.tv)           channels = [m.tv]
-  else if (typeof m.channel === 'string' && m.channel) channels = [m.channel]
-
-  if (Array.isArray(m.streaming)) channels = [...channels, ...(m.streaming as unknown[]).map(String)]
-
-  return { time, home, away, competition, channels }
+  const time        = str(m.time)        || '??:??'
+  const home        = str(m.home)        || '—'
+  const away        = str(m.away)        || '—'
+  const homeBadge   = str(m.homeBadge)
+  const awayBadge   = str(m.awayBadge)
+  const competition = str(m.competition) || ''
+  const channels: string[] = Array.isArray(m.channels)
+    ? (m.channels as unknown[]).map(String)
+    : []
+  return { time, home, away, homeBadge, awayBadge, competition, channels }
 }
 
-// ─── CANAL → COLOR ────────────────────────────────────────────
-function chColor(name: string): string {
+function chColor(name: string) {
   const n = name.toLowerCase()
-  if (n.includes('dazn'))       return '#d4a017'
-  if (n.includes('laliga') || n.includes('movistar')) return '#003087'
-  if (n.includes('gol'))        return '#e63946'
-  if (n.includes('teledeporte') || n.includes('tdp')) return '#e63946'
-  if (n.includes('antena') || n.includes('a3'))  return '#ff6b00'
-  if (n.includes('la 1') || n.includes('la1'))   return '#0057a8'
-  if (n.includes('vamos'))      return '#00a79d'
-  if (n.includes('champions'))  return '#1a237e'
-  if (n.includes('streaming') || n.includes('youtube') || n.includes('twitch')) return '#6441a5'
-  return '#4a4a5a'
+  if (n.includes('dazn'))       return { bg: '#fff3cd', text: '#856404', border: '#ffc107' }
+  if (n.includes('movistar') || n.includes('laliga')) return { bg: '#e8f0fe', text: '#1a56db', border: '#3f83f8' }
+  if (n.includes('gol'))        return { bg: '#fde8e8', text: '#c81e1e', border: '#f05252' }
+  if (n.includes('teledeporte') || n.includes('tdp')) return { bg: '#fde8e8', text: '#c81e1e', border: '#f05252' }
+  if (n.includes('antena'))     return { bg: '#fff3e0', text: '#c05621', border: '#ed8936' }
+  if (n.includes('la 1') || n.includes('la1')) return { bg: '#ebf5fb', text: '#1a56db', border: '#3f83f8' }
+  if (n.includes('vamos'))      return { bg: '#e6fffa', text: '#047481', border: '#0d9488' }
+  if (n.includes('champions'))  return { bg: '#ede9fe', text: '#5521b5', border: '#7e3af2' }
+  return { bg: '#f3f4f6', text: '#374151', border: '#9ca3af' }
 }
 
-// ─── UTILS ───────────────────────────────────────────────────
 function pad(n: number) { return String(n).padStart(2, '0') }
-function nowStr() {
-  const d = new Date()
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-function isPast(time: string) {
-  if (!time || time === '??:??') return false
-  return time < nowStr()
+function nowStr() { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}` }
+function isPast(time: string) { return time !== '??:??' && time < nowStr() }
+function dur(s: string, e: string) {
+  const m = (parseInt(e) * 60 + parseInt(e.split(':')[1])) - (parseInt(s) * 60 + parseInt(s.split(':')[1]))
+  return m > 0 ? (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`) : ''
 }
 
-// ─── COMPONENTE ───────────────────────────────────────────────
-export default function GuiaFutbolTV() {
+export default function GuiaFutbolMD() {
   const [data, setData]       = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
@@ -76,37 +62,30 @@ export default function GuiaFutbolTV() {
   }, [])
 
   const load = useCallback(async (date?: string) => {
-    setLoading(true)
-    setError('')
+    setLoading(true); setError('')
     try {
-      const url = date ? `/api/matches?date=${date}` : '/api/matches'
-      const res = await fetch(url)
+      const res  = await fetch(date ? `/api/matches?date=${date}` : '/api/matches')
       const json: ApiResponse = await res.json()
       setData(json)
       if (json.error) setError(json.error)
-    } catch (e) {
-      setError(String(e))
-    } finally {
-      setLoading(false)
-    }
+    } catch (e) { setError(String(e)) }
+    finally { setLoading(false) }
   }, [])
 
   useEffect(() => { load() }, [load])
 
   const today    = new Date().toISOString().split('T')[0]
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
-  const dateStr  = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+  const dateStr  = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
-  const matches: MatchRaw[] = data?.matches || []
-
-  const FREE_KEYWORDS = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta', 'la sexta', 'cuatro', 'telecinco']
+  const matches = data?.matches || []
+  const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta', 'la sexta', 'cuatro', 'telecinco']
   const filtered = matches.filter(m => {
     const n = normalize(m)
-    if (filter === 'free') return n.channels.some(c => FREE_KEYWORDS.some(k => c.toLowerCase().includes(k)))
-    if (filter === 'pay')  return n.channels.some(c => ['dazn', 'movistar', 'laliga', 'vamos', 'champions'].some(k => c.toLowerCase().includes(k)))
+    if (filter === 'free') return n.channels.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
+    if (filter === 'pay')  return n.channels.some(c => ['dazn', 'movistar', 'laliga', 'vamos'].some(k => c.toLowerCase().includes(k)))
     return true
   })
-
   const grouped: Record<string, MatchRaw[]> = {}
   filtered.forEach(m => {
     const key = normalize(m).competition || 'Otros partidos'
@@ -114,156 +93,240 @@ export default function GuiaFutbolTV() {
     grouped[key].push(m)
   })
 
-  const col = {
-    bg: '#0b0c10', surface: '#12141a', border: '#1e2030',
-    red: '#e63946', muted: '#6b6d7a', text: '#e8e8ec',
+  // ── MD COLOR SYSTEM ──
+  const MD = {
+    red:      '#CC0000',
+    redLight: '#fde8e8',
+    yellow:   '#FFD700',
+    black:    '#1a1a1a',
+    darkGray: '#333333',
+    gray:     '#666666',
+    lightGray:'#f5f5f5',
+    border:   '#e5e5e5',
+    white:    '#ffffff',
   }
 
-  const btnSt = (active: boolean): React.CSSProperties => ({
-    background: active ? col.red : 'transparent',
-    color: active ? '#fff' : col.muted,
-    border: 'none', borderRadius: 6, padding: '5px 12px',
-    cursor: 'pointer', fontWeight: 700, fontSize: 11,
-    letterSpacing: 0.5, textTransform: 'uppercase',
-    fontFamily: 'inherit', transition: 'all .15s',
+  const tabBtn = (active: boolean): React.CSSProperties => ({
+    background:  active ? MD.red : MD.white,
+    color:       active ? MD.white : MD.darkGray,
+    border:      `1px solid ${active ? MD.red : MD.border}`,
+    borderRadius: 2,
+    padding:     '5px 14px',
+    cursor:      'pointer',
+    fontWeight:  active ? 700 : 500,
+    fontSize:    12,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    fontFamily:  'inherit',
+    transition:  'all .15s',
   })
 
   return (
-    <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif", background: col.bg, color: col.text, minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", background: MD.white, color: MD.black, minHeight: '100vh', maxWidth: 860, margin: '0 auto' }}>
       <style>{`
-        *{box-sizing:border-box}
-        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(230,57,70,.7)}70%{box-shadow:0 0 0 8px rgba(230,57,70,0)}100%{box-shadow:0 0 0 0 rgba(230,57,70,0)}}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        ::-webkit-scrollbar{width:4px}
-        ::-webkit-scrollbar-thumb{background:#1e2030;border-radius:2px}
+        * { box-sizing: border-box; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+        a { color: inherit; text-decoration: none; }
       `}</style>
 
-      {/* HEADER */}
-      <div style={{ background: 'rgba(11,12,16,.97)', borderBottom: `1px solid ${col.border}`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ background: col.red, color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 4, letterSpacing: 1 }}>⚽</span>
-          <span style={{ fontWeight: 900, fontSize: 18, letterSpacing: -0.5, color: '#fff' }}>Fútbol en la TV</span>
-          <span style={{ fontSize: 11, color: col.muted }}>España</span>
+      {/* ── HEADER estilo MD ── */}
+      <div style={{ borderBottom: `3px solid ${MD.red}`, paddingBottom: 0 }}>
+        {/* Barra superior negra */}
+        <div style={{ background: '#111', padding: '7px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ width: 5, height: 26, background: MD.red, transform: 'skewX(-12deg)', marginRight: 8, flexShrink: 0 }} />
+            <span style={{ fontWeight: 900, fontSize: 19, color: MD.white, letterSpacing: -0.5, fontStyle: 'italic', fontFamily: "'Arial Black', Arial, sans-serif", lineHeight: 1 }}>MUNDO</span>
+            <span style={{ fontWeight: 900, fontSize: 19, color: MD.yellow, letterSpacing: -0.5, fontStyle: 'italic', fontFamily: "'Arial Black', Arial, sans-serif", lineHeight: 1 }}>DEPORTIVO</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#aaa' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: MD.red, display: 'inline-block', boxShadow: '0 0 4px #CC0000' }} />
+            EN DIRECTO · {clock}
+          </div>
         </div>
-        <span style={{ fontSize: 13, fontWeight: 700, color: col.muted }}>{clock}</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 800, color: col.red, textTransform: 'uppercase', letterSpacing: 1 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: col.red, display: 'inline-block', animation: 'pulse 2s infinite' }} />
-          En directo · WOSTI API
+
+        {/* Título sección */}
+        <div style={{ padding: '10px 16px 8px', borderTop: `1px solid ${MD.border}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: MD.red, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 3 }}>
+            ⚽ Fútbol · Guía TV
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: MD.black, margin: 0, lineHeight: 1.2, fontStyle: 'italic' }}>
+            Fútbol en la TV hoy en España
+          </h1>
+          <p style={{ fontSize: 13, color: MD.gray, margin: '4px 0 0', textTransform: 'capitalize' }}>{dateStr}</p>
         </div>
       </div>
 
-      {/* CONTROLS */}
-      <div style={{ padding: '12px 20px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', borderBottom: `1px solid ${col.border}` }}>
-        <div style={{ display: 'flex', background: col.surface, border: `1px solid ${col.border}`, borderRadius: 8, padding: 3, gap: 2 }}>
+      {/* ── CONTROLES ── */}
+      <div style={{ padding: '10px 16px', borderBottom: `1px solid ${MD.border}`, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', background: MD.lightGray }}>
+        {/* Fecha */}
+        <div style={{ display: 'flex', gap: 4 }}>
           {([[today, 'Hoy'], [tomorrow, 'Mañana']] as [string, string][]).map(([d, l]) => (
-            <button key={d} onClick={() => load(d)} style={btnSt(false)}>{l}</button>
+            <button key={d} onClick={() => load(d)} style={tabBtn(false)}>{l}</button>
           ))}
         </div>
-        <div style={{ display: 'flex', background: col.surface, border: `1px solid ${col.border}`, borderRadius: 8, padding: 3, gap: 2 }}>
-          {(['all', 'free', 'pay'] as const).map((v) => {
+        {/* Filtro */}
+        <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+          {(['all', 'free', 'pay'] as const).map(v => {
             const labels = { all: 'Todos', free: 'En abierto', pay: 'De pago' }
-            return <button key={v} onClick={() => setFilter(v)} style={btnSt(filter === v)}>{labels[v]}</button>
+            return <button key={v} onClick={() => setFilter(v)} style={tabBtn(filter === v)}>{labels[v]}</button>
           })}
         </div>
-        <span style={{ fontSize: 10, color: '#444', marginLeft: 'auto' }}>
-          {data?.count ?? 0} partidos · {data?.endpoint ?? '—'}
-        </span>
-        <button onClick={() => load()} style={{ background: col.surface, border: `1px solid ${col.border}`, color: col.muted, fontSize: 11, padding: '6px 13px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit' }}>
-          ↻ Actualizar
-        </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, color: MD.gray }}>
+            {data?.count ?? 0} partidos
+          </span>
+          <button onClick={() => load()} style={{ ...tabBtn(false), background: 'transparent', border: `1px solid ${MD.border}` }}>
+            ↻
+          </button>
+        </div>
       </div>
 
-      {/* CONTENT */}
-      <div style={{ padding: '16px 20px 60px', maxWidth: 900, margin: '0 auto' }}>
+      {/* ── CONTENT ── */}
+      <div style={{ padding: '0 16px 48px' }}>
 
+        {/* Cargando */}
         {loading && (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: col.muted }}>
-            <div style={{ fontSize: 28, marginBottom: 12, display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</div>
-            <p style={{ fontSize: 14 }}>Cargando partidos desde WOSTI API...</p>
+          <div style={{ textAlign: 'center', padding: '48px 20px', color: MD.gray }}>
+            <div style={{ fontSize: 24, display: 'inline-block', animation: 'spin 1s linear infinite', marginBottom: 10 }}>⏳</div>
+            <p style={{ fontSize: 13, margin: 0 }}>Cargando partidos...</p>
           </div>
         )}
 
+        {/* Error */}
         {(!!error && !loading) && (
-          <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-            <p style={{ fontSize: 28, marginBottom: 10 }}>⚠️</p>
-            <p style={{ fontSize: 15, color: '#ccc', marginBottom: 6 }}>Error al conectar con la API</p>
-            <p style={{ fontSize: 12, color: col.muted, marginBottom: 16 }}>{error}</p>
-            <p style={{ fontSize: 11, color: '#555', marginBottom: 12 }}>
-              Comprueba que{' '}
-              <code style={{ background: col.surface, padding: '2px 6px', borderRadius: 4 }}>RAPIDAPI_KEY</code>
-              {' '}está en las variables de entorno de Vercel
-            </p>
-            <a href="/api/debug" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#888', textDecoration: 'underline' }}>
+          <div style={{ padding: '20px 16px', margin: '16px 0', background: MD.redLight, borderLeft: `4px solid ${MD.red}`, borderRadius: 2 }}>
+            <p style={{ fontWeight: 700, fontSize: 14, color: MD.red, margin: '0 0 4px' }}>⚠️ Error al conectar con la API</p>
+            <p style={{ fontSize: 12, color: MD.darkGray, margin: '0 0 8px' }}>{error}</p>
+            <a href="/api/debug" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: MD.red, textDecoration: 'underline' }}>
               → Ver diagnóstico de endpoints
             </a>
           </div>
         )}
 
+        {/* Raw debug */}
         {(data?.raw !== undefined && !loading) && (
-          <div>
-            <div style={{ background: '#0d0e14', border: `1px solid ${col.border}`, borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
-              <p style={{ fontSize: 12, color: '#f4c430', marginBottom: 8, fontWeight: 700 }}>
-                ⚠️ Formato desconocido — endpoint: <code>{data.endpoint}</code>
-              </p>
-              <button onClick={() => setRawMode(!rawMode)} style={{ fontSize: 11, color: '#888', background: 'transparent', border: `1px solid ${col.border}`, padding: '4px 10px', borderRadius: 6, cursor: 'pointer' }}>
-                {rawMode ? 'Ocultar' : 'Ver'} respuesta raw
-              </button>
-            </div>
+          <div style={{ padding: '16px', margin: '16px 0', background: '#fffbeb', borderLeft: `4px solid #f59e0b`, borderRadius: 2 }}>
+            <p style={{ fontWeight: 700, fontSize: 13, color: '#92400e', margin: '0 0 6px' }}>
+              ⚠️ Formato desconocido — endpoint: <code>{data.endpoint}</code>
+            </p>
+            <button onClick={() => setRawMode(!rawMode)} style={{ fontSize: 11, cursor: 'pointer', background: 'transparent', border: '1px solid #d97706', borderRadius: 2, padding: '3px 8px', color: '#92400e' }}>
+              {rawMode ? 'Ocultar' : 'Ver'} respuesta raw
+            </button>
             {rawMode && (
-              <pre style={{ fontSize: 11, color: '#aaa', background: '#0d0e14', border: `1px solid ${col.border}`, borderRadius: 10, padding: 14, overflow: 'auto', maxHeight: 400 }}>
+              <pre style={{ fontSize: 11, marginTop: 10, overflow: 'auto', maxHeight: 300, color: MD.darkGray }}>
                 {JSON.stringify(data.raw, null, 2)}
               </pre>
             )}
           </div>
         )}
 
+        {/* Sin partidos */}
         {(!loading && !error && matches.length === 0 && data?.raw === undefined) && (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: col.muted }}>
-            <p style={{ fontSize: 40, marginBottom: 12 }}>📅</p>
-            <p style={{ fontSize: 16, color: '#ccc', marginBottom: 6 }}>No hay partidos televisados hoy</p>
-            <p style={{ fontSize: 13 }}>Prueba a ver la programación de mañana</p>
+          <div style={{ textAlign: 'center', padding: '48px 20px', color: MD.gray }}>
+            <p style={{ fontSize: 36, marginBottom: 8 }}>📅</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: MD.darkGray, margin: '0 0 6px' }}>No hay partidos televisados hoy</p>
+            <p style={{ fontSize: 13 }}>Consulta la programación de mañana</p>
           </div>
         )}
 
+        {/* ── LISTA DE PARTIDOS ── */}
         {(!loading && !error && Object.entries(grouped).length > 0) && (
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: '#444', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-              {dateStr} — {filtered.length} partido{filtered.length !== 1 ? 's' : ''}
-              <span style={{ flex: 1, height: 1, background: col.border, display: 'block' }} />
-            </div>
-
+          <div style={{ marginTop: 16 }}>
             {Object.entries(grouped).map(([comp, cmatches]) => (
-              <div key={comp} style={{ marginBottom: 24 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, paddingBottom: 8, borderBottom: `1px solid ${col.border}` }}>
-                  <span>🏆</span>
-                  <span style={{ fontWeight: 800, fontSize: 13, color: '#ccc', textTransform: 'uppercase', letterSpacing: 0.5 }}>{comp}</span>
-                  <span style={{ fontSize: 11, color: '#444', marginLeft: 'auto' }}>{cmatches.length} partido{cmatches.length !== 1 ? 's' : ''}</span>
+              <div key={comp} style={{ marginBottom: 28 }}>
+
+                {/* Cabecera competición — estilo MD */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `2px solid ${MD.black}`, marginBottom: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 900, color: MD.white, background: MD.red, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    {comp}
+                  </span>
+                  <span style={{ fontSize: 11, color: MD.gray, marginLeft: 'auto' }}>
+                    {cmatches.length} partido{cmatches.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
 
+                {/* Filas */}
                 {cmatches.map((m, i) => {
-                  const n = normalize(m)
+                  const n    = normalize(m)
                   const past = isPast(n.time)
                   return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', marginBottom: 6, background: col.surface, border: `1px solid ${col.border}`, borderLeft: `3px solid ${past ? '#333' : col.red}`, borderRadius: 10, opacity: past ? 0.5 : 1 }}>
-                      <div style={{ width: 46, flexShrink: 0, textAlign: 'center' }}>
-                        <span style={{ fontWeight: 800, fontSize: 15, color: past ? col.muted : '#fff', fontVariantNumeric: 'tabular-nums' }}>
+                    <div key={i} style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '11px 12px',
+                      borderBottom: `1px solid ${MD.border}`,
+                      background: past ? MD.lightGray : MD.white,
+                      opacity: past ? 0.6 : 1,
+                      borderLeft: past ? 'none' : `3px solid ${MD.red}`,
+                    }}>
+                      {/* Hora */}
+                      <div style={{ width: 50, flexShrink: 0 }}>
+                        <span style={{
+                          fontWeight: 800, fontSize: 16,
+                          color: past ? MD.gray : MD.red,
+                          fontVariantNumeric: 'tabular-nums',
+                          fontStyle: 'italic',
+                        }}>
                           {n.time}
                         </span>
+                        {past && <div style={{ fontSize: 9, color: MD.gray, textTransform: 'uppercase', letterSpacing: 0.5 }}>Jugado</div>}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {n.home} <span style={{ color: col.muted, fontWeight: 400 }}>vs</span> {n.away}
+
+                      {/* Equipos */}
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {/* Escudo local */}
+                        {n.homeBadge && (
+                          <img src={n.homeBadge} alt={n.home} width={24} height={24}
+                            style={{ objectFit: 'contain', flexShrink: 0 }}
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          />
+                        )}
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{
+                            fontWeight: 700, fontSize: 14,
+                            color: MD.black,
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                          }}>
+                            {n.home}
+                            <span style={{ color: MD.gray, fontWeight: 400, margin: '0 6px', fontSize: 12 }}>vs</span>
+                            {n.away}
+                          </div>
+                          {n.competition && (
+                            <div style={{ fontSize: 11, color: MD.gray, marginTop: 1 }}>{n.competition}</div>
+                          )}
                         </div>
-                        {n.competition && <div style={{ fontSize: 11, color: col.muted, marginTop: 1 }}>{n.competition}</div>}
+                        {/* Escudo visitante */}
+                        {n.awayBadge && (
+                          <img src={n.awayBadge} alt={n.away} width={24} height={24}
+                            style={{ objectFit: 'contain', flexShrink: 0, marginLeft: 'auto' }}
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          />
+                        )}
                       </div>
-                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0, maxWidth: 240 }}>
+
+                      {/* Canales */}
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0, maxWidth: 220 }}>
                         {n.channels.length > 0
-                          ? n.channels.map((ch, ci) => (
-                            <span key={ci} style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: `${chColor(ch)}22`, color: chColor(ch), border: `1px solid ${chColor(ch)}44`, whiteSpace: 'nowrap' }}>
-                              {ch}
-                            </span>
-                          ))
-                          : <span style={{ fontSize: 11, color: '#444', fontStyle: 'italic' }}>Sin TV confirmada</span>
+                          ? n.channels.map((ch, ci) => {
+                              const col = chColor(ch)
+                              return (
+                                <span key={ci} style={{
+                                  fontSize: 10, fontWeight: 700,
+                                  padding: '3px 7px',
+                                  background: col.bg,
+                                  color: col.text,
+                                  border: `1px solid ${col.border}`,
+                                  borderRadius: 2,
+                                  whiteSpace: 'nowrap',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: 0.3,
+                                }}>
+                                  {ch}
+                                </span>
+                              )
+                            })
+                          : <span style={{ fontSize: 11, color: MD.gray, fontStyle: 'italic' }}>Sin TV confirmada</span>
                         }
                       </div>
                     </div>
@@ -275,8 +338,12 @@ export default function GuiaFutbolTV() {
         )}
       </div>
 
-      <div style={{ borderTop: `1px solid ${col.border}`, padding: '12px 20px', textAlign: 'center', fontSize: 10, color: '#444' }}>
-        Datos: <a href="https://www.futbolenlatv.es" target="_blank" rel="noreferrer" style={{ color: '#666' }}>WOSTI · futbolenlatv.es</a> · {dateStr}
+      {/* ── FOOTER ── */}
+      <div style={{ borderTop: `2px solid ${MD.black}`, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 10, color: MD.gray }}>
+          Datos: <a href="https://www.futbolenlatv.es" target="_blank" rel="noreferrer" style={{ color: MD.red }}>futbolenlatv.es</a> · WOSTI API
+        </span>
+        <span style={{ fontSize: 10, color: MD.gray }}>{dateStr}</span>
       </div>
     </div>
   )
