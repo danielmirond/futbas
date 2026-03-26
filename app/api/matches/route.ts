@@ -110,6 +110,7 @@ export async function GET(request: Request) {
       id:          m.Id,
       time,
       date:        m.Date,
+      localDate:   localDateStr,
       home:        String(local?.Name  ?? '—'),
       away:        String(away?.Name   ?? '—'),
       homeBadge:   local?.Image ? IMG + String(local.Image) : '',
