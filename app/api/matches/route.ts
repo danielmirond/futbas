@@ -1,112 +1,84 @@
 // app/api/matches/route.ts
-// Proxy para WOSTI Fútbol TV Spain API (RapidAPI)
-// Evita CORS y mantiene la API key en servidor
-
 import { NextResponse } from 'next/server'
 
-const RAPIDAPI_KEY  = process.env.RAPIDAPI_KEY!
-const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST!
-const BASE_URL      = `https://${RAPIDAPI_HOST}`
-
-// Endpoints conocidos de la API WOSTI Spain
-// El endpoint principal devuelve partidos de hoy
-// Probamos secuencialmente hasta encontrar el que responde
-const ENDPOINTS = [
-  '/matches',
-  '/today',
-  '/games',
-  '/partidos',
-  '/fixtures',
-  '/schedule',
-  '/football',
-  '/all',
-  '/',
-]
+const KEY  = process.env.RAPIDAPI_KEY!
+const HOST = process.env.RAPIDAPI_HOST!
 
 const HEADERS = {
-  'x-rapidapi-key':  RAPIDAPI_KEY,
-  'x-rapidapi-host': RAPIDAPI_HOST,
-  'Accept':          'application/json',
-}
-
-async function tryEndpoint(endpoint: string, params?: Record<string, string>) {
-  const url = new URL(`${BASE_URL}${endpoint}`)
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-  }
-  const res = await fetch(url.toString(), { headers: HEADERS, next: { revalidate: 300 } })
-  if (!res.ok) return null
-  const data = await res.json()
-  return data
+  'x-rapidapi-key':  KEY,
+  'x-rapidapi-host': HOST,
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const date = searchParams.get('date') // YYYY-MM-DD, opcional
+  const date = searchParams.get('date') ?? new Date().toISOString().split('T')[0]
 
-  try {
-    let data = null
-    let usedEndpoint = ''
+  // Formatos de fecha a probar
+  const [yyyy, mm, dd] = date.split('-')
+  const dateFormats = [
+    date,                          // 2026-03-26
+    `${dd}/${mm}/${yyyy}`,         // 26/03/2026
+    `${dd}-${mm}-${yyyy}`,         // 26-03-2026
+    `${dd}${mm}${yyyy}`,           // 26032026
+  ]
 
-    // Intentar endpoint con fecha si se proporciona
-    if (date) {
-      data = await tryEndpoint('/matches', { date })
-      if (data) usedEndpoint = `/matches?date=${date}`
+  // Endpoints a probar (según Swagger: Events_Get)
+  const candidates = [
+    `/api/Events`,
+    `/api/Events?date=${date}`,
+    `/api/Events?date=${dd}/${mm}/${yyyy}`,
+    `/api/Events?fecha=${date}`,
+    `/api/events`,
+    `/api/events?date=${date}`,
+    `/Events`,
+    `/Events?date=${date}`,
+    `/events`,
+    `/events?date=${date}`,
+  ]
 
-      if (!data) {
-        data = await tryEndpoint(`/matches/${date}`)
-        if (data) usedEndpoint = `/matches/${date}`
+  let raw: unknown = null
+  let usedEndpoint = ''
+
+  for (const ep of candidates) {
+    try {
+      const res = await fetch(`https://${HOST}${ep}`, {
+        headers: HEADERS,
+        next: { revalidate: 300 },
+        signal: AbortSignal.timeout(8000),
+      })
+      if (res.ok) {
+        raw = await res.json()
+        usedEndpoint = ep
+        break
       }
-    }
+    } catch { continue }
+  }
 
-    // Probar endpoints secuencialmente
-    if (!data) {
-      for (const ep of ENDPOINTS) {
-        try {
-          data = await tryEndpoint(ep)
-          if (data && !data.message && !data.error) {
-            usedEndpoint = ep
-            break
-          }
-        } catch { continue }
-      }
-    }
-
-    if (!data) {
-      return NextResponse.json(
-        { error: 'No se pudo conectar con la API WOSTI', endpoints_tried: ENDPOINTS },
-        { status: 502 }
-      )
-    }
-
-    // Normalizar respuesta: la API puede devolver array o { matches: [] } o { data: [] }
-    let matches = []
-    if (Array.isArray(data)) {
-      matches = data
-    } else if (Array.isArray(data.matches)) {
-      matches = data.matches
-    } else if (Array.isArray(data.data)) {
-      matches = data.data
-    } else if (Array.isArray(data.games)) {
-      matches = data.games
-    } else if (Array.isArray(data.partidos)) {
-      matches = data.partidos
-    } else {
-      // Devolver raw para inspección
-      return NextResponse.json({ raw: data, endpoint: usedEndpoint })
-    }
-
-    return NextResponse.json({
-      matches,
-      count: matches.length,
-      endpoint: usedEndpoint,
-      date: date || new Date().toISOString().split('T')[0],
-    })
-
-  } catch (error) {
+  if (!raw) {
     return NextResponse.json(
-      { error: String(error) },
-      { status: 500 }
+      { error: 'No se encontró endpoint válido', candidates_tried: candidates },
+      { status: 502 }
     )
   }
+
+  // Normalizar respuesta
+  type MatchRaw = Record<string, unknown>
+  let matches: MatchRaw[] = []
+
+  if (Array.isArray(raw))                        matches = raw as MatchRaw[]
+  else if (Array.isArray((raw as Record<string, unknown>).events))   matches = (raw as Record<string, unknown[]>).events as MatchRaw[]
+  else if (Array.isArray((raw as Record<string, unknown>).matches))  matches = (raw as Record<string, unknown[]>).matches as MatchRaw[]
+  else if (Array.isArray((raw as Record<string, unknown>).data))     matches = (raw as Record<string, unknown[]>).data as MatchRaw[]
+  else if (Array.isArray((raw as Record<string, unknown>).results))  matches = (raw as Record<string, unknown[]>).results as MatchRaw[]
+  else {
+    // Formato desconocido — devolver raw para inspección
+    return NextResponse.json({ raw, endpoint: usedEndpoint })
+  }
+
+  return NextResponse.json({
+    matches,
+    count:    matches.length,
+    endpoint: usedEndpoint,
+    date,
+  })
 }
