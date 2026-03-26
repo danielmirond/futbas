@@ -21,7 +21,7 @@ function normalize(m: MatchRaw) {
     homeBadge:   str(m.homeBadge),
     awayBadge:   str(m.awayBadge),
     competition: str(m.competition) || '',
-    channels:    Array.isArray(m.channels) ? (m.channels as unknown[]).map(String) : [],
+    channels:    Array.isArray(m.channels) ? (m.channels as { name: string; image: string }[]) : [],
   }
 }
 
