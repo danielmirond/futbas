@@ -307,8 +307,14 @@ export default function GuiaFutbolMD() {
                       ? n.channels.map((ch, ci) => {
                           const col = chColor(ch.name)
                           return (
-                            <span key={ci} className="ch-tag" style={{ background: col.bg, color: col.text, borderColor: col.border }}>
-                              {ch}
+                            <span key={ci} className="ch-tag" style={{ background: col.bg, color: col.text, borderColor: col.border, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              {ch.image && (
+                                <img src={ch.image} alt={ch.name} width={14} height={14}
+                                  style={{ objectFit: 'contain', flexShrink: 0 }}
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                />
+                              )}
+                              {ch.name}
                             </span>
                           )
                         })
