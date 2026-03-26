@@ -66,6 +66,8 @@ export default function GuiaFutbolMD() {
   const [clock, setClock]     = useState(nowStr())
   const [filter, setFilter]   = useState('all')
   const [rawMode, setRawMode] = useState(false)
+  const [compFilter, setCompFilter] = useState('')
+  const [teamFilter, setTeamFilter] = useState('')
 
   useEffect(() => {
     const t = setInterval(() => setClock(nowStr()), 30000)
@@ -90,11 +92,18 @@ export default function GuiaFutbolMD() {
   const dateStr  = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   const matches = data?.matches || []
+  const competitions = [...new Set(matches.map(m => String(m.competition || '')))].filter(Boolean).sort()
+  const teams = [...new Set(matches.flatMap(m => [String(m.home || ''), String(m.away || '')]))].filter(Boolean).sort()
   const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta', 'cuatro', 'telecinco', 'tve', 'rtve']
   const filtered = matches.filter(m => {
     const n = normalize(m)
     if (filter === 'free') return n.channels.some(c => FREE_KW.some(k => c.name.toLowerCase().includes(k)))
     if (filter === 'pay')  return n.channels.some(c => ['dazn', 'movistar', 'laliga', 'vamos', 'ppv'].some(k => c.name.toLowerCase().includes(k)))
+    return true
+  }).filter(m => {
+    const n = normalize(m)
+    if (compFilter && n.competition !== compFilter) return false
+    if (teamFilter && n.home !== teamFilter && n.away !== teamFilter) return false
     return true
   })
   const grouped: Record<string, MatchRaw[]> = {}
@@ -228,8 +237,26 @@ export default function GuiaFutbolMD() {
             return <button key={v} onClick={() => setFilter(v)} style={tabBtn(filter === v)}>{L[v]}</button>
           })}
         </div>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+          <select value={compFilter} onChange={e => { setCompFilter(e.target.value); setTeamFilter('') }}
+            style={{ fontSize: 11, padding: '5px 8px', border: `1px solid ${MD.border}`, borderRadius: 2, background: MD.white, color: MD.darkGray, cursor: 'pointer', maxWidth: 180 }}>
+            <option value="">Competición</option>
+            {competitions.map(comp => <option key={comp} value={comp}>{comp}</option>)}
+          </select>
+          <select value={teamFilter} onChange={e => { setTeamFilter(e.target.value); setCompFilter('') }}
+            style={{ fontSize: 11, padding: '5px 8px', border: `1px solid ${MD.border}`, borderRadius: 2, background: MD.white, color: MD.darkGray, cursor: 'pointer', maxWidth: 180 }}>
+            <option value="">Equipo</option>
+            {teams.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          {(compFilter || teamFilter) && (
+            <button onClick={() => { setCompFilter(''); setTeamFilter('') }}
+              style={{ fontSize: 11, padding: '5px 8px', border: `1px solid ${MD.red}`, borderRadius: 2, background: MD.redLight, color: MD.red, cursor: 'pointer', fontFamily: 'inherit' }}>
+              ✕ Limpiar
+            </button>
+          )}
+        </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 11, color: MD.gray }}>{data?.count ?? 0} partidos</span>
+          <span style={{ fontSize: 11, color: MD.gray }}>{filtered.length} partido{filtered.length !== 1 ? 's' : ''}</span>
           <button onClick={() => load()} style={{ ...tabBtn(false), padding: '6px 10px' }} title="Actualizar">↻</button>
         </div>
       </div>
