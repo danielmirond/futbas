@@ -83,14 +83,26 @@ export async function GET(request: Request) {
       ? (m.Channels as Record<string, unknown>[]).map(c => ({ name: String(c.Name ?? ''), image: c.Image ? `/api/badge?img=${String(c.Image)}` : '' }))
       : []
 
-    // Extraer hora local Spain (UTC+2 en verano, UTC+1 en invierno)
+    // Extraer hora y fecha local España
+    // Detectar si es horario de verano (CEST +2) o invierno (CET +1)
     let time = '??:??'
+    let localDateStr = ''
     if (typeof m.Date === 'string') {
       const d = new Date(m.Date)
-      const offset = 1 // CET — ajustar a 2 en verano si hace falta
-      const localH = (d.getUTCHours() + offset + 24) % 24
-      const localM = d.getUTCMinutes()
-      time = `${String(localH).padStart(2,'0')}:${String(localM).padStart(2,'0')}`
+      // Usar Intl para obtener hora correcta en Madrid automáticamente
+      const madridTime = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'Europe/Madrid',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      }).format(d)
+      // Fecha local en Madrid
+      const madridDate = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'Europe/Madrid',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(d)
+      // Convertir DD/MM/YYYY → YYYY-MM-DD
+      const [dd, mm, yyyy] = madridDate.split('/')
+      localDateStr = `${yyyy}-${mm}-${dd}`
+      time = madridTime
     }
 
     const IMG = 'https://static.futbolenlatv.com/img/32/'
@@ -108,12 +120,15 @@ export async function GET(request: Request) {
     }
   })
 
+  // Filtrar por fecha local España
+  const filtered = matches.filter(m => m.localDate === date)
+
   // Ordenar por hora
-  matches.sort((a, b) => a.time.localeCompare(b.time))
+  filtered.sort((a, b) => String(a.time).localeCompare(String(b.time)))
 
   return NextResponse.json({
-    matches,
-    count:    matches.length,
+    matches:  filtered,
+    count:    filtered.length,
     endpoint: usedEndpoint,
     date,
   })
