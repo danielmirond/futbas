@@ -93,7 +93,7 @@ export default function GuiaFutbolMD() {
 
   const matches = data?.matches || []
   const competitions = Array.from(new Set(matches.map(m => String(m.competition || '')))).filter(Boolean).sort()
-  const teams = Array.from(new Set(matches.reduce(function(acc, m){ return acc.concat([String(m.home||''), String(m.away||'')]); }, []))).filter(Boolean).sort()
+  const teams = Array.from(new Set(matches.reduce(function(acc: string[], m){ return acc.concat([String(m.home||''), String(m.away||'')]); }, []))).filter(Boolean).sort()
   const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta', 'cuatro', 'telecinco', 'tve', 'rtve']
   const filtered = matches.filter(m => {
     const n = normalize(m)
