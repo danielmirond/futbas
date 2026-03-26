@@ -66,6 +66,7 @@ export default function GuiaFutbolMD() {
   const [clock, setClock]     = useState(nowStr())
   const [filter, setFilter]   = useState('all')
   const [rawMode, setRawMode] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [compFilter, setCompFilter] = useState('')
   const [teamFilter, setTeamFilter] = useState('')
 
@@ -76,6 +77,7 @@ export default function GuiaFutbolMD() {
 
   const load = useCallback(async (date?: string) => {
     setLoading(true); setError('')
+    if (date) setSelectedDate(date)
     try {
       const res = await fetch(date ? `/api/matches?date=${date}` : '/api/matches')
       const json: ApiResponse = await res.json()
@@ -92,8 +94,8 @@ export default function GuiaFutbolMD() {
   const dateStr  = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   const matches = data?.matches || []
-  const competitions = Array.from(new Set(matches.map(m => String(m.competition || '')))).filter(Boolean).sort()
-  const teams = Array.from(new Set(matches.reduce(function(acc: string[], m){ return acc.concat([String(m.home||''), String(m.away||'')]); }, []))).filter(Boolean).sort()
+  const competitions = Array.from(new Set(matches.map(m => String(m.competition || ''))).filter(Boolean).sort()
+  const teams = Array.from(new Set(matches.reduce(function(acc, m){ return acc.concat([String(m.home||''), String(m.away||'')]); }, []))).filter(Boolean).sort()
   const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta', 'cuatro', 'telecinco', 'tve', 'rtve']
   const filtered = matches.filter(m => {
     const n = normalize(m)
@@ -228,7 +230,7 @@ export default function GuiaFutbolMD() {
       <div style={{ padding: '10px 16px', borderBottom: `1px solid ${MD.border}`, background: MD.lightGray, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4 }}>
           {([[today, 'Hoy'], [tomorrow, 'Mañana']] as [string,string][]).map(([d, l]) => (
-            <button key={d} onClick={() => load(d)} style={tabBtn(false)}>{l}</button>
+            <button key={d} onClick={() => load(d)} style={tabBtn(selectedDate === d)}>{l}</button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
