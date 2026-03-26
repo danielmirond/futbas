@@ -93,13 +93,17 @@ export async function GET(request: Request) {
       time = `${String(localH).padStart(2,'0')}:${String(localM).padStart(2,'0')}`
     }
 
+    const IMG = 'https://static.futbolenlatv.com/img/32/'
     return {
       id:          m.Id,
       time,
       date:        m.Date,
-      home:        String(local?.Name ?? '—'),
-      away:        String(away?.Name  ?? '—'),
-      competition: String(comp?.Name  ?? ''),
+      home:        String(local?.Name  ?? '—'),
+      away:        String(away?.Name   ?? '—'),
+      homeBadge:   local?.Image ? IMG + String(local.Image) : '',
+      awayBadge:   away?.Image  ? IMG + String(away.Image)  : '',
+      compBadge:   comp?.Image  ? IMG + String(comp.Image)  : '',
+      competition: String(comp?.Name   ?? ''),
       channels:    chs,
     }
   })
