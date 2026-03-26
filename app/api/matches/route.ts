@@ -80,7 +80,7 @@ export async function GET(request: Request) {
     const away  = m.AwayTeam  as Record<string, unknown> | undefined
     const comp  = m.Competition as Record<string, unknown> | undefined
     const chs   = Array.isArray(m.Channels)
-      ? (m.Channels as Record<string, unknown>[]).map(c => String(c.Name ?? ''))
+      ? (m.Channels as Record<string, unknown>[]).map(c => ({ name: String(c.Name ?? ''), image: c.Image ? `/api/badge?img=${String(c.Image)}` : '' }))
       : []
 
     // Extraer hora local Spain (UTC+2 en verano, UTC+1 en invierno)

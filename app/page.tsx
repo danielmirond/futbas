@@ -93,8 +93,8 @@ export default function GuiaFutbolMD() {
   const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta', 'cuatro', 'telecinco', 'tve', 'rtve']
   const filtered = matches.filter(m => {
     const n = normalize(m)
-    if (filter === 'free') return n.channels.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
-    if (filter === 'pay')  return n.channels.some(c => ['dazn', 'movistar', 'laliga', 'vamos', 'ppv'].some(k => c.toLowerCase().includes(k)))
+    if (filter === 'free') return n.channels.some(c => FREE_KW.some(k => c.name.toLowerCase().includes(k)))
+    if (filter === 'pay')  return n.channels.some(c => ['dazn', 'movistar', 'laliga', 'vamos', 'ppv'].some(k => c.name.toLowerCase().includes(k)))
     return true
   })
   const grouped: Record<string, MatchRaw[]> = {}
@@ -305,7 +305,7 @@ export default function GuiaFutbolMD() {
                   <div className="match-channels">
                     {n.channels.length > 0
                       ? n.channels.map((ch, ci) => {
-                          const col = chColor(ch)
+                          const col = chColor(ch.name)
                           return (
                             <span key={ci} className="ch-tag" style={{ background: col.bg, color: col.text, borderColor: col.border }}>
                               {ch}
