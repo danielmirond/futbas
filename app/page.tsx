@@ -420,6 +420,8 @@ export default function GuiaFutbolMD() {
   /* Feature 6 */ const [toast, setToast] = useState('')
   /* Feature 7 */ const [viewMode, setViewMode] = useState<'day' | 'week'>('day')
   /* New: grouping mode */ const [groupBy, setGroupBy] = useState<'comp' | 'channel'>('comp')
+  /* Real standings data */ const [liveComp, setLiveComp] = useState<CompData | null>(null)
+  /* Loading standings */ const [loadingComp, setLoadingComp] = useState(false)
   /* New: polls */ const [polls, setPolls] = useState<Record<number, 'home' | 'away'>>({})
   /* New: interest counters */ const [interests, setInterests] = useState<Record<number, number>>({})
   /* New: notifications */ const [notifEnabled, setNotifEnabled] = useState(false)
@@ -540,7 +542,20 @@ export default function GuiaFutbolMD() {
 
   const selectDay = (d: string) => { setSelectedDate(d); setFilter('all'); setCompFilter(''); setTeamFilter(''); setViewMode('day') }
   const resetAll = () => { setFilter('all'); setCompFilter(''); setTeamFilter(''); setSelectedDate(today); setSearchQuery(''); setViewMode('day') }
-  const showComp = (name: string) => { setCurrentComp(name); const cp = COMPS[name]; setCompTab(cp?.table.length ? 'tabla' : 'resultados'); setPage('comp'); setMenuOpen(false) }
+  const showComp = async (name: string) => {
+    setCurrentComp(name); setPage('comp'); setMenuOpen(false); setLoadingComp(true); setLiveComp(null)
+    const fallback = COMPS[name]
+    setCompTab(fallback?.table.length ? 'tabla' : 'resultados')
+    try {
+      const res = await fetch(`/api/standings?comp=${encodeURIComponent(name)}`)
+      const data = await res.json()
+      if (data.table?.length || data.results?.length || data.next?.length) {
+        const emoji = COMPS[name]?.emoji || '⚽'
+        setLiveComp({ emoji, table: data.table || [], results: data.results || [], next: data.next || [] })
+        if (data.table?.length) setCompTab('tabla'); else setCompTab('resultados')
+      }
+    } catch {} finally { setLoadingComp(false) }
+  }
   const showMain = () => setPage('main')
 
   const handleShare = async (m: Match) => {
@@ -566,7 +581,7 @@ export default function GuiaFutbolMD() {
     return { date: d, label }
   })
 
-  const cp = COMPS[currentComp]
+  const cp = liveComp || COMPS[currentComp]
 
   /* Feature 9: JSON-LD structured data */
   const jsonLd = useMemo(() => {
