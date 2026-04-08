@@ -458,7 +458,7 @@ export default function GuiaFutbolMD() {
     document.body.style.background = T.bg
   }, [darkMode, T.bg])
 
-  // Fetch live matches from API
+  // Fetch live matches from WOSTI API
   useEffect(() => {
     const fetchMatches = async () => {
       try {
@@ -466,7 +466,7 @@ export default function GuiaFutbolMD() {
         const data = await res.json()
         if (data.matches?.length && data.endpoint !== 'demo' && data.endpoint !== 'demo-fallback') {
           const mapped: Match[] = data.matches.map((m: Record<string, unknown>, i: number) => ({
-            id: 1000 + i,
+            id: 2000 + i,
             time: String(m.time || '??:??'),
             date: selectedDate,
             home: String(m.home || '?'),
@@ -476,6 +476,9 @@ export default function GuiaFutbolMD() {
           }))
           setLiveMatches(mapped)
           setDataSource('api')
+        } else {
+          setLiveMatches([])
+          setDataSource('demo')
         }
       } catch {}
     }
