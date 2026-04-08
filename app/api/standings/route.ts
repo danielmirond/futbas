@@ -80,7 +80,7 @@ export async function GET(request: Request) {
     type ResultItem = { d: string; h: string; sh: number; sa: number; a: string }
     type NextItem = { d: string; h: string; a: string; tv: string }
 
-    function parseEvents(data: Record<string, unknown>) {
+    const parseEvents = (data: Record<string, unknown>) => {
       const results: ResultItem[] = []
       const next: NextItem[] = []
       const events = (data?.events as Record<string, unknown>[]) || []
