@@ -422,6 +422,8 @@ export default function GuiaFutbolMD() {
   /* New: grouping mode */ const [groupBy, setGroupBy] = useState<'comp' | 'channel'>('comp')
   /* Real standings data */ const [liveComp, setLiveComp] = useState<CompData | null>(null)
   /* Loading standings */ const [loadingComp, setLoadingComp] = useState(false)
+  /* Live matches from API */ const [liveMatches, setLiveMatches] = useState<Match[]>([])
+  /* API data source indicator */ const [dataSource, setDataSource] = useState<'demo' | 'api'>('demo')
   /* New: polls */ const [polls, setPolls] = useState<Record<number, 'home' | 'away'>>({})
   /* New: interest counters */ const [interests, setInterests] = useState<Record<number, number>>({})
   /* New: notifications */ const [notifEnabled, setNotifEnabled] = useState(false)
@@ -456,12 +458,36 @@ export default function GuiaFutbolMD() {
     document.body.style.background = T.bg
   }, [darkMode, T.bg])
 
+  // Fetch live matches from API
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const res = await fetch(`/api/matches?date=${selectedDate}`)
+        const data = await res.json()
+        if (data.matches?.length && data.endpoint !== 'demo' && data.endpoint !== 'demo-fallback') {
+          const mapped: Match[] = data.matches.map((m: Record<string, unknown>, i: number) => ({
+            id: 1000 + i,
+            time: String(m.time || '??:??'),
+            date: selectedDate,
+            home: String(m.home || '?'),
+            away: String(m.away || '?'),
+            comp: String(m.competition || ''),
+            ch: Array.isArray(m.channels) ? (m.channels as { name: string }[]).map(c => c.name) : [],
+          }))
+          setLiveMatches(mapped)
+          setDataSource('api')
+        }
+      } catch {}
+    }
+    fetchMatches()
+  }, [selectedDate])
+
   // Clock + notifications for fav matches starting soon
   useEffect(() => {
     const t = setInterval(() => {
       setClock(nowStr())
       if (notifEnabled && favorites.length > 0) {
-        MATCHES.forEach(m => {
+        allMatches.forEach(m => {
           const mins = startsIn(m.time, m.date)
           if (mins === 15 && (favorites.includes(m.home) || favorites.includes(m.away))) {
             new Notification(`${m.home} vs ${m.away}`, { body: `Empieza en 15 min — ${m.ch.join(', ')}`, icon: '/logo-md.png' })
@@ -493,9 +519,13 @@ export default function GuiaFutbolMD() {
   const dateStr = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   // ── Filters ──
+  // Use live API data if available, otherwise demo
+  const allMatches = liveMatches.length > 0 && dataSource === 'api'
+    ? [...liveMatches, ...MATCHES.filter(m => !liveMatches.some(lm => lm.home === m.home && lm.away === m.away && lm.date === m.date))]
+    : MATCHES
   const baseMatches = viewMode === 'week'
-    ? MATCHES
-    : MATCHES.filter(m => m.date === selectedDate)
+    ? allMatches
+    : allMatches.filter(m => m.date === selectedDate)
 
   const clubTeams = Array.from(new Set(MATCHES.filter(m => !INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
   const nationalTeams = Array.from(new Set(MATCHES.filter(m => INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
@@ -836,7 +866,7 @@ export default function GuiaFutbolMD() {
           </div>
 
           <div style={{ borderTop: `2px solid ${darkMode ? '#333' : T.black}`, padding: '9px 14px', display: 'flex', justifyContent: 'space-between', fontSize: 10, color: T.gray }}>
-            <span>Demo · futbolenlatv.es · WOSTI API</span>
+            <span>{dataSource === 'api' ? 'EN VIVO' : 'Demo'} · futbolenlatv.es · WOSTI API</span>
             <span>{dateStr}</span>
           </div>
         </>
