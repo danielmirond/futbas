@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo - Guia Futbol TV</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── Presenter chrome ─────────────────────────────────── */
+.presenter{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+.presenter-header{text-align:center;margin-bottom:40px}
+.presenter-header h1{font-size:28px;font-weight:900;font-style:italic;letter-spacing:-0.5px}
+.presenter-header h1 span{color:#CC0000}
+.presenter-header p{color:#888;font-size:13px;margin-top:6px}
+
+/* ── Progress bar ─────────────────────────────────────── */
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:#CC0000;z-index:999;transition:width .6s ease}
+
+/* ── Slide ────────────────────────────────────────────── */
+.slide{opacity:0;transform:translateY(40px);transition:all .7s cubic-bezier(.22,1,.36,1);margin-bottom:64px}
+.slide.visible{opacity:1;transform:translateY(0)}
+.slide-label{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#CC0000;margin-bottom:12px}
+.slide-label .num{background:#CC0000;color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px}
+.slide-title{font-size:20px;font-weight:800;margin-bottom:6px;font-style:italic}
+.slide-desc{font-size:13px;color:#999;margin-bottom:16px;line-height:1.5;max-width:600px}
+
+/* ── App frame ────────────────────────────────────────── */
+.app-frame{border:1px solid #333;border-radius:8px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5);position:relative}
+.app-frame-bar{background:#222;padding:6px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #333}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+.app-frame-url{margin-left:8px;font-size:10px;color:#666;background:#1a1a1a;padding:2px 10px;border-radius:3px;flex:1}
+
+/* ── Simulated App Content ────────────────────────────── */
+.app{background:#fff;color:#1a1a1a;font-family:'Helvetica Neue',Arial,sans-serif}
+.header-bar{background:#111;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #CC0000}
+.logo-m{font-weight:900;font-size:20px;color:#FFD700;font-style:italic;font-family:'Arial Black',sans-serif;letter-spacing:-0.5px;margin:0 1px}
+.logo-d{font-weight:900;font-size:20px;color:#fff;font-style:italic;font-family:'Arial Black',sans-serif;letter-spacing:-0.5px;margin:0 1px 0 1px}
+.logo-bar-r{width:3px;height:18px;background:#CC0000;transform:skewX(-12deg);display:inline-block;margin-left:3px}
+.logo-bar{width:3px;height:18px;background:#CC0000;transform:skewX(-12deg);display:inline-block}
+.live{font-size:10px;color:#888;display:flex;align-items:center;gap:4px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#CC0000;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.sub-header{padding:8px 14px 10px;background:#fff;border-bottom:1px solid #e5e5e5}
+.breadcrumb-lbl{font-size:10px;font-weight:700;color:#CC0000;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px}
+.page-title{font-size:16px;font-weight:900;font-style:italic}
+
+.controls{padding:8px 14px;border-bottom:1px solid #e5e5e5;background:#f7f7f7}
+.btn-row{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:5px}
+.btn{background:#fff;color:#333;border:1px solid #e5e5e5;border-radius:2px;padding:4px 9px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
+.btn.active{background:#CC0000;color:#fff;border-color:#CC0000;font-weight:700}
+
+.day-sep{display:flex;align-items:center;margin:10px 14px 6px;padding:5px 10px;background:#1a1a1a;border-left:4px solid #CC0000;color:#fff;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px}
+.day-sep .cnt{font-size:9px;color:#aaa;margin-left:auto}
+
+.comp-hdr{display:flex;align-items:center;padding:4px 14px;border-bottom:2px solid #1a1a1a}
+.comp-badge{font-size:10px;font-weight:900;color:#fff;background:#CC0000;padding:2px 8px;text-transform:uppercase;letter-spacing:1px}
+
+.match{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #e5e5e5;border-left:3px solid #CC0000;margin:0 14px}
+.match-time{font-weight:800;font-size:13px;color:#CC0000;font-style:italic}
+.match-sub{font-size:8px;color:#888;text-transform:uppercase;margin-top:1px}
+.team{font-weight:700;font-size:12px}
+.vs{color:#888;font-size:10px;margin:0 3px}
+.match-comp{font-size:10px;color:#888;margin-top:1px}
+.ch-tag{font-size:8px;font-weight:700;padding:2px 5px;border-radius:2px;border:1px solid;white-space:nowrap;text-transform:uppercase;display:inline-block;margin:1px}
+.ch-dazn{background:#1a1a1a;color:#CCFF00;border-color:#333}
+.ch-movistar{background:#019DF4;color:#fff;border-color:#0180c5}
+.ch-laliga{background:#EE1044;color:#fff;border-color:#c50d37}
+.ch-gol{background:#C8A415;color:#fff;border-color:#a68a10}
+.ch-tve{background:#1C3A7A;color:#fff;border-color:#15306a}
+.ch-rtve{background:#E4002B;color:#fff;border-color:#bf0024}
+.ch-uefa{background:#004A99;color:#fff;border-color:#003d80}
+.ch-antena{background:#FF6600;color:#fff;border-color:#d65500}
+.match-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+
+.score-box{display:flex;align-items:center;gap:3px}
+.score-nums{display:flex;border-radius:3px;overflow:hidden;font-weight:900;font-size:12px}
+.score-num{padding:2px 6px}
+.score-label{font-size:8px;font-weight:700;text-transform:uppercase}
+
+/* ── Table ────────────────────────────────────────────── */
+.table-section{padding:0 14px}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;padding:0 14px}
+.leg-item{display:flex;align-items:center;gap:3px;font-size:9px;color:#888}
+.leg-sq{width:8px;height:8px;border:1px solid #e5e5e5;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:11px;margin:0 14px;max-width:calc(100% - 28px)}
+th{padding:5px 3px;font-size:9px;font-weight:600;color:#888;text-align:center;border-bottom:2px solid #1a1a1a}
+th:nth-child(1),th:nth-child(2){text-align:left}
+td{padding:5px 3px;text-align:center;border-bottom:1px solid #e5e5e5}
+td:nth-child(2){text-align:left;font-weight:600}
+.form-dots{display:flex;gap:1px;justify-content:center}
+.fdot{width:14px;height:14px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff}
+
+/* Tabs */
+.tabs{display:flex;padding:0 14px}
+.tab{padding:7px 12px;font-size:10px;font-weight:500;color:#333;background:transparent;border:none;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:.3px}
+.tab.active{font-weight:700;color:#fff;background:#CC0000;border-bottom:none}
+
+/* Results */
+.result-row{display:grid;grid-template-columns:70px 1fr 44px 1fr;align-items:center;gap:6px;padding:7px 14px;border-bottom:1px solid #e5e5e5;font-size:12px}
+.result-row:nth-child(even){background:#f7f7f7}
+.result-date{font-size:9px;color:#888}
+.result-team{font-weight:600;font-size:12px}
+.result-score{display:flex;align-items:center;justify-content:center;gap:3px;font-weight:900;font-size:14px}
+
+/* Next matches */
+.next-row{display:grid;grid-template-columns:85px 1fr auto 1fr auto;align-items:center;gap:6px;padding:7px 14px;border-bottom:1px solid #e5e5e5;border-left:3px solid #CC0000;margin-bottom:1px}
+.next-date{font-size:9px;color:#CC0000;font-weight:700}
+.next-team{font-weight:600;font-size:12px}
+
+/* ── Feature cards ────────────────────────────────────── */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:24px}
+.feature{background:#161616;border:1px solid #222;border-radius:6px;padding:16px}
+.feature-icon{font-size:20px;margin-bottom:8px}
+.feature-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.feature-desc{font-size:11px;color:#888;line-height:1.4}
+
+/* ── Strategy slides ─────────────────────────────────── */
+.strategy-card{background:#111;border:1px solid #222;border-radius:8px;padding:24px 28px;margin-bottom:16px}
+.strategy-card h3{font-size:15px;font-weight:800;margin-bottom:8px;font-style:italic;color:#fff}
+.strategy-card p{font-size:12px;color:#999;line-height:1.6;margin-bottom:6px}
+.strategy-card .highlight{color:#CC0000;font-weight:700}
+.strategy-card .metric{display:inline-block;background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:3px 10px;font-size:11px;font-weight:700;color:#CCFF00;margin:2px 3px 2px 0}
+.strategy-card ul{list-style:none;padding:0;margin:8px 0 0}
+.strategy-card li{font-size:12px;color:#bbb;padding:5px 0;border-bottom:1px solid #1a1a1a;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+.strategy-card li:last-child{border-bottom:none}
+.strategy-card li::before{content:'';width:6px;height:6px;border-radius:50%;background:#CC0000;flex-shrink:0;margin-top:5px}
+
+.widget-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:16px}
+.widget-card{background:#161616;border:1px solid #222;border-radius:8px;overflow:hidden}
+.widget-card-header{padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #222}
+.widget-card-header .team-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff}
+.widget-card-header h4{font-size:13px;font-weight:700;color:#fff}
+.widget-card-header span{font-size:10px;color:#666;margin-left:auto}
+.widget-card-body{padding:10px 14px}
+.widget-card-row{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #1a1a1a;font-size:11px;color:#bbb}
+.widget-card-row:last-child{border-bottom:none}
+.widget-card-row .wtime{color:#CC0000;font-weight:700;font-style:italic;width:36px;flex-shrink:0}
+.widget-card-row .wteams{flex:1;font-weight:600;color:#ddd}
+.widget-card-footer{padding:8px 14px;background:#111;font-size:9px;color:#666;text-align:center;text-transform:uppercase;letter-spacing:1px}
+
+.seo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}
+.seo-keyword{background:#161616;border:1px solid #222;border-radius:6px;padding:12px 14px;text-align:center}
+.seo-keyword .kw{font-size:12px;font-weight:700;color:#fff;margin-bottom:4px}
+.seo-keyword .vol{font-size:10px;color:#CCFF00;font-weight:600}
+.seo-keyword .intent{font-size:9px;color:#666;margin-top:2px}
+
+.arrow-flow{display:flex;align-items:center;justify-content:center;gap:12px;margin:20px 0;flex-wrap:wrap}
+.arrow-flow .step{background:#161616;border:1px solid #222;border-radius:6px;padding:10px 16px;text-align:center;min-width:120px}
+.arrow-flow .step-icon{font-size:18px;margin-bottom:4px}
+.arrow-flow .step-text{font-size:10px;color:#bbb;font-weight:600}
+.arrow-flow .arrow{color:#CC0000;font-size:18px;font-weight:900}
+
+/* ── Controls overlay ─────────────────────────────────── */
+.controls-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,20,.9);border:1px solid #333;border-radius:8px;padding:8px 20px;font-size:11px;color:#888;display:flex;align-items:center;gap:12px;z-index:100;backdrop-filter:blur(8px)}
+.key{background:#333;color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600}
+
+/* ── Autoplay indicator ───────────────────────────────── */
+.autoplay-badge{position:fixed;top:12px;right:16px;background:rgba(204,0,0,.9);color:#fff;font-size:9px;font-weight:700;padding:4px 10px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;z-index:100;display:flex;align-items:center;gap:5px}
+.autoplay-badge .dot-anim{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1s infinite}
+
+/* Footer */
+.presenter-footer{text-align:center;padding:40px 0;border-top:1px solid #222;margin-top:20px}
+.presenter-footer p{font-size:11px;color:#666}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="autoplay-badge" id="autoplayBadge"><span class="dot-anim"></span>AUTOPLAY</div>
+
+<div class="presenter">
+  <div class="presenter-header">
+    <h1><img src="/logo-md.png" alt="MD" style="height:48px;vertical-align:middle;margin-right:10px"><span style="font-size:24px">Guia Futbol TV</span></h1>
+    <p>Widget de programacion futbolistica para Mundo Deportivo</p>
+  </div>
+
+  <!-- ═══════ SLIDE 1: Overview ═══════ -->
+  <div class="slide" id="s1">
+    <div class="slide-label"><span class="num">1</span> VISTA PRINCIPAL</div>
+    <div class="slide-title">Partidos del dia con marcadores en vivo</div>
+    <div class="slide-desc">Vista principal mostrando todos los partidos de hoy, agrupados por competicion, con marcadores en tiempo real y canales de TV con colores corporativos.</div>
+    <div class="app-frame">
+      <div class="app-frame-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="app-frame-url">localhost:3000</span></div>
+      <div class="app">
+        <div class="header-bar">
+          <div style="display:flex;align-items:center"><img src="/logo-md.png" alt="MD" style="height:28px"></div>
+          <div class="live"><span class="live-dot"></span>EN DIRECTO · 12:04</div>
+        </div>
+        <div class="sub-header">
+          <div class="breadcrumb-lbl">Futbol · Guia TV</div>
+          <div class="page-title">Futbol en la TV hoy</div>
+        </div>
+        <div class="controls">
+          <div class="btn-row"><span class="btn">Ayer</span><span class="btn active">Hoy</span><span class="btn">Manana</span><span class="btn">Vie 10</span><span class="btn">Sab 11</span><span class="btn">Dom 12</span><span class="btn">Lun 13</span></div>
+          <div class="btn-row"><span class="btn active">Todos</span><span class="btn">En abierto</span><span class="btn">De pago</span><span style="font-size:10px;color:#888;margin-left:auto">4 partidos</span></div>
+        </div>
+        <div class="day-sep">Hoy · Miercoles, 8 de Abril<span class="cnt">4 partidos</span></div>
+        <div class="comp-hdr"><span class="comp-badge">LaLiga Hypermotion</span></div>
+        <div class="match">
+          <div><div class="match-time">16:15</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Granada CF</span><span class="vs">vs</span><span class="team">Huesca</span></div><div class="match-comp">LaLiga Hypermotion</div></div>
+          <div class="match-right"><div class="score-box"><div class="score-nums" style="background:#eee"><span class="score-num" style="color:#333">3</span><span style="color:#999;padding:0 1px">-</span><span class="score-num" style="color:#333">1</span></div><span class="score-label" style="color:#aaa">FIN</span></div><div><span class="ch-tag ch-dazn">DAZN</span><span class="ch-tag ch-laliga">LaLiga TV</span></div></div>
+        </div>
+        <div class="comp-hdr"><span class="comp-badge">LaLiga EA Sports</span></div>
+        <div class="match">
+          <div><div class="match-time">19:00</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">FC Barcelona</span><span class="vs">vs</span><span class="team">Atletico Madrid</span></div><div class="match-comp">LaLiga EA Sports</div></div>
+          <div class="match-right"><div class="score-box"><div class="score-nums" style="background:#f4a261"><span class="score-num" style="color:#fff">2</span><span style="color:#fff;padding:0 1px;opacity:.5">-</span><span class="score-num" style="color:#fff">1</span></div><span class="score-label" style="color:#f4a261">HT</span></div><div><span class="ch-tag ch-dazn">DAZN LaLiga</span><span class="ch-tag ch-movistar">M+ LaLiga</span></div></div>
+        </div>
+        <div class="match">
+          <div><div class="match-time">21:00</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Real Madrid</span><span class="vs">vs</span><span class="team">Sevilla FC</span></div><div class="match-comp">LaLiga EA Sports</div></div>
+          <div class="match-right"><div class="score-box"><div class="score-nums" style="background:#CC0000"><span class="score-num" style="color:#fff">1</span><span style="color:#fff;padding:0 1px;opacity:.5">-</span><span class="score-num" style="color:#fff">0</span></div><span class="score-label" style="color:#CC0000">67'</span></div><div><span class="ch-tag ch-dazn">DAZN LaLiga</span></div></div>
+        </div>
+        <div class="comp-hdr"><span class="comp-badge">Amistoso</span></div>
+        <div class="match">
+          <div><div class="match-time">20:00</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Espana</span><span class="vs">vs</span><span class="team">Serbia</span></div><div class="match-comp">Amistoso</div></div>
+          <div class="match-right"><div><span class="ch-tag ch-tve">La 1 TVE</span><span class="ch-tag ch-rtve">RTVE Play</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SLIDE 2: Manana ═══════ -->
+  <div class="slide" id="s2">
+    <div class="slide-label"><span class="num">2</span> NAVEGACION POR DIAS</div>
+    <div class="slide-title">Consulta la programacion de cualquier dia</div>
+    <div class="slide-desc">Navega entre 7 dias con un solo click. Los partidos se agrupan por competicion con indicador de fecha y numero de partidos.</div>
+    <div class="app-frame">
+      <div class="app-frame-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="app-frame-url">localhost:3000</span></div>
+      <div class="app">
+        <div class="header-bar">
+          <div style="display:flex;align-items:center"><img src="/logo-md.png" alt="MD" style="height:28px"></div>
+          <div class="live"><span class="live-dot"></span>EN DIRECTO · 12:25</div>
+        </div>
+        <div class="sub-header">
+          <div class="breadcrumb-lbl">Futbol · Guia TV</div>
+          <div class="page-title">Futbol en la TV hoy</div>
+        </div>
+        <div class="controls">
+          <div class="btn-row"><span class="btn">Ayer</span><span class="btn">Hoy</span><span class="btn active">Manana</span><span class="btn">Vie 10</span><span class="btn">Sab 11</span><span class="btn">Dom 12</span><span class="btn">Lun 13</span></div>
+          <div class="btn-row"><span class="btn active">Todos</span><span class="btn">En abierto</span><span class="btn">De pago</span><span style="font-size:10px;color:#888;margin-left:auto">5 partidos</span></div>
+        </div>
+        <div class="day-sep">Manana · Jueves, 9 de Abril<span class="cnt">5 partidos</span></div>
+        <div class="comp-hdr"><span class="comp-badge">Amistoso</span></div>
+        <div class="match">
+          <div><div class="match-time">18:45</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Alemania</span><span class="vs">vs</span><span class="team">Ghana</span></div><div class="match-comp">Amistoso</div></div>
+          <div class="match-right"><div><span class="ch-tag ch-uefa">UEFA TV PPV</span></div></div>
+        </div>
+        <div class="match">
+          <div><div class="match-time">21:00</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Francia</span><span class="vs">vs</span><span class="team">Colombia</span></div><div class="match-comp">Amistoso</div></div>
+          <div class="match-right"><div><span class="ch-tag ch-dazn">DAZN</span></div></div>
+        </div>
+        <div class="comp-hdr"><span class="comp-badge">LaLiga Hypermotion</span></div>
+        <div class="match">
+          <div><div class="match-time">19:00</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Sporting Gijon</span><span class="vs">vs</span><span class="team">Deportivo</span></div><div class="match-comp">LaLiga Hypermotion</div></div>
+          <div class="match-right"><div><span class="ch-tag ch-gol">Gol TV</span><span class="ch-tag ch-dazn">DAZN</span></div></div>
+        </div>
+        <div class="comp-hdr"><span class="comp-badge">LaLiga EA Sports</span></div>
+        <div class="match">
+          <div><div class="match-time">16:15</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Athletic Club</span><span class="vs">vs</span><span class="team">Villarreal</span></div><div class="match-comp">LaLiga EA Sports</div></div>
+          <div class="match-right"><div><span class="ch-tag ch-dazn">DAZN</span></div></div>
+        </div>
+        <div class="match">
+          <div><div class="match-time">21:00</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Real Madrid</span><span class="vs">vs</span><span class="team">Sevilla FC</span></div><div class="match-comp">LaLiga EA Sports</div></div>
+          <div class="match-right"><div><span class="ch-tag ch-dazn">DAZN LaLiga</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SLIDE 3: Filtro en abierto ═══════ -->
+  <div class="slide" id="s3">
+    <div class="slide-label"><span class="num">3</span> FILTROS INTELIGENTES</div>
+    <div class="slide-title">Filtra por tipo de emision, competicion o equipo</div>
+    <div class="slide-desc">Encuentra rapidamente los partidos en abierto (La 1, Gol TV, Antena 3) o de pago (DAZN, Movistar+). Tambien filtra por competicion o equipo especifico.</div>
+    <div class="app-frame">
+      <div class="app-frame-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="app-frame-url">localhost:3000</span></div>
+      <div class="app">
+        <div class="header-bar">
+          <div style="display:flex;align-items:center"><img src="/logo-md.png" alt="MD" style="height:28px"></div>
+          <div class="live"><span class="live-dot"></span>EN DIRECTO · 12:25</div>
+        </div>
+        <div class="sub-header">
+          <div class="breadcrumb-lbl">Futbol · Guia TV</div>
+          <div class="page-title">Futbol en la TV hoy</div>
+        </div>
+        <div class="controls">
+          <div class="btn-row"><span class="btn">Ayer</span><span class="btn active">Hoy</span><span class="btn">Manana</span><span class="btn">Vie 10</span><span class="btn">Sab 11</span><span class="btn">Dom 12</span><span class="btn">Lun 13</span></div>
+          <div class="btn-row"><span class="btn">Todos</span><span class="btn active">En abierto</span><span class="btn">De pago</span><span style="font-size:10px;color:#888;margin-left:auto">1 partido</span></div>
+        </div>
+        <div class="day-sep">Hoy · Miercoles, 8 de Abril<span class="cnt">1 partidos</span></div>
+        <div class="comp-hdr"><span class="comp-badge">Amistoso</span></div>
+        <div class="match">
+          <div><div class="match-time">20:00</div><div class="match-sub">Hoy</div></div>
+          <div><div><span class="team">Espana</span><span class="vs">vs</span><span class="team">Serbia</span></div><div class="match-comp">Amistoso</div></div>
+          <div class="match-right"><div><span class="ch-tag ch-tve">La 1 TVE</span><span class="ch-tag ch-rtve">RTVE Play</span></div></div>
+        </div>
+        <div style="text-align:center;padding:30px;color:#888;font-size:12px">Solo se muestran partidos en canales gratuitos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SLIDE 4: Clasificacion ═══════ -->
+  <div class="slide" id="s4">
+    <div class="slide-label"><span class="num">4</span> PAGINAS DE COMPETICION</div>
+    <div class="slide-title">Clasificacion completa con zonas y forma</div>
+    <div class="slide-desc">Cada competicion tiene su pagina dedicada con tabla de clasificacion, zonas de color (Champions, Europa League, descenso) e indicadores de forma reciente.</div>
+    <div class="app-frame">
+      <div class="app-frame-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="app-frame-url">localhost:3000 / LaLiga EA Sports</span></div>
+      <div class="app">
+        <div class="header-bar">
+          <div style="display:flex;align-items:center"><img src="/logo-md.png" alt="MD" style="height:28px"></div>
+          <div class="live"><span class="live-dot"></span>EN DIRECTO · 12:04</div>
+        </div>
+        <div style="padding:7px 14px;background:#f7f7f7;border-bottom:1px solid #e5e5e5;font-size:11px;display:flex;gap:6px;align-items:center">
+          <span style="color:#CC0000;font-weight:700">&larr; Guia TV</span><span style="color:#888">/</span><span style="font-weight:600">LaLiga EA Sports</span>
+        </div>
+        <div style="padding:8px 14px 0;border-bottom:1px solid #e5e5e5">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">&#127466;&#127480;</span>
+            <div><div style="font-size:9px;font-weight:700;color:#CC0000;text-transform:uppercase;letter-spacing:1.5px">Competicion</div><div style="font-size:16px;font-weight:900;font-style:italic">LaLiga EA Sports</div></div>
+          </div>
+          <div class="tabs"><span class="tab active">Clasificacion</span><span class="tab">Resultados</span><span class="tab">Proximos</span></div>
+        </div>
+        <div class="legend"><div class="leg-item"><span class="leg-sq" style="background:#e8f5e9"></span>Champions</div><div class="leg-item"><span class="leg-sq" style="background:#e3f2fd"></span>Europa L.</div><div class="leg-item"><span class="leg-sq" style="background:#fff8e1"></span>Conference</div><div class="leg-item"><span class="leg-sq" style="background:#fde8e8"></span>Descenso</div></div>
+        <div style="overflow-x:auto;padding:0 14px">
+          <table>
+            <thead><tr><th>#</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>Forma</th><th>Pts</th></tr></thead>
+            <tbody>
+              <tr style="background:#e8f5e9"><td style="color:#166534;font-weight:700">1</td><td>FC Barcelona</td><td style="color:#888">30</td><td>22</td><td>6</td><td>2</td><td style="color:#166534;font-weight:600">+40</td><td><div class="form-dots"><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#f59e0b">D</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#22c55e">W</span></div></td><td style="font-weight:900;font-size:13px">72</td></tr>
+              <tr style="background:#e8f5e9"><td style="color:#166534;font-weight:700">2</td><td>Real Madrid</td><td style="color:#888">30</td><td>21</td><td>5</td><td>4</td><td style="color:#166534;font-weight:600">+30</td><td><div class="form-dots"><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#ef4444">L</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#f59e0b">D</span></div></td><td style="font-weight:900;font-size:13px">68</td></tr>
+              <tr style="background:#e8f5e9"><td style="color:#166534;font-weight:700">3</td><td>Atletico Madrid</td><td style="color:#888">30</td><td>18</td><td>6</td><td>6</td><td style="color:#166534;font-weight:600">+17</td><td><div class="form-dots"><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#f59e0b">D</span><span class="fdot" style="background:#ef4444">L</span></div></td><td style="font-weight:900;font-size:13px">60</td></tr>
+              <tr style="background:#e8f5e9"><td style="color:#166534;font-weight:700">4</td><td>Athletic Club</td><td style="color:#888">30</td><td>15</td><td>9</td><td>6</td><td style="color:#166534;font-weight:600">+7</td><td><div class="form-dots"><span class="fdot" style="background:#f59e0b">D</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#f59e0b">D</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#22c55e">W</span></div></td><td style="font-weight:900;font-size:13px">54</td></tr>
+              <tr style="background:#e3f2fd"><td style="color:#1a56db;font-weight:700">5</td><td>Villarreal</td><td style="color:#888">30</td><td>14</td><td>9</td><td>7</td><td style="color:#166534;font-weight:600">+8</td><td><div class="form-dots"><span class="fdot" style="background:#ef4444">L</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#f59e0b">D</span><span class="fdot" style="background:#22c55e">W</span></div></td><td style="font-weight:900;font-size:13px">51</td></tr>
+              <tr style="background:#e3f2fd"><td style="color:#1a56db;font-weight:700">6</td><td>Real Sociedad</td><td style="color:#888">30</td><td>14</td><td>7</td><td>9</td><td style="color:#166534;font-weight:600">+4</td><td><div class="form-dots"><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#ef4444">L</span><span class="fdot" style="background:#f59e0b">D</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#ef4444">L</span></div></td><td style="font-weight:900;font-size:13px">49</td></tr>
+              <tr style="background:#fff8e1"><td style="font-weight:700;color:#888">7</td><td>Sevilla FC</td><td style="color:#888">30</td><td>12</td><td>9</td><td>9</td><td style="color:#CC0000;font-weight:600">-1</td><td><div class="form-dots"><span class="fdot" style="background:#f59e0b">D</span><span class="fdot" style="background:#ef4444">L</span><span class="fdot" style="background:#22c55e">W</span><span class="fdot" style="background:#f59e0b">D</span><span class="fdot" style="background:#22c55e">W</span></div></td><td style="font-weight:900;font-size:13px">45</td></tr>
+            </tbody>
+          </table>
+          <div style="text-align:center;padding:10px;font-size:10px;color:#888">... y 13 equipos mas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SLIDE 5: Resultados ═══════ -->
+  <div class="slide" id="s5">
+    <div class="slide-label"><span class="num">5</span> RESULTADOS Y PROXIMOS</div>
+    <div class="slide-title">Historico de resultados y proximos partidos</div>
+    <div class="slide-desc">Cada competicion incluye pestanas con los ultimos resultados y los proximos partidos programados, incluyendo el canal donde se emiten.</div>
+    <div class="app-frame">
+      <div class="app-frame-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="app-frame-url">localhost:3000 / LaLiga EA Sports / Resultados</span></div>
+      <div class="app">
+        <div class="header-bar">
+          <div style="display:flex;align-items:center"><img src="/logo-md.png" alt="MD" style="height:28px"></div>
+          <div class="live"><span class="live-dot"></span>EN DIRECTO · 12:05</div>
+        </div>
+        <div style="padding:7px 14px;background:#f7f7f7;border-bottom:1px solid #e5e5e5;font-size:11px;display:flex;gap:6px;align-items:center">
+          <span style="color:#CC0000;font-weight:700">&larr; Guia TV</span><span style="color:#888">/</span><span style="font-weight:600">LaLiga EA Sports</span>
+        </div>
+        <div style="padding:8px 14px 0;border-bottom:1px solid #e5e5e5">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">&#127466;&#127480;</span>
+            <div><div style="font-size:9px;font-weight:700;color:#CC0000;text-transform:uppercase;letter-spacing:1.5px">Competicion</div><div style="font-size:16px;font-weight:900;font-style:italic">LaLiga EA Sports</div></div>
+          </div>
+          <div class="tabs"><span class="tab">Clasificacion</span><span class="tab active">Resultados</span><span class="tab">Proximos</span></div>
+        </div>
+        <div>
+          <div class="result-row"><span class="result-date">Sab 22 Mar</span><span class="result-team" style="text-align:right">FC Barcelona</span><div class="result-score"><span>3</span><span style="color:#888;font-size:11px">-</span><span>1</span></div><span class="result-team">Getafe CF</span></div>
+          <div class="result-row"><span class="result-date">Sab 22 Mar</span><span class="result-team" style="text-align:right">Real Madrid</span><div class="result-score"><span>2</span><span style="color:#888;font-size:11px">-</span><span>0</span></div><span class="result-team">Celta de Vigo</span></div>
+          <div class="result-row"><span class="result-date">Jue 27 Mar</span><span class="result-team" style="text-align:right">Valencia CF</span><div class="result-score"><span>2</span><span style="color:#888;font-size:11px">-</span><span>1</span></div><span class="result-team">Getafe CF</span></div>
+          <div class="result-row"><span class="result-date">Jue 27 Mar</span><span class="result-team" style="text-align:right">Osasuna</span><div class="result-score"><span>0</span><span style="color:#888;font-size:11px">-</span><span>0</span></div><span class="result-team">Rayo Vallecano</span></div>
+        </div>
+        <div style="height:20px"></div>
+        <div style="padding:0 14px;border-bottom:1px solid #e5e5e5"><div class="tabs"><span class="tab">Clasificacion</span><span class="tab">Resultados</span><span class="tab active">Proximos</span></div></div>
+        <div>
+          <div class="next-row"><span class="next-date">Vie 28 19:00</span><span class="next-team" style="text-align:right">FC Barcelona</span><span style="color:#888;font-size:10px">vs</span><span class="next-team">Atletico Madrid</span><span class="ch-tag ch-dazn">DAZN LaLiga</span></div>
+          <div class="next-row"><span class="next-date">Vie 28 21:00</span><span class="next-team" style="text-align:right">Real Madrid</span><span style="color:#888;font-size:10px">vs</span><span class="next-team">Sevilla FC</span><span class="ch-tag ch-dazn">DAZN LaLiga</span></div>
+          <div class="next-row"><span class="next-date">Sab 29 16:15</span><span class="next-team" style="text-align:right">Athletic Club</span><span style="color:#888;font-size:10px">vs</span><span class="next-team">Villarreal</span><span class="ch-tag ch-dazn">DAZN</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SLIDE 6: Objetivo de producto ═══════ -->
+  <div class="slide" id="s6">
+    <div class="slide-label"><span class="num">6</span> OBJETIVO DE PRODUCTO</div>
+    <div class="slide-title">Convertir MD en la referencia de programacion futbolistica</div>
+    <div class="slide-desc">Un widget que genera trafico recurrente, fideliza al usuario y posiciona a Mundo Deportivo como utilidad diaria, no solo medio informativo.</div>
+
+    <div class="strategy-card">
+      <h3>El problema que resolvemos</h3>
+      <p>Millones de aficionados buscan cada dia <span class="highlight">"donde ver el partido"</span> y acaban en paginas de terceros. Ese trafico deberia ser nuestro.</p>
+      <ul>
+        <li>El usuario necesita saber <strong style="color:#fff">que partido hay hoy, a que hora y en que canal</strong> — y lo necesita rapido</li>
+        <li>Las busquedas son <strong style="color:#fff">recurrentes</strong>: el mismo usuario vuelve cada jornada, cada Champions, cada partido de su equipo</li>
+        <li>Ningun medio deportivo espanol ofrece una experiencia dedicada, rapida y bien disenada para esto</li>
+      </ul>
+    </div>
+
+    <div class="strategy-card">
+      <h3>Modelo de engagement</h3>
+      <div class="arrow-flow">
+        <div class="step"><div class="step-icon">&#128270;</div><div class="step-text">Busqueda<br>"donde ver Barca"</div></div>
+        <div class="arrow">&#8594;</div>
+        <div class="step"><div class="step-icon">&#9917;</div><div class="step-text">Widget Guia TV<br>Respuesta inmediata</div></div>
+        <div class="arrow">&#8594;</div>
+        <div class="step"><div class="step-icon">&#128240;</div><div class="step-text">Contenido MD<br>Previa, cronica, analisis</div></div>
+        <div class="arrow">&#8594;</div>
+        <div class="step"><div class="step-icon">&#128260;</div><div class="step-text">Retencion<br>Vuelve manana</div></div>
+      </div>
+      <p style="text-align:center;font-size:11px;color:#666;margin-top:8px">De la utilidad al habito. Del habito a la fidelidad.</p>
+    </div>
+
+    <div class="strategy-card">
+      <h3>KPIs objetivo</h3>
+      <p>
+        <span class="metric">+30% visitas recurrentes</span>
+        <span class="metric">Top 3 "futbol TV hoy"</span>
+        <span class="metric">-40% bounce rate</span>
+        <span class="metric">+2 paginas/sesion</span>
+        <span class="metric">Widget embeddable</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════ SLIDE 7: SEO ═══════ -->
+  <div class="slide" id="s7">
+    <div class="slide-label"><span class="num">7</span> ESTRATEGIA SEO</div>
+    <div class="slide-title">Capturar el trafico de busqueda de programacion deportiva</div>
+    <div class="slide-desc">Cada pagina del widget es una landing optimizada para keywords de alta intencion y alto volumen de busqueda recurrente.</div>
+
+    <div class="strategy-card">
+      <h3>Cluster "FUTBOL EN TV" — datos reales SEMrush</h3>
+      <p style="margin-bottom:12px"><span class="metric">15.915 keywords</span><span class="metric">450.130 vol. total/mes</span><span class="metric">KD medio: 43%</span></p>
+      <div class="seo-grid">
+        <div class="seo-keyword"><div class="kw">"futbol hoy tv"</div><div class="vol">60.500/mes</div><div class="intent">KD 72 · CPC $0,83</div></div>
+        <div class="seo-keyword"><div class="kw">"futbol libre tv"</div><div class="vol">49.500/mes</div><div class="intent">KD 59 · CPC $1,40</div></div>
+        <div class="seo-keyword"><div class="kw">"futbol hoy en tv"</div><div class="vol">33.100/mes</div><div class="intent">KD 70 · CPC $0,71</div></div>
+        <div class="seo-keyword"><div class="kw">"futbol tv"</div><div class="vol">22.200/mes</div><div class="intent">KD 73 · CPC $0,98</div></div>
+        <div class="seo-keyword"><div class="kw">"futbol en la tv"</div><div class="vol">18.100/mes</div><div class="intent">KD 69 · CPC $0,98</div></div>
+        <div class="seo-keyword"><div class="kw">"futbol tv hoy"</div><div class="vol">18.100/mes</div><div class="intent">KD 69 · CPC $0,80</div></div>
+        <div class="seo-keyword"><div class="kw">"futbol en tv"</div><div class="vol">12.100/mes</div><div class="intent">KD 71 · CPC $1,21</div></div>
+        <div class="seo-keyword"><div class="kw">"partidos futbol hoy en tv"</div><div class="vol">4.400/mes</div><div class="intent">KD 68 · CPC $0,00</div></div>
+      </div>
+      <p style="margin-top:12px;font-size:11px;color:#CCFF00;font-weight:600">Volumen total del cluster: 450K busquedas mensuales Trafico recurrente y predecible.</p>
+    </div>
+
+    <div class="strategy-card">
+      <h3>Clusters de intencion de busqueda</h3>
+      <p style="margin-bottom:10px">Concordancia amplia: <span class="metric">4.208 keywords</span><span class="metric">136.180 vol./mes</span><span class="metric">KD medio: 48%</span></p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-top:10px">
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px 10px"><div style="font-size:11px;font-weight:700;color:#fff">vivo</div><div style="font-size:10px;color:#CCFF00;font-weight:600">1.274 kw</div></div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px 10px"><div style="font-size:11px;font-weight:700;color:#fff">ver</div><div style="font-size:10px;color:#CCFF00;font-weight:600">1.254 kw</div></div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px 10px"><div style="font-size:11px;font-weight:700;color:#fff">gratis</div><div style="font-size:10px;color:#CCFF00;font-weight:600">556 kw</div></div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px 10px"><div style="font-size:11px;font-weight:700;color:#fff">directo</div><div style="font-size:10px;color:#CCFF00;font-weight:600">395 kw</div></div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px 10px"><div style="font-size:11px;font-weight:700;color:#fff">hoy</div><div style="font-size:10px;color:#CCFF00;font-weight:600">395 kw</div></div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px 10px"><div style="font-size:11px;font-weight:700;color:#fff">partido</div><div style="font-size:10px;color:#CCFF00;font-weight:600">243 kw</div></div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px 10px"><div style="font-size:11px;font-weight:700;color:#fff">movistar</div><div style="font-size:10px;color:#CCFF00;font-weight:600">202 kw</div></div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px 10px"><div style="font-size:11px;font-weight:700;color:#fff">canal</div><div style="font-size:10px;color:#CCFF00;font-weight:600">149 kw</div></div>
+      </div>
+      <p style="margin-top:10px;font-size:11px;color:#999">Cada cluster es una oportunidad de contenido. El widget responde directamente a las intenciones "ver", "hoy", "directo", "gratis" y "canal".</p>
+    </div>
+
+    <div class="strategy-card">
+      <h3>Cluster "PARTIDOS HOY EN TV" — SEMrush</h3>
+      <p style="margin-bottom:10px"><span class="metric">498 keywords</span><span class="metric">17.600 vol./mes</span><span class="metric">KD medio: 53%</span></p>
+      <div class="seo-grid">
+        <div class="seo-keyword"><div class="kw">"partidos de futbol hoy en tv"</div><div class="vol">4.400/mes</div><div class="intent">KD 68 · CPC $0,00</div></div>
+        <div class="seo-keyword"><div class="kw">"partidos en tv hoy"</div><div class="vol">1.900/mes</div><div class="intent">KD 66 · CPC $1,15</div></div>
+        <div class="seo-keyword"><div class="kw">"que partido televisan hoy en gol tv"</div><div class="vol">1.600/mes</div><div class="intent">KD 31 · CPC $0,00</div></div>
+        <div class="seo-keyword"><div class="kw">"partidos de hoy en tv"</div><div class="vol">1.300/mes</div><div class="intent">KD 65 · CPC $0,00</div></div>
+        <div class="seo-keyword"><div class="kw">"partidos hoy en tv"</div><div class="vol">1.300/mes</div><div class="intent">KD 63 · CPC $0,86</div></div>
+        <div class="seo-keyword"><div class="kw">"partido en abierto gol tv hoy"</div><div class="vol">1.000/mes</div><div class="intent">KD 37 · CPC $0,00</div></div>
+      </div>
+      <p style="margin-top:10px;font-size:11px;color:#999">Subclusters clave: <strong style="color:#bbb">gol</strong> (67 kw), <strong style="color:#bbb">madrid</strong> (33 kw), <strong style="color:#bbb">abierto</strong> (23 kw) — los usuarios buscan por canal y por equipo. Los widgets de equipo capturan directamente este long-tail.</p>
+    </div>
+
+    <div class="strategy-card" style="background:#0d0d0d;border-color:#CC0000">
+      <h3 style="color:#CCFF00">Oportunidad total combinada</h3>
+      <p style="font-size:13px;color:#fff;line-height:1.6"><span class="metric" style="font-size:13px">+467K busquedas/mes</span> en solo 2 clusters principales. Sumando clusters de equipos ("donde ver Real Madrid", "donde ver Barcelona"), competiciones ("Champions TV", "LaLiga TV") y variantes con tildes, el volumen supera las <span class="highlight" style="font-size:14px">600K busquedas mensuales</span> — trafico que hoy se reparte entre futbolenlatv.es, resultados-futbol.com y otros agregadores sin marca editorial.</p>
+    </div>
+
+    <div class="strategy-card">
+      <h3>Estructura SEO por capas</h3>
+      <ul>
+        <li><strong style="color:#fff">/futbol/tv/hoy</strong> — Landing principal. Captura "futbol TV hoy", "partidos hoy", "que partido hay hoy"</li>
+        <li><strong style="color:#fff">/futbol/tv/laliga</strong> — Pagina de competicion. Captura "LaLiga TV", "donde ver LaLiga", "horario LaLiga"</li>
+        <li><strong style="color:#fff">/futbol/tv/real-madrid</strong> — Widget de equipo. Captura "donde ver Real Madrid", "proximo partido Real Madrid TV"</li>
+        <li><strong style="color:#fff">/futbol/tv/champions</strong> — Pagina Champions. Picos estacionales de 200K+ busquedas en semana de Champions</li>
+      </ul>
+      <p style="margin-top:10px">Cada URL genera <span class="highlight">rich snippets</span> con datos estructurados (Event schema), apareciendo en Google con hora, canal y equipos.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ SLIDE 8: Widgets de equipo ═══════ -->
+  <div class="slide" id="s8">
+    <div class="slide-label"><span class="num">8</span> WIDGETS DE EQUIPO</div>
+    <div class="slide-title">Un widget dedicado para cada equipo que enriquece toda la web</div>
+    <div class="slide-desc">Cada pagina de equipo en MD puede incluir un widget embebido con los proximos partidos televisados, canales y horarios. Contenido dinamico que actualiza la pagina sin esfuerzo editorial.</div>
+
+    <div class="widget-grid">
+      <div class="widget-card">
+        <div class="widget-card-header">
+          <div class="team-dot" style="background:linear-gradient(135deg,#A50044,#004D98)">B</div>
+          <h4>FC Barcelona</h4>
+          <span>3 proximos</span>
+        </div>
+        <div class="widget-card-body">
+          <div class="widget-card-row"><span class="wtime">19:00</span><span class="wteams">Barcelona vs Atletico</span><span class="ch-tag ch-dazn">DAZN</span></div>
+          <div class="widget-card-row"><span class="wtime">21:00</span><span class="wteams">Sevilla vs Barcelona</span><span class="ch-tag ch-movistar">M+ LaLiga</span></div>
+          <div class="widget-card-row"><span class="wtime">18:45</span><span class="wteams">Barcelona vs Bayern</span><span class="ch-tag" style="background:#0D1541;color:#fff;border-color:#060c2a">UCL</span></div>
+        </div>
+        <div class="widget-card-footer">mundodeportivo.com/futbol/fc-barcelona</div>
+      </div>
+      <div class="widget-card">
+        <div class="widget-card-header">
+          <div class="team-dot" style="background:linear-gradient(135deg,#FEBE10,#00529F)">RM</div>
+          <h4>Real Madrid</h4>
+          <span>3 proximos</span>
+        </div>
+        <div class="widget-card-body">
+          <div class="widget-card-row"><span class="wtime">21:00</span><span class="wteams">R. Madrid vs Sevilla</span><span class="ch-tag ch-dazn">DAZN</span></div>
+          <div class="widget-card-row"><span class="wtime">16:15</span><span class="wteams">Celta vs R. Madrid</span><span class="ch-tag ch-laliga">LaLiga TV</span></div>
+          <div class="widget-card-row"><span class="wtime">21:00</span><span class="wteams">R. Madrid vs Man City</span><span class="ch-tag" style="background:#0D1541;color:#fff;border-color:#060c2a">UCL</span></div>
+        </div>
+        <div class="widget-card-footer">mundodeportivo.com/futbol/real-madrid</div>
+      </div>
+      <div class="widget-card">
+        <div class="widget-card-header">
+          <div class="team-dot" style="background:linear-gradient(135deg,#CE1126,#fff)">ATM</div>
+          <h4>Atletico Madrid</h4>
+          <span>2 proximos</span>
+        </div>
+        <div class="widget-card-body">
+          <div class="widget-card-row"><span class="wtime">19:00</span><span class="wteams">Barcelona vs Atletico</span><span class="ch-tag ch-dazn">DAZN</span></div>
+          <div class="widget-card-row"><span class="wtime">21:00</span><span class="wteams">Atletico vs Betis</span><span class="ch-tag ch-movistar">M+ LaLiga</span></div>
+        </div>
+        <div class="widget-card-footer">mundodeportivo.com/futbol/atletico-de-madrid</div>
+      </div>
+      <div class="widget-card">
+        <div class="widget-card-header">
+          <div class="team-dot" style="background:linear-gradient(135deg,#EE2523,#000)">ATH</div>
+          <h4>Athletic Club</h4>
+          <span>2 proximos</span>
+        </div>
+        <div class="widget-card-body">
+          <div class="widget-card-row"><span class="wtime">16:15</span><span class="wteams">Athletic vs Villarreal</span><span class="ch-tag ch-dazn">DAZN</span></div>
+          <div class="widget-card-row"><span class="wtime">19:00</span><span class="wteams">R. Sociedad vs Athletic</span><span class="ch-tag ch-movistar">M+ LaLiga</span></div>
+        </div>
+        <div class="widget-card-footer">mundodeportivo.com/futbol/athletic-club</div>
+      </div>
+    </div>
+
+    <div class="strategy-card" style="margin-top:20px">
+      <h3>Donde se embeben estos widgets</h3>
+      <ul>
+        <li><strong style="color:#fff">Pagina de equipo</strong> — Sidebar o modulo dentro de la ficha de cada equipo en MD. El lector ve de un vistazo cuando y donde ver el proximo partido</li>
+        <li><strong style="color:#fff">Previas de partido</strong> — En cada articulo de previa se inserta automaticamente el widget con canal y hora. Cero esfuerzo editorial</li>
+        <li><strong style="color:#fff">Homepage / Portada</strong> — Modulo destacado "Partidos de hoy en TV" que rota segun la programacion del dia</li>
+        <li><strong style="color:#fff">App movil</strong> — Notificaciones push "Tu equipo juega en 30 min — ver en DAZN" con deep link al widget</li>
+        <li><strong style="color:#fff">Newsletter</strong> — Bloque automatico "Esta semana en TV" en los emails diarios de MD</li>
+      </ul>
+    </div>
+
+    <div class="strategy-card">
+      <h3>Valor para el negocio</h3>
+      <ul>
+        <li><strong style="color:#fff">Contenido siempre fresco</strong> — Los widgets se actualizan automaticamente via API. Las paginas de equipo nunca quedan desactualizadas</li>
+        <li><strong style="color:#fff">SEO long-tail masivo</strong> — Cada equipo genera su propia landing: "donde ver Athletic Club", "Betis TV hoy" — cientos de keywords con intencion alta</li>
+        <li><strong style="color:#fff">Monetizacion</strong> — Espacio premium para patrocinadores de broadcasting (DAZN, Movistar) junto a su contenido. CPC alto por intencion de compra</li>
+        <li><strong style="color:#fff">Retencion y habito</strong> — El usuario vuelve cada semana a consultar los partidos de su equipo. Genera sesiones recurrentes sin coste de adquisicion</li>
+        <li><strong style="color:#fff">Diferenciacion</strong> — Ningun competidor (Marca, AS, Sport) tiene una herramienta asi integrada. First-mover advantage</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════ SLIDE 9: Features ═══════ -->
+  <div class="slide" id="s9">
+    <div class="slide-label"><span class="num">9</span> CARACTERISTICAS</div>
+    <div class="slide-title">Todo lo que incluye el widget</div>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">&#9917;</div>
+        <div class="feature-title">Partidos en directo</div>
+        <div class="feature-desc">Marcadores en tiempo real con indicadores de minuto, descanso y final del partido.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128250;</div>
+        <div class="feature-title">Canales con marca</div>
+        <div class="feature-desc">Colores corporativos de DAZN, Movistar+, Gol TV, La 1, RTVE Play, Antena 3 y mas.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128197;</div>
+        <div class="feature-title">7 dias de programacion</div>
+        <div class="feature-desc">Navega entre ayer, hoy, manana y hasta 7 dias de programacion futbolistica.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128269;</div>
+        <div class="feature-title">Filtros avanzados</div>
+        <div class="feature-desc">Filtra por canales en abierto o de pago, por competicion o por equipo.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#127942;</div>
+        <div class="feature-title">Paginas de competicion</div>
+        <div class="feature-desc">Clasificacion, resultados y proximos partidos por cada competicion.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#128241;</div>
+        <div class="feature-title">Responsive</div>
+        <div class="feature-desc">Adaptado a movil, tablet y desktop. Estilo Mundo Deportivo.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="presenter-footer">
+    <p>Guia Futbol TV · Next.js + TypeScript · Datos: WOSTI API</p>
+  </div>
+</div>
+
+<div class="controls-hint" id="controlsHint">
+  <span><span class="key">&#8595;</span> Scroll para avanzar</span>
+  <span><span class="key">Space</span> Pausa autoplay</span>
+</div>
+
+<script>
+// ── Intersection Observer for scroll animations ──
+var slides = document.querySelectorAll('.slide');
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15 });
+slides.forEach(function(s) { observer.observe(s); });
+
+// ── Progress bar ──
+window.addEventListener('scroll', function() {
+  var h = document.documentElement.scrollHeight - window.innerHeight;
+  var pct = h > 0 ? (window.scrollY / h) * 100 : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+});
+
+// ── Autoplay ──
+var autoplay = true;
+var autoplayInterval;
+var currentSlide = 0;
+
+function startAutoplay() {
+  autoplay = true;
+  document.getElementById('autoplayBadge').style.display = 'flex';
+  autoplayInterval = setInterval(function() {
+    currentSlide++;
+    if (currentSlide >= slides.length) {
+      clearInterval(autoplayInterval);
+      document.getElementById('autoplayBadge').style.display = 'none';
+      return;
+    }
+    slides[currentSlide].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 4000);
+}
+
+function stopAutoplay() {
+  autoplay = false;
+  clearInterval(autoplayInterval);
+  document.getElementById('autoplayBadge').style.display = 'none';
+}
+
+// Start autoplay after 2s
+setTimeout(function() {
+  slides[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  startAutoplay();
+}, 1500);
+
+// Stop on user interaction
+window.addEventListener('wheel', stopAutoplay, { once: true });
+window.addEventListener('touchstart', stopAutoplay, { once: true });
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (autoplay) stopAutoplay();
+    else { currentSlide = Math.max(0, currentSlide); startAutoplay(); }
+  }
+});
+
+// Hide hint after 6s
+setTimeout(function() {
+  document.getElementById('controlsHint').style.opacity = '0';
+  document.getElementById('controlsHint').style.transition = 'opacity 1s';
+}, 8000);
+</script>
+</body>
+</html>
