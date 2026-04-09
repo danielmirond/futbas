@@ -243,8 +243,19 @@ function MatchPreview({ m, T, polls, votePoll, interests, trackInterest }: {
   const awayRow = compData?.table.find(r => r.team === m.away)
   const homeSlug = MD_SLUGS[m.home]
   const awaySlug = MD_SLUGS[m.away]
-  const h2h = getH2H(m.home, m.away)
   const cta = getMatchCTA(m.ch)
+
+  // Fetch real H2H data
+  const [h2h, setH2h] = useState<{ d: string; h: string; sh: number; sa: number; a: string }[]>([])
+  const [h2hLoading, setH2hLoading] = useState(true)
+  useEffect(() => {
+    const league = m.comp.includes('Premier') ? 'eng.1' : m.comp.includes('Hypermotion') ? 'esp.2' : 'esp.1'
+    fetch(`/api/h2h?home=${encodeURIComponent(m.home)}&away=${encodeURIComponent(m.away)}&league=${league}`)
+      .then(r => r.json())
+      .then(d => { if (d.matches?.length) setH2h(d.matches) })
+      .catch(() => {})
+      .finally(() => setH2hLoading(false))
+  }, [m.home, m.away, m.comp])
   const vote = polls[m.id]
   const intCount = interests[m.id] || 0
   return (
@@ -268,19 +279,22 @@ function MatchPreview({ m, T, polls, votePoll, interests, trackInterest }: {
         {!homeRow && !awayRow && <div style={{ color: T.gray }}>Sin datos de clasificación para esta competición</div>}
       </div>
       {/* H2H */}
-      {h2h.length > 0 && (
-        <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
-          <div style={{ fontWeight: 700, fontSize: 10, color: T.gray, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Últimos enfrentamientos</div>
-          {h2h.map((r, i) => (
-            <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '2px 0', fontSize: 10, color: T.text }}>
-              <span style={{ color: T.gray, width: 55 }}>{r.d}</span>
-              <span style={{ fontWeight: 600, textAlign: 'right', flex: 1 }}>{r.h}</span>
-              <span style={{ fontWeight: 900, color: T.red }}>{r.sh} - {r.sa}</span>
-              <span style={{ fontWeight: 600, flex: 1 }}>{r.a}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+        <div style={{ fontWeight: 700, fontSize: 10, color: T.gray, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Últimos enfrentamientos</div>
+        {h2hLoading
+          ? <div style={{ fontSize: 10, color: T.gray }}>Cargando...</div>
+          : h2h.length > 0
+            ? h2h.map((r, i) => (
+              <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '2px 0', fontSize: 10, color: T.text }}>
+                <span style={{ color: T.gray, width: 75 }}>{r.d}</span>
+                <span style={{ fontWeight: 600, textAlign: 'right', flex: 1 }}>{r.h}</span>
+                <span style={{ fontWeight: 900, color: T.red }}>{r.sh} - {r.sa}</span>
+                <span style={{ fontWeight: 600, flex: 1 }}>{r.a}</span>
+              </div>
+            ))
+            : <div style={{ fontSize: 10, color: T.gray }}>Sin enfrentamientos recientes</div>
+        }
+      </div>
       {/* Poll */}
       <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ fontSize: 10, color: T.gray, fontWeight: 600 }}>¿Quién gana?</span>
