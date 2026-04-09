@@ -71,7 +71,20 @@ export async function GET(request: Request) {
       }
     })
 
-    const filtered = matches.filter(m => m.localDate === date)
+    // Only show relevant competitions
+    const ALLOWED_COMPS = [
+      'LaLiga EA Sports', 'LaLiga Hypermotion', 'Premier League',
+      'Champions League', 'Europa League', 'Conference League',
+      'Copa del Rey', 'Supercopa', 'UEFA Nations League',
+      'Bundesliga', 'Serie A', 'Ligue 1', 'Liga MX',
+      'Amistoso', 'Clasificación Mundial',
+    ]
+    const filtered = matches
+      .filter(m => m.localDate === date)
+      .filter(m => {
+        if (!m.competition) return false
+        return ALLOWED_COMPS.some(c => m.competition.toLowerCase().includes(c.toLowerCase()))
+      })
     filtered.sort((a, b) => String(a.time).localeCompare(String(b.time)))
 
     return NextResponse.json({
