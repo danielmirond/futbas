@@ -244,7 +244,7 @@ function MatchPreview({ m, T, polls, votePoll, interests, trackInterest }: {
   const league = m.comp.includes('Premier') ? 'eng.1' : m.comp.includes('Hypermotion') ? 'esp.2' : 'esp.1'
 
   // Fetch real team data (last 5, form, standings) + H2H
-  type TeamData = { name: string; shortName: string; logo: string; last5: { d: string; h: string; sh: number; sa: number; a: string; win: boolean | null }[]; form: string[] }
+  type TeamData = { name: string; shortName: string; logo: string; pos: number; pts: number; gp: number; wins: number; draws: number; losses: number; last5: { d: string; h: string; sh: number; sa: number; a: string; win: boolean | null }[]; form: string[] }
   const [homeData, setHomeData] = useState<TeamData | null>(null)
   const [awayData, setAwayData] = useState<TeamData | null>(null)
   const [h2h, setH2h] = useState<{ d: string; h: string; sh: number; sa: number; a: string }[]>([])
@@ -274,6 +274,12 @@ function MatchPreview({ m, T, polls, votePoll, interests, trackInterest }: {
           <span style={{ fontWeight: 700, color: T.text }}>{data.shortName || name}</span>
           {slug && <a href={`https://www.mundodeportivo.com/futbol/${slug}`} target="_blank" rel="noreferrer" style={{ fontSize: 9, color: T.red, fontWeight: 600, textDecoration: 'none' }}>MD →</a>}
         </div>
+        {/* Standings position */}
+        {data.pos > 0 && (
+          <div style={{ color: T.gray, fontSize: 10, marginBottom: 3 }}>
+            #{data.pos} · {data.pts} pts · {data.wins}G {data.draws}E {data.losses}P
+          </div>
+        )}
         {/* Form dots */}
         <div style={{ display: 'flex', gap: 3, marginBottom: 5 }}>
           {data.form.map((v, i) => <span key={i} style={{ width: 16, height: 16, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#fff', background: formDotColor(v) }}>{v}</span>)}

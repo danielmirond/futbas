@@ -47,7 +47,32 @@ export async function GET(request: Request) {
     const shortName = String(team.shortDisplayName || '')
     const logo = String(team.logo || '')
 
-    // Get schedule
+    // Get standings + schedule in parallel
+    const standingsRes = await fetch(
+      `https://football-standings-api.vercel.app/leagues/${league}/standings?season=2025`,
+      { next: { revalidate: 300 }, signal: AbortSignal.timeout(8000) }
+    ).catch(() => null)
+
+    let pos = 0, pts = 0, gp = 0, wins = 0, draws = 0, losses = 0
+    if (standingsRes?.ok) {
+      const sData = await standingsRes.json()
+      const rows = sData?.data?.standings || []
+      const teamRow = rows.find((r: Record<string, unknown>, i: number) => {
+        const t = r.team as Record<string, unknown> | undefined
+        const tn = normalize(String(t?.displayName || ''))
+        const tsn = normalize(String(t?.shortDisplayName || ''))
+        return tn.includes(n) || n.includes(tn) || tsn.includes(n) || n.includes(tsn)
+          || (nFirst.length >= 4 && (tn.startsWith(nFirst) || tsn.startsWith(nFirst)))
+      })
+      if (teamRow) {
+        const idx = rows.indexOf(teamRow)
+        pos = idx + 1
+        const stats = (teamRow.stats as Record<string, unknown>[]) || []
+        const stat = (sn: string) => { const s = stats.find((x: Record<string, unknown>) => x.name === sn); return typeof s?.value === 'number' ? s.value : 0 }
+        pts = stat('points'); gp = stat('gamesPlayed'); wins = stat('wins'); draws = stat('ties'); losses = stat('losses')
+      }
+    }
+
     const schedRes = await fetch(
       `https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule`,
       { next: { revalidate: 300 }, signal: AbortSignal.timeout(8000) }
@@ -107,6 +132,7 @@ export async function GET(request: Request) {
       shortName,
       logo,
       league: LEAGUE_MAP[league] || league,
+      pos, pts, gp, wins, draws, losses,
       last5,
       form,
     })
