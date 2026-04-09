@@ -1,46 +1,77 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { FormIndicator } from './form-indicator'
 import { PositionBadge } from './position-badge'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type FormResult = 'W' | 'D' | 'L'
 
 interface TeamRow {
   position: number
-  team: string
-  pj: number
-  pg: number
-  pe: number
-  pp: number
-  gf: number
-  gc: number
-  dg: number
-  pts: number
+  teamName: string
+  teamSlug: string
+  points: number
+  played: number
+  won: number
+  drawn: number
+  lost: number
+  goalsFor: number
+  goalsAgainst: number
   form: FormResult[]
+  zone?: string
 }
 
-const MOCK_DATA: TeamRow[] = [
-  { position: 1,  team: 'CE Martinenc',        pj: 24, pg: 17, pe: 4, pp: 3, gf: 48, gc: 18, dg: 30,  pts: 55, form: ['W','W','D','W','W'] },
-  { position: 2,  team: 'UE Cornellà B',       pj: 24, pg: 16, pe: 3, pp: 5, gf: 42, gc: 22, dg: 20,  pts: 51, form: ['W','D','W','W','L'] },
-  { position: 3,  team: 'CF Gavà',             pj: 24, pg: 14, pe: 5, pp: 5, gf: 39, gc: 21, dg: 18,  pts: 47, form: ['D','W','W','L','W'] },
-  { position: 4,  team: 'CE Europa B',         pj: 24, pg: 13, pe: 6, pp: 5, gf: 37, gc: 24, dg: 13,  pts: 45, form: ['W','L','W','W','D'] },
-  { position: 5,  team: 'CF Damm',             pj: 24, pg: 12, pe: 6, pp: 6, gf: 35, gc: 25, dg: 10,  pts: 42, form: ['L','W','D','W','W'] },
-  { position: 6,  team: 'UE Sants',            pj: 24, pg: 12, pe: 5, pp: 7, gf: 33, gc: 26, dg: 7,   pts: 41, form: ['W','W','L','D','W'] },
-  { position: 7,  team: 'CF Badalona Futur',   pj: 24, pg: 11, pe: 5, pp: 8, gf: 30, gc: 27, dg: 3,   pts: 38, form: ['D','D','W','L','W'] },
-  { position: 8,  team: 'UE Castelldefels',    pj: 24, pg: 10, pe: 6, pp: 8, gf: 28, gc: 25, dg: 3,   pts: 36, form: ['W','L','D','W','L'] },
-  { position: 9,  team: "CE L'Hospitalet B",   pj: 24, pg: 9,  pe: 7, pp: 8, gf: 29, gc: 28, dg: 1,   pts: 34, form: ['L','D','W','D','W'] },
-  { position: 10, team: 'FC Prat',             pj: 24, pg: 9,  pe: 5, pp: 10, gf: 26, gc: 30, dg: -4,  pts: 32, form: ['D','L','W','L','W'] },
-  { position: 11, team: 'UE Sant Andreu B',    pj: 24, pg: 8,  pe: 6, pp: 10, gf: 25, gc: 31, dg: -6,  pts: 30, form: ['L','W','D','L','D'] },
-  { position: 12, team: 'CF Sant Cugat',       pj: 24, pg: 7,  pe: 7, pp: 10, gf: 23, gc: 29, dg: -6,  pts: 28, form: ['D','L','L','W','D'] },
-  { position: 13, team: 'CF Vilafranca',       pj: 24, pg: 7,  pe: 5, pp: 12, gf: 22, gc: 34, dg: -12, pts: 26, form: ['L','L','D','W','L'] },
-  { position: 14, team: 'UE Figueres',         pj: 24, pg: 6,  pe: 5, pp: 13, gf: 20, gc: 36, dg: -16, pts: 23, form: ['L','D','L','L','W'] },
-  { position: 15, team: 'CF Lloret',           pj: 24, pg: 5,  pe: 4, pp: 15, gf: 18, gc: 40, dg: -22, pts: 19, form: ['L','L','L','D','L'] },
-  { position: 16, team: 'CD Roquetenc',        pj: 24, pg: 3,  pe: 5, pp: 16, gf: 14, gc: 43, dg: -29, pts: 14, form: ['L','D','L','L','L'] },
-]
+interface ClassificationTableProps {
+  season?: string
+  sport?: string
+  category?: string
+  group?: string
+}
 
-export function ClassificationTable() {
+export function ClassificationTable({
+  season = '2526',
+  sport = 'futbol-11',
+  category = 'primera-catalana',
+  group = 'grup-1',
+}: ClassificationTableProps = {}) {
   const t = useTranslations('classification')
+  const [data, setData] = useState<TeamRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+
+    fetch(`/api/scraper/clasificacion?season=${season}&sport=${sport}&category=${category}&group=${group}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.error) throw new Error(json.error)
+        setData(json.data || [])
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [season, sport, category, group])
+
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 16 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="card text-loss text-sm">{error}</div>
+  }
+
+  if (data.length === 0) {
+    return <div className="card text-muted text-sm">No hi ha dades de classificació.</div>
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -61,17 +92,20 @@ export function ClassificationTable() {
           </tr>
         </thead>
         <tbody>
-          {MOCK_DATA.map((row, i) => {
-            const isPromotion = row.position <= 2
-            const isRelegation = row.position >= 15
+          {data.map((row, i) => {
+            const isPromotion = row.zone === 'promotion'
+            const isPlayoff = row.zone === 'playoff'
+            const isRelegation = row.zone === 'relegation'
+            const gd = row.goalsFor - row.goalsAgainst
 
             return (
               <tr
-                key={row.team}
+                key={row.teamSlug || row.teamName}
                 className={`
                   border-b border-border/50 transition-colors hover:bg-ink/[0.02]
                   ${i % 2 === 0 ? 'bg-white' : 'bg-surface'}
                   ${isPromotion ? 'border-l-2 border-l-win' : ''}
+                  ${isPlayoff ? 'border-l-2 border-l-accent' : ''}
                   ${isRelegation ? 'border-l-2 border-l-loss' : ''}
                 `}
               >
@@ -79,20 +113,20 @@ export function ClassificationTable() {
                   <PositionBadge position={row.position} />
                 </td>
                 <td className="py-2.5 px-2 font-medium text-ink whitespace-nowrap">
-                  {row.team}
+                  {row.teamName}
                 </td>
-                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.pj}</td>
-                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.pg}</td>
-                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.pe}</td>
-                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.pp}</td>
-                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.gf}</td>
-                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.gc}</td>
+                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.played}</td>
+                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.won}</td>
+                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.drawn}</td>
+                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.lost}</td>
+                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.goalsFor}</td>
+                <td className="py-2.5 px-2 text-center tabular-nums text-muted">{row.goalsAgainst}</td>
                 <td className="py-2.5 px-2 text-center tabular-nums font-medium">
-                  <span className={row.dg > 0 ? 'text-win' : row.dg < 0 ? 'text-loss' : 'text-muted'}>
-                    {row.dg > 0 ? `+${row.dg}` : row.dg}
+                  <span className={gd > 0 ? 'text-win' : gd < 0 ? 'text-loss' : 'text-muted'}>
+                    {gd > 0 ? `+${gd}` : gd}
                   </span>
                 </td>
-                <td className="py-2.5 px-2 text-center tabular-nums font-bold text-ink">{row.pts}</td>
+                <td className="py-2.5 px-2 text-center tabular-nums font-bold text-ink">{row.points}</td>
                 <td className="py-2.5 px-2">
                   <FormIndicator form={row.form} />
                 </td>
