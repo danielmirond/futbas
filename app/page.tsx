@@ -399,6 +399,7 @@ export default function GuiaFutbolMD() {
   /* Real standings data */ const [liveComp, setLiveComp] = useState<CompData | null>(null)
   /* Loading standings */ const [loadingComp, setLoadingComp] = useState(false)
   /* Live matches from API */ const [liveMatches, setLiveMatches] = useState<Match[]>([])
+  /* All week matches for selects */ const [weekMatches, setWeekMatches] = useState<Match[]>([])
   /* API data source indicator */ const [dataSource, setDataSource] = useState<'demo' | 'api'>('demo')
   /* New: polls */ const [polls, setPolls] = useState<Record<number, 'home' | 'away'>>({})
   /* New: interest counters */ const [interests, setInterests] = useState<Record<number, number>>({})
@@ -433,6 +434,29 @@ export default function GuiaFutbolMD() {
     try { localStorage.setItem('md-darkmode', String(darkMode)) } catch {}
     document.body.style.background = T.bg
   }, [darkMode, T.bg])
+
+  // Fetch ALL week matches for selects (competiciones, equipos, favoritos)
+  useEffect(() => {
+    const fetchWeek = async () => {
+      const all: Match[] = []
+      const dates = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(Date.now() + (i - 1) * 86400000)
+        return d.toISOString().split('T')[0]
+      })
+      const results = await Promise.allSettled(
+        dates.map(d => fetch(`/api/allmatches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))
+      )
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value.matches) {
+          for (const m of r.value.matches) {
+            all.push({ id: m.id, time: m.time, date: m.date, home: m.home, away: m.away, comp: m.comp, ch: m.ch || [], score: m.score })
+          }
+        }
+      }
+      setWeekMatches(all)
+    }
+    fetchWeek()
+  }, [])
 
   // Fetch matches: ESPN (all comps) + WOSTI (TV channels), merged
   useEffect(() => {
@@ -562,9 +586,11 @@ export default function GuiaFutbolMD() {
     ? allMatches
     : allMatches.filter(m => m.date === selectedDate)
 
-  const clubTeams = Array.from(new Set(allMatches.filter(m => !INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
-  const nationalTeams = Array.from(new Set(allMatches.filter(m => INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
-  const allComps = Array.from(new Set(allMatches.map(m => m.comp))).sort()
+  // Selects use week data so all teams/comps are always visible
+  const selectSource = weekMatches.length > 0 ? weekMatches : allMatches
+  const clubTeams = Array.from(new Set(selectSource.filter(m => !INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
+  const nationalTeams = Array.from(new Set(selectSource.filter(m => INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
+  const allComps = Array.from(new Set(selectSource.map(m => m.comp))).filter(Boolean).sort()
 
   const filtered = useMemo(() => baseMatches.filter(m => {
     if (filter === 'free') return m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
