@@ -19,96 +19,18 @@ interface CompData {
   emoji: string; table: TableRow[]; results: CompResult[]; next: CompNext[]
 }
 
-/* ── Demo Data ───────────────────────────────────────────────── */
+/* ── Date helpers ────────────────────────────────────────────── */
 const today = new Date().toISOString().split('T')[0]
-const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
-const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-const day3 = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
 
-const MATCHES: Match[] = [
-  { id: 1, time: '16:00', date: yesterday, home: 'Osasuna', away: 'Rayo Vallecano', comp: 'LaLiga EA Sports', ch: ['DAZN LaLiga', 'M+ LaLiga'], score: { h: 0, a: 0, st: 'FT' } },
-  { id: 2, time: '20:00', date: yesterday, home: 'Valencia CF', away: 'Getafe CF', comp: 'LaLiga EA Sports', ch: ['DAZN LaLiga'], score: { h: 2, a: 1, st: 'FT' } },
-  { id: 3, time: '16:15', date: today, home: 'Granada CF', away: 'Huesca', comp: 'LaLiga Hypermotion', ch: ['DAZN', 'LaLiga TV'], score: { h: 3, a: 1, st: 'FT' } },
-  { id: 4, time: '19:00', date: today, home: 'FC Barcelona', away: 'Atlético Madrid', comp: 'LaLiga EA Sports', ch: ['DAZN LaLiga', 'M+ LaLiga'], score: { h: 2, a: 1, st: 'HT', min: 45 } },
-  { id: 5, time: '20:00', date: today, home: 'España', away: 'Serbia', comp: 'Amistoso', ch: ['La 1 TVE', 'RTVE Play'] },
-  { id: 6, time: '21:00', date: today, home: 'Real Madrid', away: 'Sevilla FC', comp: 'LaLiga EA Sports', ch: ['DAZN LaLiga'], score: { h: 1, a: 0, st: '1H', min: 67 } },
-  { id: 7, time: '18:45', date: tomorrow, home: 'Alemania', away: 'Ghana', comp: 'Amistoso', ch: ['UEFA TV PPV'] },
-  { id: 8, time: '19:00', date: tomorrow, home: 'Sporting Gijón', away: 'Deportivo', comp: 'LaLiga Hypermotion', ch: ['Gol TV', 'DAZN'] },
-  { id: 9, time: '21:00', date: tomorrow, home: 'Francia', away: 'Colombia', comp: 'Amistoso', ch: ['DAZN'] },
-  { id: 10, time: '20:45', date: day3, home: 'Arsenal', away: 'Chelsea', comp: 'Premier League', ch: ['DAZN'] },
-  { id: 11, time: '16:15', date: tomorrow, home: 'Athletic Club', away: 'Villarreal', comp: 'LaLiga EA Sports', ch: ['DAZN'] },
-  { id: 12, time: '21:00', date: tomorrow, home: 'Real Madrid', away: 'Sevilla FC', comp: 'LaLiga EA Sports', ch: ['DAZN LaLiga'] },
-]
+/* No demo data — all matches come from WOSTI API */
 
+/* Competitions — structure only, data loaded from /api/standings */
 const COMPS: Record<string, CompData> = {
-  'LaLiga EA Sports': {
-    emoji: '🇪🇸', table: [
-      { pos: 1, team: 'FC Barcelona', pj: 30, pts: 72, g: 22, e: 6, p: 2, gf: 68, gc: 28, dg: 40, f: ['W', 'W', 'D', 'W', 'W'] },
-      { pos: 2, team: 'Real Madrid', pj: 30, pts: 68, g: 21, e: 5, p: 4, gf: 61, gc: 31, dg: 30, f: ['W', 'L', 'W', 'W', 'D'] },
-      { pos: 3, team: 'Atlético Madrid', pj: 30, pts: 60, g: 18, e: 6, p: 6, gf: 52, gc: 35, dg: 17, f: ['W', 'W', 'W', 'D', 'L'] },
-      { pos: 4, team: 'Athletic Club', pj: 30, pts: 54, g: 15, e: 9, p: 6, gf: 45, gc: 38, dg: 7, f: ['D', 'W', 'D', 'W', 'W'] },
-      { pos: 5, team: 'Villarreal', pj: 30, pts: 51, g: 14, e: 9, p: 7, gf: 48, gc: 40, dg: 8, f: ['L', 'W', 'W', 'D', 'W'] },
-      { pos: 6, team: 'Real Sociedad', pj: 30, pts: 49, g: 14, e: 7, p: 9, gf: 42, gc: 38, dg: 4, f: ['W', 'L', 'D', 'W', 'L'] },
-      { pos: 7, team: 'Sevilla FC', pj: 30, pts: 45, g: 12, e: 9, p: 9, gf: 40, gc: 41, dg: -1, f: ['D', 'L', 'W', 'D', 'W'] },
-      { pos: 8, team: 'Real Betis', pj: 30, pts: 43, g: 12, e: 7, p: 11, gf: 38, gc: 42, dg: -4, f: ['W', 'W', 'L', 'L', 'D'] },
-      { pos: 9, team: 'Girona FC', pj: 30, pts: 36, g: 9, e: 9, p: 12, gf: 40, gc: 47, dg: -7, f: ['L', 'W', 'D', 'D', 'W'] },
-      { pos: 10, team: 'Osasuna', pj: 30, pts: 37, g: 10, e: 7, p: 13, gf: 32, gc: 44, dg: -12, f: ['D', 'D', 'W', 'L', 'D'] },
-      { pos: 11, team: 'Valencia CF', pj: 30, pts: 38, g: 10, e: 8, p: 12, gf: 36, gc: 48, dg: -12, f: ['W', 'D', 'L', 'W', 'L'] },
-      { pos: 12, team: 'Getafe CF', pj: 30, pts: 35, g: 9, e: 8, p: 13, gf: 28, gc: 38, dg: -10, f: ['L', 'D', 'W', 'L', 'D'] },
-      { pos: 13, team: 'Rayo Vallecano', pj: 30, pts: 34, g: 9, e: 7, p: 14, gf: 34, gc: 46, dg: -12, f: ['D', 'L', 'D', 'W', 'L'] },
-      { pos: 14, team: 'Celta de Vigo', pj: 30, pts: 33, g: 8, e: 9, p: 13, gf: 36, gc: 48, dg: -12, f: ['W', 'L', 'D', 'L', 'W'] },
-      { pos: 15, team: 'Mallorca', pj: 30, pts: 32, g: 8, e: 8, p: 14, gf: 27, gc: 42, dg: -15, f: ['L', 'W', 'L', 'D', 'L'] },
-      { pos: 16, team: 'Espanyol', pj: 30, pts: 30, g: 7, e: 9, p: 14, gf: 30, gc: 48, dg: -18, f: ['D', 'L', 'W', 'L', 'D'] },
-      { pos: 17, team: 'Las Palmas', pj: 30, pts: 27, g: 6, e: 9, p: 15, gf: 30, gc: 52, dg: -22, f: ['D', 'L', 'D', 'L', 'W'] },
-      { pos: 18, team: 'Alavés', pj: 30, pts: 29, g: 7, e: 8, p: 15, gf: 28, gc: 50, dg: -22, f: ['L', 'D', 'L', 'W', 'L'] },
-      { pos: 19, team: 'Leganés', pj: 30, pts: 25, g: 5, e: 10, p: 15, gf: 25, gc: 50, dg: -25, f: ['L', 'D', 'L', 'D', 'L'] },
-      { pos: 20, team: 'Real Valladolid', pj: 30, pts: 19, g: 4, e: 7, p: 19, gf: 22, gc: 60, dg: -38, f: ['L', 'L', 'D', 'L', 'L'] },
-    ],
-    results: [
-      { d: 'Sáb 22 Mar', h: 'FC Barcelona', sh: 3, sa: 1, a: 'Getafe CF' },
-      { d: 'Sáb 22 Mar', h: 'Real Madrid', sh: 2, sa: 0, a: 'Celta de Vigo' },
-      { d: 'Jue 27 Mar', h: 'Valencia CF', sh: 2, sa: 1, a: 'Getafe CF' },
-      { d: 'Jue 27 Mar', h: 'Osasuna', sh: 0, sa: 0, a: 'Rayo Vallecano' },
-    ],
-    next: [
-      { d: 'Vie 28 19:00', h: 'FC Barcelona', a: 'Atlético Madrid', tv: 'DAZN LaLiga' },
-      { d: 'Vie 28 21:00', h: 'Real Madrid', a: 'Sevilla FC', tv: 'DAZN LaLiga' },
-      { d: 'Sáb 29 16:15', h: 'Athletic Club', a: 'Villarreal', tv: 'DAZN' },
-    ],
-  },
-  'LaLiga Hypermotion': {
-    emoji: '🇪🇸', table: [
-      { pos: 1, team: 'Sporting Gijón', pj: 30, pts: 68, g: 20, e: 8, p: 2, gf: 58, gc: 22, dg: 36, f: ['W', 'W', 'W', 'D', 'W'] },
-      { pos: 2, team: 'Deportivo', pj: 30, pts: 65, g: 19, e: 8, p: 3, gf: 55, gc: 28, dg: 27, f: ['W', 'D', 'W', 'W', 'W'] },
-      { pos: 3, team: 'Real Zaragoza', pj: 30, pts: 58, g: 17, e: 7, p: 6, gf: 48, gc: 32, dg: 16, f: ['D', 'W', 'W', 'L', 'W'] },
-      { pos: 4, team: 'Granada CF', pj: 30, pts: 55, g: 16, e: 7, p: 7, gf: 45, gc: 34, dg: 11, f: ['W', 'W', 'D', 'W', 'L'] },
-      { pos: 5, team: 'Eibar', pj: 30, pts: 50, g: 14, e: 8, p: 8, gf: 40, gc: 36, dg: 4, f: ['L', 'W', 'W', 'D', 'W'] },
-      { pos: 6, team: 'Málaga', pj: 30, pts: 47, g: 13, e: 8, p: 9, gf: 38, gc: 38, dg: 0, f: ['W', 'L', 'D', 'W', 'D'] },
-      { pos: 7, team: 'Huesca', pj: 30, pts: 41, g: 11, e: 8, p: 11, gf: 36, gc: 40, dg: -4, f: ['L', 'D', 'W', 'D', 'L'] },
-      { pos: 8, team: 'Burgos CF', pj: 30, pts: 28, g: 6, e: 10, p: 14, gf: 28, gc: 48, dg: -20, f: ['L', 'D', 'L', 'D', 'L'] },
-      { pos: 9, team: 'Cádiz CF', pj: 30, pts: 25, g: 5, e: 10, p: 15, gf: 25, gc: 50, dg: -25, f: ['D', 'L', 'L', 'D', 'L'] },
-    ],
-    results: [
-      { d: 'Sáb 22 Mar', h: 'Sporting Gijón', sh: 2, sa: 0, a: 'Burgos CF' },
-      { d: 'Dom 23 Mar', h: 'Granada CF', sh: 1, sa: 1, a: 'Eibar' },
-      { d: 'Dom 23 Mar', h: 'Deportivo', sh: 3, sa: 1, a: 'Cádiz CF' },
-    ],
-    next: [
-      { d: 'Sáb 28 16:15', h: 'Granada CF', a: 'Huesca', tv: 'DAZN' },
-      { d: 'Dom 29 19:00', h: 'Sporting Gijón', a: 'Deportivo', tv: 'Gol TV' },
-    ],
-  },
-  'Amistoso': {
-    emoji: '🌍', table: [],
-    results: [
-      { d: 'Jue 26 Mar', h: 'España', sh: 3, sa: 0, a: 'Egipto' },
-      { d: 'Jue 26 Mar', h: 'Brasil', sh: 2, sa: 1, a: 'Francia' },
-    ],
-    next: [
-      { d: 'Vie 28 20:00', h: 'España', a: 'Serbia', tv: 'La 1 TVE' },
-      { d: 'Sáb 29 21:00', h: 'Francia', a: 'Colombia', tv: 'DAZN' },
-    ],
-  },
+  'LaLiga EA Sports': { emoji: '🇪🇸', table: [], results: [], next: [] },
+  'LaLiga Hypermotion': { emoji: '🇪🇸', table: [], results: [], next: [] },
+  'Premier League': { emoji: '🏴', table: [], results: [], next: [] },
+  'Champions League': { emoji: '🏆', table: [], results: [], next: [] },
+  'Europa League': { emoji: '🏆', table: [], results: [], next: [] },
 }
 
 /* ── Theme ───────────────────────────────────────────────────── */
@@ -161,18 +83,8 @@ function formatCountdown(mins: number): string {
 }
 
 /* Demo H2H data */
-const H2H: Record<string, { d: string; h: string; sh: number; sa: number; a: string }[]> = {
-  'FC Barcelona|Atlético Madrid': [
-    { d: 'Mar 2025', h: 'FC Barcelona', sh: 1, sa: 0, a: 'Atlético Madrid' },
-    { d: 'Oct 2024', h: 'Atlético Madrid', sh: 2, sa: 1, a: 'FC Barcelona' },
-    { d: 'Mar 2024', h: 'FC Barcelona', sh: 3, sa: 2, a: 'Atlético Madrid' },
-  ],
-  'Real Madrid|Sevilla FC': [
-    { d: 'Feb 2025', h: 'Real Madrid', sh: 4, sa: 0, a: 'Sevilla FC' },
-    { d: 'Oct 2024', h: 'Sevilla FC', sh: 1, sa: 1, a: 'Real Madrid' },
-    { d: 'Abr 2024', h: 'Real Madrid', sh: 2, sa: 1, a: 'Sevilla FC' },
-  ],
-}
+/* H2H data would come from a real API — empty for now */
+const H2H: Record<string, { d: string; h: string; sh: number; sa: number; a: string }[]> = {}
 
 function getH2H(home: string, away: string) {
   return H2H[`${home}|${away}`] || H2H[`${away}|${home}`] || []
@@ -522,17 +434,15 @@ export default function GuiaFutbolMD() {
   const dateStr = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   // ── Filters ──
-  // Use live API data if available, otherwise demo
-  const allMatches = liveMatches.length > 0 && dataSource === 'api'
-    ? [...liveMatches, ...MATCHES.filter(m => !liveMatches.some(lm => lm.home === m.home && lm.away === m.away && lm.date === m.date))]
-    : MATCHES
+  // All matches come from API
+  const allMatches = liveMatches
   const baseMatches = viewMode === 'week'
     ? allMatches
     : allMatches.filter(m => m.date === selectedDate)
 
-  const clubTeams = Array.from(new Set(MATCHES.filter(m => !INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
-  const nationalTeams = Array.from(new Set(MATCHES.filter(m => INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
-  const allComps = Array.from(new Set(MATCHES.map(m => m.comp))).sort()
+  const clubTeams = Array.from(new Set(allMatches.filter(m => !INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
+  const nationalTeams = Array.from(new Set(allMatches.filter(m => INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
+  const allComps = Array.from(new Set(allMatches.map(m => m.comp))).sort()
 
   const filtered = useMemo(() => baseMatches.filter(m => {
     if (filter === 'free') return m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
@@ -568,7 +478,7 @@ export default function GuiaFutbolMD() {
 
   // Featured match: most channels today
   const featuredMatch = useMemo(() => {
-    const todayMatches = MATCHES.filter(m => m.date === today && !isPast(m.time, m.date))
+    const todayMatches = allMatches.filter(m => m.date === today && !isPast(m.time, m.date))
     if (!todayMatches.length) return null
     return todayMatches.reduce((best, m) => m.ch.length > best.ch.length ? m : best, todayMatches[0])
   }, [])
@@ -618,7 +528,7 @@ export default function GuiaFutbolMD() {
 
   /* Feature 9: JSON-LD structured data */
   const jsonLd = useMemo(() => {
-    const events = MATCHES.filter(m => m.date === today).map(m => ({
+    const events = allMatches.filter(m => m.date === today).map(m => ({
       '@type': 'SportsEvent', name: `${m.home} vs ${m.away}`,
       startDate: `${m.date}T${m.time}:00+02:00`,
       homeTeam: { '@type': 'SportsTeam', name: m.home },
