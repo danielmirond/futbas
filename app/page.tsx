@@ -238,50 +238,74 @@ function MatchPreview({ m, T, polls, votePoll, interests, trackInterest }: {
   polls: Record<number, 'home' | 'away'>; votePoll: (id: number, side: 'home' | 'away') => void
   interests: Record<number, number>; trackInterest: (id: number) => void
 }) {
-  const compData = COMPS[m.comp]
-  const homeRow = compData?.table.find(r => r.team === m.home)
-  const awayRow = compData?.table.find(r => r.team === m.away)
   const homeSlug = MD_SLUGS[m.home]
   const awaySlug = MD_SLUGS[m.away]
   const cta = getMatchCTA(m.ch)
+  const league = m.comp.includes('Premier') ? 'eng.1' : m.comp.includes('Hypermotion') ? 'esp.2' : 'esp.1'
 
-  // Fetch real H2H data
+  // Fetch real team data (last 5, form, standings) + H2H
+  type TeamData = { name: string; shortName: string; logo: string; last5: { d: string; h: string; sh: number; sa: number; a: string; win: boolean | null }[]; form: string[] }
+  const [homeData, setHomeData] = useState<TeamData | null>(null)
+  const [awayData, setAwayData] = useState<TeamData | null>(null)
   const [h2h, setH2h] = useState<{ d: string; h: string; sh: number; sa: number; a: string }[]>([])
-  const [h2hLoading, setH2hLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
-    const league = m.comp.includes('Premier') ? 'eng.1' : m.comp.includes('Hypermotion') ? 'esp.2' : 'esp.1'
-    fetch(`/api/h2h?home=${encodeURIComponent(m.home)}&away=${encodeURIComponent(m.away)}&league=${league}`)
-      .then(r => r.json())
-      .then(d => { if (d.matches?.length) setH2h(d.matches) })
-      .catch(() => {})
-      .finally(() => setH2hLoading(false))
-  }, [m.home, m.away, m.comp])
+    Promise.all([
+      fetch(`/api/team?name=${encodeURIComponent(m.home)}&league=${league}`).then(r => r.json()),
+      fetch(`/api/team?name=${encodeURIComponent(m.away)}&league=${league}`).then(r => r.json()),
+      fetch(`/api/h2h?home=${encodeURIComponent(m.home)}&away=${encodeURIComponent(m.away)}&league=${league}`).then(r => r.json()),
+    ]).then(([hd, ad, h2hd]) => {
+      if (hd.form) setHomeData(hd)
+      if (ad.form) setAwayData(ad)
+      if (h2hd.matches?.length) setH2h(h2hd.matches)
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [m.home, m.away, league])
+
   const vote = polls[m.id]
   const intCount = interests[m.id] || 0
+
+  const renderTeamBlock = (data: TeamData | null, name: string, slug: string | undefined) => {
+    if (!data) return null
+    return (
+      <div style={{ flex: 1, minWidth: 140 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          {data.logo && <img src={data.logo} alt={data.shortName} width={20} height={20} style={{ objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />}
+          <span style={{ fontWeight: 700, color: T.text }}>{data.shortName || name}</span>
+          {slug && <a href={`https://www.mundodeportivo.com/futbol/${slug}`} target="_blank" rel="noreferrer" style={{ fontSize: 9, color: T.red, fontWeight: 600, textDecoration: 'none' }}>MD →</a>}
+        </div>
+        {/* Form dots */}
+        <div style={{ display: 'flex', gap: 3, marginBottom: 5 }}>
+          {data.form.map((v, i) => <span key={i} style={{ width: 16, height: 16, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#fff', background: formDotColor(v) }}>{v}</span>)}
+        </div>
+        {/* Last 5 results */}
+        {data.last5.map((r, i) => (
+          <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '1px 0', fontSize: 9, color: T.gray }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: r.win === true ? '#22c55e' : r.win === false ? '#ef4444' : '#f59e0b', flexShrink: 0 }} />
+            <span>{r.h} {r.sh}-{r.sa} {r.a}</span>
+            <span style={{ color: T.border, marginLeft: 'auto' }}>{r.d}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div style={{ padding: '10px 12px', background: T.lightGray, borderBottom: `1px solid ${T.border}`, borderLeft: `3px solid ${T.yellow}`, fontSize: 11 }}>
-      {/* Team stats */}
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-        {homeRow && (
-          <div>
-            <div style={{ fontWeight: 700, color: T.text, marginBottom: 3 }}>{m.home}</div>
-            <div style={{ color: T.gray }}>#{homeRow.pos} · {homeRow.pts} pts · {homeRow.g}G {homeRow.e}E {homeRow.p}P</div>
-            <div style={{ display: 'flex', gap: 2, marginTop: 3 }}>{homeRow.f.map((v, i) => <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 800, color: '#fff', background: formDotColor(v) }}>{v}</span>)}</div>
-          </div>
-        )}
-        {awayRow && (
-          <div>
-            <div style={{ fontWeight: 700, color: T.text, marginBottom: 3 }}>{m.away}</div>
-            <div style={{ color: T.gray }}>#{awayRow.pos} · {awayRow.pts} pts · {awayRow.g}G {awayRow.e}E {awayRow.p}P</div>
-            <div style={{ display: 'flex', gap: 2, marginTop: 3 }}>{awayRow.f.map((v, i) => <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 800, color: '#fff', background: formDotColor(v) }}>{v}</span>)}</div>
-          </div>
-        )}
-        {!homeRow && !awayRow && <div style={{ color: T.gray }}>Sin datos de clasificación para esta competición</div>}
-      </div>
+      {/* Team stats + last 5 */}
+      {loading ? (
+        <div style={{ color: T.gray, padding: '8px 0' }}>Cargando datos...</div>
+      ) : (
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+          {renderTeamBlock(homeData, m.home, homeSlug)}
+          {renderTeamBlock(awayData, m.away, awaySlug)}
+          {!homeData && !awayData && <div style={{ color: T.gray }}>Sin datos disponibles</div>}
+        </div>
+      )}
       {/* H2H */}
       <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
         <div style={{ fontWeight: 700, fontSize: 10, color: T.gray, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Últimos enfrentamientos</div>
-        {h2hLoading
+        {loading
           ? <div style={{ fontSize: 10, color: T.gray }}>Cargando...</div>
           : h2h.length > 0
             ? h2h.map((r, i) => (
