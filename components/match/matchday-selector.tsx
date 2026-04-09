@@ -30,7 +30,7 @@ export function MatchdaySelector({
             flex-shrink-0 w-9 h-9 rounded-sm text-sm font-sans font-medium transition-colors
             ${selected === matchday
               ? 'bg-accent text-white'
-              : 'bg-white border border-border text-muted hover:text-ink hover:border-ink/20'
+              : 'bg-card border border-border text-muted hover:text-ink hover:border-white/10'
             }
           `}
         >

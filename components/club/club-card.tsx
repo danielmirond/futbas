@@ -23,7 +23,7 @@ export function ClubCard({
 }: ClubCardProps) {
   return (
     <Link href={`/${locale}/clubs/${id}`} className="block">
-      <div className="card hover:border-ink/20 transition-colors flex items-center gap-4">
+      <div className="card hover:border-white/10 transition-colors flex items-center gap-4">
         <KitSvg
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}

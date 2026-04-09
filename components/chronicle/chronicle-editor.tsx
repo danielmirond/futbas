@@ -34,7 +34,7 @@ export function ChronicleEditor({
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
             placeholder="Escriu el titular..."
-            className="w-full border border-border rounded-sm px-3 py-2 text-sm font-serif text-ink bg-white placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+            className="w-full border border-border rounded-sm px-3 py-2 text-sm font-serif text-ink bg-card placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
           />
         </div>
 
@@ -48,7 +48,7 @@ export function ChronicleEditor({
             onChange={(e) => setBody(e.target.value)}
             placeholder="Escriu la cronica del partit..."
             rows={16}
-            className="w-full border border-border rounded-sm px-3 py-2 text-sm font-sans text-ink bg-white placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent resize-y"
+            className="w-full border border-border rounded-sm px-3 py-2 text-sm font-sans text-ink bg-card placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent resize-y"
           />
         </div>
 

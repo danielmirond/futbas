@@ -38,7 +38,7 @@ export function Header() {
   }
 
   return (
-    <header className="border-b border-border bg-white sticky top-0 z-50">
+    <header className="border-b border-border bg-surface sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href={`/${locale}`} className="flex items-center gap-2">
           <span className="font-serif text-xl tracking-tight">Futbas</span>
@@ -71,7 +71,7 @@ export function Header() {
           )}
           <button
             onClick={switchLocale}
-            className="text-xs font-mono uppercase tracking-wider px-2 py-1 border border-border rounded-sm hover:bg-ink/5 transition-colors"
+            className="text-xs font-mono uppercase tracking-wider px-2 py-1 border border-border rounded-sm hover:bg-white/5 transition-colors"
           >
             {locale === 'ca' ? 'ES' : 'CA'}
           </button>

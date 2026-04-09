@@ -39,7 +39,7 @@ export function ClubDirectory() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Cercar club..."
-        className="w-full border border-border rounded-sm px-3 py-2 text-sm font-sans bg-white text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent mb-4"
+        className="w-full border border-border rounded-sm px-3 py-2 text-sm font-sans bg-card text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent mb-4"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -21,7 +21,7 @@ export function CompetitionSelector() {
       <select
         value={competition}
         onChange={(e) => setCompetition(e.target.value)}
-        className="text-sm border border-border rounded-sm px-3 py-1.5 bg-white font-sans text-ink focus:outline-none focus:ring-1 focus:ring-accent"
+        className="text-sm border border-border rounded-sm px-3 py-1.5 bg-card font-sans text-ink focus:outline-none focus:ring-1 focus:ring-accent"
       >
         {COMPETITIONS.map((c) => (
           <option key={c} value={c}>{c}</option>
@@ -31,7 +31,7 @@ export function CompetitionSelector() {
       <select
         value={group}
         onChange={(e) => setGroup(e.target.value)}
-        className="text-sm border border-border rounded-sm px-3 py-1.5 bg-white font-sans text-ink focus:outline-none focus:ring-1 focus:ring-accent"
+        className="text-sm border border-border rounded-sm px-3 py-1.5 bg-card font-sans text-ink focus:outline-none focus:ring-1 focus:ring-accent"
       >
         {GROUPS.map((g) => (
           <option key={g} value={g}>{g}</option>

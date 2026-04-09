@@ -48,7 +48,7 @@ export default function LoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-sm text-sm focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2 border border-border rounded-sm text-sm bg-card text-ink focus:outline-none focus:border-accent"
             required
           />
         </div>
@@ -58,7 +58,7 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-sm text-sm focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2 border border-border rounded-sm text-sm bg-card text-ink focus:outline-none focus:border-accent"
             required
           />
         </div>
@@ -68,7 +68,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-ink text-white text-sm font-sans font-medium rounded-sm hover:bg-ink/90 transition-colors disabled:opacity-50"
+          className="w-full py-2.5 bg-accent text-white text-sm font-sans font-medium rounded-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
         >
           {loading ? '...' : t('login')}
         </button>
@@ -85,7 +85,7 @@ export default function LoginPage() {
 
       <button
         onClick={handleGoogleLogin}
-        className="w-full py-2.5 border border-border text-sm font-sans rounded-sm hover:bg-ink/5 transition-colors"
+        className="w-full py-2.5 border border-border text-sm font-sans rounded-sm hover:bg-white/5 transition-colors"
       >
         {t('withGoogle')}
       </button>

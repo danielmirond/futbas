@@ -44,7 +44,7 @@ export function MatchEventsTimeline({ matchId: _matchId }: MatchEventsTimelinePr
             </div>
 
             {/* Icon dot */}
-            <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center bg-white border border-border rounded-full z-10 text-sm">
+            <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center bg-card border border-border rounded-full z-10 text-sm">
               {EVENT_ICONS[event.type]}
             </div>
 

@@ -26,7 +26,7 @@ export function MatchCard({
   const isScheduled = status === 'scheduled'
 
   return (
-    <div className="card hover:border-ink/20 transition-colors">
+    <div className="card hover:border-white/10 transition-colors">
       <div className="text-xs text-muted mb-2 font-sans">{competition}</div>
 
       <div className="flex items-center justify-between gap-4">

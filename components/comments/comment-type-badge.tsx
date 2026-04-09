@@ -5,9 +5,9 @@ interface CommentTypeBadgeProps {
 }
 
 const typeConfig: Record<CommentType, { label: string; className: string }> = {
-  passio:    { label: 'Passio',     className: 'bg-rose-100 text-rose-700' },
-  prediccio: { label: 'Prediccio',  className: 'bg-blue-100 text-blue-700' },
-  arbitre:   { label: 'Arbitre',    className: 'bg-amber-100 text-amber-700' },
+  passio:    { label: 'Passio',     className: 'bg-rose-500/20 text-rose-400' },
+  prediccio: { label: 'Prediccio',  className: 'bg-blue-500/20 text-blue-400' },
+  arbitre:   { label: 'Arbitre',    className: 'bg-amber-500/20 text-amber-400' },
 }
 
 export function CommentTypeBadge({ type }: CommentTypeBadgeProps) {

@@ -52,7 +52,7 @@ export function ChronicleView({ matchId: _matchId }: ChronicleViewProps) {
       </div>
 
       {/* MVP callout */}
-      <div className="mt-8 border-l-2 border-accent bg-accent-light/30 rounded-r-sm p-4">
+      <div className="mt-8 border-l-2 border-accent bg-accent-light rounded-r-sm p-4">
         <h4 className="text-xs uppercase tracking-wider text-accent font-sans font-medium mb-1">
           MVP del Partit
         </h4>

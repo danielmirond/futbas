@@ -9,15 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        surface: '#FAFAF7',
-        ink: '#0A0A0A',
-        accent: '#1B4FFF',
-        'accent-light': '#E8EDFF',
-        win: '#15803D',
-        draw: '#A16207',
-        loss: '#DC2626',
-        muted: '#6B7280',
-        border: '#E5E5E0',
+        surface: '#0D0D0F',
+        card: '#18181B',
+        ink: '#F5F5F3',
+        accent: '#3B82F6',
+        'accent-light': '#1E293B',
+        win: '#22C55E',
+        draw: '#EAB308',
+        loss: '#EF4444',
+        muted: '#71717A',
+        border: '#27272A',
       },
       fontFamily: {
         serif: ['var(--font-instrument-serif)', 'Georgia', 'serif'],

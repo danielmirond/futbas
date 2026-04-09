@@ -25,11 +25,15 @@
 
 @layer components {
   .card {
-    @apply bg-white border border-border rounded-sm p-4;
+    @apply bg-card border border-border rounded-lg p-4 transition-colors;
+  }
+
+  .card-hover {
+    @apply hover:border-white/10 hover:bg-white/[0.03];
   }
 
   .section-rule {
-    @apply border-t border-ink/10 pt-6 mt-6;
+    @apply border-t border-white/10 pt-6 mt-6;
   }
 
   .stat-number {
@@ -37,10 +41,10 @@
   }
 
   .form-dot {
-    @apply w-5 h-5 rounded-full text-white text-xs flex items-center justify-center font-sans font-medium;
+    @apply w-5 h-5 rounded-full text-white text-xs flex items-center justify-center font-sans font-bold shadow-sm;
   }
 
   .form-dot-w { @apply bg-win; }
-  .form-dot-d { @apply bg-draw; }
+  .form-dot-d { @apply bg-draw text-black; }
   .form-dot-l { @apply bg-loss; }
 }

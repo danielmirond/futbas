@@ -77,7 +77,7 @@ export function ClassificationTable({
     <div className="overflow-x-auto">
       <table className="w-full text-sm font-sans">
         <thead>
-          <tr className="border-b border-ink/10 text-left text-xs text-muted uppercase tracking-wider">
+          <tr className="border-b border-white/10 text-left text-xs text-muted uppercase tracking-wider">
             <th className="py-3 px-2 w-10">Pos</th>
             <th className="py-3 px-2">{t('team')}</th>
             <th className="py-3 px-2 text-center w-10">PJ</th>
@@ -102,8 +102,8 @@ export function ClassificationTable({
               <tr
                 key={row.teamSlug || row.teamName}
                 className={`
-                  border-b border-border/50 transition-colors hover:bg-ink/[0.02]
-                  ${i % 2 === 0 ? 'bg-white' : 'bg-surface'}
+                  border-b border-border/50 transition-colors hover:bg-white/[0.03]
+                  ${i % 2 === 0 ? 'bg-card' : 'bg-surface'}
                   ${isPromotion ? 'border-l-2 border-l-win' : ''}
                   ${isPlayoff ? 'border-l-2 border-l-accent' : ''}
                   ${isRelegation ? 'border-l-2 border-l-loss' : ''}

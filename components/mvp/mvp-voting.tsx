@@ -61,7 +61,7 @@ export function MvpVoting({ matchId: _matchId }: MvpVotingProps) {
                 className={`text-left p-3 rounded-sm border transition-colors ${
                   isSelected
                     ? 'border-accent bg-accent-light'
-                    : 'border-border bg-white hover:border-ink/20'
+                    : 'border-border bg-card hover:border-white/10'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
@@ -77,9 +77,9 @@ export function MvpVoting({ matchId: _matchId }: MvpVotingProps) {
                 </div>
 
                 {/* Bar */}
-                <div className="w-full h-1.5 bg-border/50 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${isTop ? 'bg-accent' : 'bg-ink/20'}`}
+                    className={`h-full rounded-full transition-all ${isTop ? 'bg-accent' : 'bg-white/10'}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

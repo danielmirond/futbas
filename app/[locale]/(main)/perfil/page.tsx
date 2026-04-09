@@ -20,7 +20,7 @@ export default function PerfilPage() {
           <button className="px-3 py-1.5 text-sm border border-accent text-accent rounded-sm">
             {t('catalan')}
           </button>
-          <button className="px-3 py-1.5 text-sm border border-border text-muted rounded-sm hover:border-ink/30 transition-colors">
+          <button className="px-3 py-1.5 text-sm border border-border text-muted rounded-sm hover:border-white/20 transition-colors">
             {t('spanish')}
           </button>
         </div>

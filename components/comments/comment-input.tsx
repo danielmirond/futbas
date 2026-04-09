@@ -41,7 +41,7 @@ export function CommentInput({ onSubmit }: CommentInputProps) {
             className={`px-3 py-1 rounded-full text-xs font-medium font-sans transition-colors ${
               selectedType === t.value
                 ? 'bg-accent text-white'
-                : 'bg-ink/5 text-muted hover:text-ink'
+                : 'bg-white/5 text-muted hover:text-ink'
             }`}
           >
             {t.label}
@@ -57,7 +57,7 @@ export function CommentInput({ onSubmit }: CommentInputProps) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Escriu un comentari..."
-          className="flex-1 border border-border rounded-sm px-3 py-2 text-sm font-sans bg-white text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+          className="flex-1 border border-border rounded-sm px-3 py-2 text-sm font-sans bg-card text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
         />
         <button
           onClick={handleSubmit}
