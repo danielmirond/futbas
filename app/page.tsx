@@ -450,37 +450,54 @@ export default function GuiaFutbolMD() {
           score: m.score as Match['score'],
         }))
 
-        // Build a lookup from WOSTI by home+away for channel merging
-        const wostiChannels = new Map<string, string[]>()
-        for (const m of wostiRes.matches || []) {
-          const key = `${String(m.home || '').toLowerCase()}|${String(m.away || '').toLowerCase()}`
-          const chs = Array.isArray(m.channels) ? (m.channels as { name: string }[]).map((c: { name: string }) => c.name) : []
-          if (chs.length) wostiChannels.set(key, chs)
+        // Build WOSTI match list with channels
+        type WostiEntry = { time: string; home: string; away: string; comp: string; chs: string[] }
+        const wostiList: WostiEntry[] = (wostiRes.matches || []).map((m: Record<string, unknown>) => ({
+          time: String(m.time || ''),
+          home: String(m.home || ''),
+          away: String(m.away || ''),
+          comp: String(m.competition || ''),
+          chs: Array.isArray(m.channels) ? (m.channels as { name: string }[]).map((c: { name: string }) => c.name) : [],
+        })).filter((w: WostiEntry) => w.chs.length > 0)
+
+        // Fuzzy team match: first word with 4+ chars, or contains
+        const fuzzyTeam = (a: string, b: string) => {
+          const al = a.toLowerCase(), bl = b.toLowerCase()
+          if (al === bl) return true
+          if (al.includes(bl) || bl.includes(al)) return true
+          const af = al.split(/[\s.]+/)[0], bf = bl.split(/[\s.]+/)[0]
+          if (af.length >= 4 && bf.length >= 4 && (af.startsWith(bf.slice(0, 4)) || bf.startsWith(af.slice(0, 4)))) return true
+          return false
         }
 
-        // Merge: ESPN matches with WOSTI channels
+        // Merge: ESPN matches with WOSTI channels (by time + fuzzy home)
+        const usedWosti = new Set<number>()
         const merged = espnMatches.map(m => {
-          const key = `${m.home.toLowerCase()}|${m.away.toLowerCase()}`
-          const wChs = wostiChannels.get(key)
-          if (wChs?.length) return { ...m, ch: wChs }
-          // Try partial match (WOSTI may use different team names)
-          for (const [wKey, wCh] of Array.from(wostiChannels.entries())) {
-            const parts = wKey.split('|')
-            const wh = parts[0], wa = parts[1]
-            if ((m.home.toLowerCase().includes(wh) || wh.includes(m.home.toLowerCase())) &&
-                (m.away.toLowerCase().includes(wa) || wa.includes(m.away.toLowerCase()))) {
-              return { ...m, ch: wCh }
+          for (let i = 0; i < wostiList.length; i++) {
+            if (usedWosti.has(i)) continue
+            const w = wostiList[i]
+            // Same time (within 30 min) + fuzzy home match
+            const timeDiff = Math.abs(
+              parseInt(m.time.split(':')[0]) * 60 + parseInt(m.time.split(':')[1]) -
+              parseInt(w.time.split(':')[0]) * 60 - parseInt(w.time.split(':')[1])
+            )
+            if (timeDiff <= 30 && fuzzyTeam(m.home, w.home)) {
+              usedWosti.add(i)
+              return { ...m, ch: w.chs }
             }
           }
           return m
         })
 
-        // Also add WOSTI-only matches not in ESPN
-        const wostiOnly: Match[] = (wostiRes.matches || [])
-          .filter((wm: Record<string, unknown>) => {
-            const wHome = String(wm.home || '').toLowerCase()
-            const wAway = String(wm.away || '').toLowerCase()
-            return !merged.some(em => em.home.toLowerCase().includes(wHome) || wHome.includes(em.home.toLowerCase()))
+        // Add WOSTI-only matches not matched to ESPN
+        const wostiOnly: Match[] = wostiList
+          .filter((_w, i) => !usedWosti.has(i))
+          .filter(w => {
+            // Skip if ESPN already has this match
+            return !merged.some(em => fuzzyTeam(em.home, w.home) && Math.abs(
+              parseInt(em.time.split(':')[0]) * 60 + parseInt(em.time.split(':')[1]) -
+              parseInt(w.time.split(':')[0]) * 60 - parseInt(w.time.split(':')[1])
+            ) <= 30)
           })
           .map((wm: Record<string, unknown>, i: number) => ({
             id: 3000 + i,
