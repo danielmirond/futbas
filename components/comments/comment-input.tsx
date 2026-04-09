@@ -1,11 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-
-type CommentType = 'passio' | 'prediccio' | 'arbitre'
+import type { CommentType } from '@/types/database'
 
 interface CommentInputProps {
-  onSubmit: (text: string, type: CommentType) => void
+  onSubmit: (text: string, type: CommentType) => void | Promise<void>
 }
 
 const TYPES: { value: CommentType; label: string }[] = [

@@ -9,6 +9,7 @@ export type UserRole = 'user' | 'admin' | 'moderator'
 
 export interface Database {
   public: {
+    PostgrestVersion: '12'
     Tables: {
       users: {
         Row: {
@@ -292,6 +293,19 @@ export interface Database {
           team_id?: string | null
         }
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      match_status: MatchStatus
+      event_type: EventType
+      comment_type: CommentType
+      chronicle_status: ChronicleStatus
+      favorite_type: FavoriteType
     }
   }
 }

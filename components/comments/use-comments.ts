@@ -1,87 +1,114 @@
-import { useState } from 'react'
+'use client'
 
-type CommentType = 'passio' | 'prediccio' | 'arbitre'
+import { useEffect, useState, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import type { CommentType } from '@/types/database'
 
-interface Comment {
+export interface Comment {
   id: string
-  matchId: string
-  displayName: string
+  user_id: string
+  match_id: string
   text: string
-  type: CommentType
-  createdAt: string
-  relativeTime: string
+  comment_type: CommentType
+  created_at: string
+  user?: {
+    display_name: string | null
+    avatar_url: string | null
+  }
 }
 
-const MOCK_COMMENTS: Comment[] = [
-  {
-    id: '1',
-    matchId: '1',
-    displayName: 'Joan Puig',
-    text: 'Quin golazo de Marc Pujol! Ens portem els tres punts cap a casa!',
-    type: 'passio',
-    createdAt: '2026-04-06T17:15:00',
-    relativeTime: 'fa 3 dies',
-  },
-  {
-    id: '2',
-    matchId: '1',
-    displayName: 'Marta Vidal',
-    text: 'Deia jo que guanyariem 2-1, quina intuicio!',
-    type: 'prediccio',
-    createdAt: '2026-04-06T17:20:00',
-    relativeTime: 'fa 3 dies',
-  },
-  {
-    id: '3',
-    matchId: '1',
-    displayName: 'Pere Soler',
-    text: 'El penal al minut 65 era clarisssim i no l\'ha xiulat. Vergonya d\'arbitratge.',
-    type: 'arbitre',
-    createdAt: '2026-04-06T17:30:00',
-    relativeTime: 'fa 3 dies',
-  },
-  {
-    id: '4',
-    matchId: '1',
-    displayName: 'Laia Ferrer',
-    text: 'Gran ambient avui al camp, la grada plena fins a dalt!',
-    type: 'passio',
-    createdAt: '2026-04-06T17:45:00',
-    relativeTime: 'fa 3 dies',
-  },
-  {
-    id: '5',
-    matchId: '1',
-    displayName: 'Oriol Mas',
-    text: 'Si seguim aixi, ascens directe! Vinga Martinenc!',
-    type: 'passio',
-    createdAt: '2026-04-06T18:00:00',
-    relativeTime: 'fa 3 dies',
-  },
-]
-
 export function useRealtimeComments(matchId: string) {
-  const [comments, setComments] = useState<Comment[]>(
-    MOCK_COMMENTS.filter((c) => c.matchId === matchId)
-  )
-  const [isLoading] = useState(false)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  function addComment(text: string, type: CommentType) {
-    const newComment: Comment = {
-      id: String(Date.now()),
-      matchId,
-      displayName: 'Tu',
-      text,
-      type,
-      createdAt: new Date().toISOString(),
-      relativeTime: 'ara',
+  useEffect(() => {
+    const supabase = createClient()
+
+    async function fetchComments() {
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*, user:users(display_name, avatar_url)')
+        .eq('match_id', matchId)
+        .order('created_at', { ascending: true })
+        .limit(100)
+
+      if (!error && data) {
+        setComments(data as Comment[])
+      }
+      setIsLoading(false)
     }
-    setComments((prev) => [...prev, newComment])
-  }
 
-  function deleteComment(commentId: string) {
-    setComments((prev) => prev.filter((c) => c.id !== commentId))
-  }
+    fetchComments()
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel(`comments:${matchId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'comments',
+          filter: `match_id=eq.${matchId}`,
+        },
+        async (payload) => {
+          const { data } = await supabase
+            .from('comments')
+            .select('*, user:users(display_name, avatar_url)')
+            .eq('id', payload.new.id)
+            .single()
+
+          if (data) {
+            setComments(prev => [...prev, data as Comment])
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'comments',
+          filter: `match_id=eq.${matchId}`,
+        },
+        (payload) => {
+          setComments(prev => prev.filter(c => c.id !== payload.old.id))
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [matchId])
+
+  const addComment = useCallback(async (text: string, type: CommentType) => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) throw new Error('Must be logged in to comment')
+
+    const { error } = await supabase
+      .from('comments')
+      .insert({
+        user_id: user.id,
+        match_id: matchId,
+        text,
+        comment_type: type,
+      })
+
+    if (error) throw error
+  }, [matchId])
+
+  const deleteComment = useCallback(async (commentId: string) => {
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', commentId)
+
+    if (error) throw error
+  }, [])
 
   return { comments, isLoading, addComment, deleteComment }
 }

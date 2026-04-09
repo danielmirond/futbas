@@ -1,4 +1,4 @@
-type CommentType = 'passio' | 'prediccio' | 'arbitre'
+import type { CommentType } from '@/types/database'
 
 interface CommentTypeBadgeProps {
   type: CommentType
