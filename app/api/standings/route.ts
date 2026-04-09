@@ -4,6 +4,10 @@ const LEAGUE_IDS: Record<string, string> = {
   'LaLiga EA Sports': 'esp.1',
   'LaLiga Hypermotion': 'esp.2',
   'Premier League': 'eng.1',
+  'Bundesliga': 'ger.1',
+  'Serie A': 'ita.1',
+  'Ligue 1': 'fra.1',
+  'Liga MX': 'mex.1',
 }
 
 export async function GET(request: Request) {

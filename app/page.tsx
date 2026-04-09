@@ -24,13 +24,23 @@ const today = new Date().toISOString().split('T')[0]
 
 /* No demo data — all matches come from WOSTI API */
 
-/* Competitions — structure only, data loaded from /api/standings */
-const COMPS: Record<string, CompData> = {
-  'LaLiga EA Sports': { emoji: '🇪🇸', table: [], results: [], next: [] },
-  'LaLiga Hypermotion': { emoji: '🇪🇸', table: [], results: [], next: [] },
-  'Premier League': { emoji: '🏴', table: [], results: [], next: [] },
-  'Champions League': { emoji: '🏆', table: [], results: [], next: [] },
-  'Europa League': { emoji: '🏆', table: [], results: [], next: [] },
+/* Competitions — all supported, data loaded from /api/standings */
+const COMP_EMOJI: Record<string, string> = {
+  'LaLiga EA Sports': '🇪🇸', 'LaLiga Hypermotion': '🇪🇸',
+  'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Bundesliga': '🇩🇪', 'Serie A': '🇮🇹', 'Ligue 1': '🇫🇷',
+  'Champions League': '🏆', 'Europa League': '🏆', 'Conference League': '🏆',
+  'Copa del Rey': '🏆', 'Supercopa': '🏆',
+  'UEFA Nations League': '🌍', 'Amistoso': '🌍', 'Clasificación Mundial': '🌍',
+  'Liga MX': '🇲🇽',
+}
+const COMP_LEAGUE_ID: Record<string, string> = {
+  'LaLiga EA Sports': 'esp.1', 'LaLiga Hypermotion': 'esp.2',
+  'Premier League': 'eng.1', 'Bundesliga': 'ger.1', 'Serie A': 'ita.1', 'Ligue 1': 'fra.1',
+  'Liga MX': 'mex.1',
+}
+const COMPS: Record<string, CompData> = {}
+for (const name of Object.keys(COMP_EMOJI)) {
+  COMPS[name] = { emoji: COMP_EMOJI[name], table: [], results: [], next: [] }
 }
 
 /* ── Theme ───────────────────────────────────────────────────── */
@@ -134,9 +144,19 @@ function chColor(name: string) {
 
 function formDotColor(r: string) { return r === 'W' ? '#22c55e' : r === 'D' ? '#f59e0b' : '#ef4444' }
 
-function zoneColor(pos: number, comp: string) {
-  if (comp === 'LaLiga EA Sports') { if (pos <= 4) return '#e8f5e9'; if (pos <= 6) return '#e3f2fd'; if (pos <= 7) return '#fff8e1'; if (pos >= 18) return '#fde8e8' }
-  if (comp === 'LaLiga Hypermotion') { if (pos <= 2) return '#e8f5e9'; if (pos <= 4) return '#e3f2fd'; if (pos >= 8) return '#fde8e8' }
+function zoneColor(pos: number, comp: string, total: number) {
+  // Champions/promotion zone (green), Europa/playoff (blue), Conference (yellow), Relegation (red)
+  if (comp.includes('LaLiga EA') || comp.includes('Premier') || comp.includes('Bundesliga') || comp.includes('Serie A') || comp.includes('Ligue 1')) {
+    if (pos <= 4) return '#e8f5e9'
+    if (pos <= 6) return '#e3f2fd'
+    if (pos <= 7) return '#fff8e1'
+    if (pos >= total - 2) return '#fde8e8'
+  }
+  if (comp.includes('Hypermotion') || comp.includes('Liga MX')) {
+    if (pos <= 2) return '#e8f5e9'
+    if (pos <= 6) return '#e3f2fd'
+    if (pos >= total - 3) return '#fde8e8'
+  }
   return 'transparent'
 }
 
@@ -241,7 +261,7 @@ function MatchPreview({ m, T, polls, votePoll, interests, trackInterest }: {
   const homeSlug = MD_SLUGS[m.home]
   const awaySlug = MD_SLUGS[m.away]
   const cta = getMatchCTA(m.ch)
-  const league = m.comp.includes('Premier') ? 'eng.1' : m.comp.includes('Hypermotion') ? 'esp.2' : 'esp.1'
+  const league = COMP_LEAGUE_ID[m.comp] || Object.entries(COMP_LEAGUE_ID).find(([k]) => m.comp.includes(k.split(' ')[0]))?.[1] || 'esp.1'
 
   // Fetch real team data (last 5, form, standings) + H2H
   type TeamData = { name: string; shortName: string; logo: string; pos: number; pts: number; gp: number; wins: number; draws: number; losses: number; last5: { d: string; h: string; sh: number; sa: number; a: string; win: boolean | null }[]; form: string[] }
@@ -414,28 +434,69 @@ export default function GuiaFutbolMD() {
     document.body.style.background = T.bg
   }, [darkMode, T.bg])
 
-  // Fetch live matches from WOSTI API
+  // Fetch matches: ESPN (all comps) + WOSTI (TV channels), merged
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const res = await fetch(`/api/matches?date=${selectedDate}`)
-        const data = await res.json()
-        if (data.matches?.length && data.endpoint !== 'demo' && data.endpoint !== 'demo-fallback') {
-          const mapped: Match[] = data.matches.map((m: Record<string, unknown>, i: number) => ({
-            id: 2000 + i,
-            time: String(m.time || '??:??'),
-            date: selectedDate,
-            home: String(m.home || '?'),
-            away: String(m.away || '?'),
-            comp: String(m.competition || ''),
-            ch: Array.isArray(m.channels) ? (m.channels as { name: string }[]).map(c => c.name) : [],
-          }))
-          setLiveMatches(mapped)
-          setDataSource('api')
-        } else {
-          setLiveMatches([])
-          setDataSource('demo')
+        // Fetch ESPN all matches + WOSTI TV channels in parallel
+        const [espnRes, wostiRes] = await Promise.all([
+          fetch(`/api/allmatches?date=${selectedDate}`).then(r => r.json()).catch(() => ({ matches: [] })),
+          fetch(`/api/matches?date=${selectedDate}`).then(r => r.json()).catch(() => ({ matches: [] })),
+        ])
+
+        const espnMatches: Match[] = (espnRes.matches || []).map((m: Record<string, unknown>) => ({
+          id: m.id, time: m.time, date: m.date, home: m.home, away: m.away, comp: m.comp,
+          ch: (m.ch as string[]) || [],
+          score: m.score as Match['score'],
+        }))
+
+        // Build a lookup from WOSTI by home+away for channel merging
+        const wostiChannels = new Map<string, string[]>()
+        for (const m of wostiRes.matches || []) {
+          const key = `${String(m.home || '').toLowerCase()}|${String(m.away || '').toLowerCase()}`
+          const chs = Array.isArray(m.channels) ? (m.channels as { name: string }[]).map((c: { name: string }) => c.name) : []
+          if (chs.length) wostiChannels.set(key, chs)
         }
+
+        // Merge: ESPN matches with WOSTI channels
+        const merged = espnMatches.map(m => {
+          const key = `${m.home.toLowerCase()}|${m.away.toLowerCase()}`
+          const wChs = wostiChannels.get(key)
+          if (wChs?.length) return { ...m, ch: wChs }
+          // Try partial match (WOSTI may use different team names)
+          for (const [wKey, wCh] of Array.from(wostiChannels.entries())) {
+            const parts = wKey.split('|')
+            const wh = parts[0], wa = parts[1]
+            if ((m.home.toLowerCase().includes(wh) || wh.includes(m.home.toLowerCase())) &&
+                (m.away.toLowerCase().includes(wa) || wa.includes(m.away.toLowerCase()))) {
+              return { ...m, ch: wCh }
+            }
+          }
+          return m
+        })
+
+        // Also add WOSTI-only matches not in ESPN
+        const wostiOnly: Match[] = (wostiRes.matches || [])
+          .filter((wm: Record<string, unknown>) => {
+            const wHome = String(wm.home || '').toLowerCase()
+            const wAway = String(wm.away || '').toLowerCase()
+            return !merged.some(em => em.home.toLowerCase().includes(wHome) || wHome.includes(em.home.toLowerCase()))
+          })
+          .map((wm: Record<string, unknown>, i: number) => ({
+            id: 3000 + i,
+            time: String(wm.time || '??:??'),
+            date: selectedDate,
+            home: String(wm.home || '?'),
+            away: String(wm.away || '?'),
+            comp: String(wm.competition || ''),
+            ch: Array.isArray(wm.channels) ? (wm.channels as { name: string }[]).map((c: { name: string }) => c.name) : [],
+          }))
+
+        const all = [...merged, ...wostiOnly]
+        all.sort((a, b) => a.time.localeCompare(b.time))
+
+        setLiveMatches(all)
+        setDataSource(all.length > 0 ? 'api' : 'demo')
       } catch {}
     }
     fetchMatches()
@@ -877,7 +938,7 @@ export default function GuiaFutbolMD() {
                     </tr></thead>
                     <tbody>
                       {[...cp.table].sort((a, b) => a.pos - b.pos).map(r => (
-                        <tr key={r.pos} style={{ background: zoneColor(r.pos, currentComp) }}>
+                        <tr key={r.pos} style={{ background: zoneColor(r.pos, currentComp, cp.table.length) }}>
                           <td style={{ padding: '6px 4px', color: r.pos <= 4 ? '#166534' : r.pos >= 18 ? T.red : T.gray, fontWeight: 700, borderBottom: `1px solid ${T.border}` }}>{r.pos}</td>
                           <td style={{ padding: '6px 4px', fontWeight: 600, textAlign: 'left', borderBottom: `1px solid ${T.border}`, color: '#1a1a1a' }}>{r.team}</td>
                           {[r.pj, r.g, r.e, r.p, r.gf, r.gc].map((v, i) => (
