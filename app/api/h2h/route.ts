@@ -23,20 +23,30 @@ export async function GET(request: Request) {
     const teamsData = await teamsRes.json()
     const allTeams = teamsData?.sports?.[0]?.leagues?.[0]?.teams || []
 
-    // Find home team ID (fuzzy match)
+    // Find team ID (fuzzy match — handles partial names, abbreviations, nicknames)
+    const normalize = (s: string) => s.toLowerCase().replace(/[.\-']/g, '').replace(/\s+/g, ' ').trim()
     const findTeamId = (name: string) => {
-      const n = name.toLowerCase()
+      const n = normalize(name)
+      const nFirst = n.split(' ')[0]
       const team = allTeams.find((t: Record<string, unknown>) => {
         const tm = t.team as Record<string, unknown>
-        const dn = String(tm?.displayName || '').toLowerCase()
-        const sn = String(tm?.shortDisplayName || '').toLowerCase()
-        return dn.includes(n) || n.includes(dn) || sn.includes(n) || n.includes(sn)
+        const dn = normalize(String(tm?.displayName || ''))
+        const sn = normalize(String(tm?.shortDisplayName || ''))
+        const abbr = normalize(String(tm?.abbreviation || ''))
+        const slug = normalize(String(tm?.slug || ''))
+        return dn === n || sn === n || dn.includes(n) || n.includes(dn)
+          || sn.includes(n) || n.includes(sn) || abbr === n
+          || slug.includes(n.replace(/ /g, '_'))
+          || (nFirst.length >= 4 && (dn.startsWith(nFirst) || sn.startsWith(nFirst)))
       })
       return (team?.team as Record<string, unknown>)?.id as string | undefined
     }
 
     const homeId = findTeamId(home)
     if (!homeId) return NextResponse.json({ matches: [], error: `Team not found: ${home}` })
+
+    const awayId = findTeamId(away)
+    if (!awayId) return NextResponse.json({ matches: [], error: `Team not found: ${away}` })
 
     // Get schedule for home team
     const schedRes = await fetch(
@@ -73,8 +83,10 @@ export async function GET(request: Request) {
       const hName = String(hTeam?.shortDisplayName || hTeam?.displayName || '')
       const aName = String(aTeam?.shortDisplayName || aTeam?.displayName || '')
 
-      // Check if the away team is in this match
-      if (!hName.toLowerCase().includes(awayLower) && !aName.toLowerCase().includes(awayLower)) continue
+      // Check if the opponent is in this match by team ID
+      const hId = String((hTeam?.id as string) || '')
+      const aId = String((aTeam?.id as string) || '')
+      if (hId !== awayId && aId !== awayId) continue
 
       const hScore = homeComp.score
       const aScore = awayComp.score
