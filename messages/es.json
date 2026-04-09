@@ -1,0 +1,120 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "classification": "Clasificación",
+    "matches": "Partidos",
+    "clubs": "Clubes",
+    "profile": "Perfil"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Se ha producido un error",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "search": "Buscar...",
+    "noResults": "No se han encontrado resultados",
+    "seeAll": "Ver todo",
+    "back": "Volver"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "logout": "Cerrar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "displayName": "Nombre de usuario",
+    "withGoogle": "Continuar con Google",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "forgotPassword": "¿Has olvidado la contraseña?"
+  },
+  "classification": {
+    "title": "Clasificación",
+    "position": "Pos",
+    "team": "Equipo",
+    "played": "PJ",
+    "won": "PG",
+    "drawn": "PE",
+    "lost": "PP",
+    "goalsFor": "GF",
+    "goalsAgainst": "GC",
+    "goalDifference": "DG",
+    "points": "Pts",
+    "form": "Forma",
+    "promotionZone": "Zona de ascenso",
+    "relegationZone": "Zona de descenso",
+    "selectCompetition": "Seleccionar competición",
+    "selectGroup": "Seleccionar grupo"
+  },
+  "match": {
+    "title": "Partidos",
+    "scheduled": "Programado",
+    "live": "En directo",
+    "finished": "Finalizado",
+    "postponed": "Aplazado",
+    "cancelled": "Cancelado",
+    "matchday": "Jornada",
+    "referee": "Árbitro",
+    "venue": "Campo",
+    "lineup": "Alineación",
+    "events": "Eventos",
+    "noMatches": "No hay partidos"
+  },
+  "comments": {
+    "title": "Comentarios",
+    "placeholder": "Escribe un comentario...",
+    "send": "Enviar",
+    "passion": "Pasión",
+    "prediction": "Predicción",
+    "referee": "Árbitro",
+    "loginToComment": "Inicia sesión para comentar"
+  },
+  "mvp": {
+    "title": "MVP del partido",
+    "vote": "Votar",
+    "voted": "Votado",
+    "votes": "votos",
+    "selectPlayer": "Selecciona un jugador"
+  },
+  "chronicle": {
+    "title": "Crónica",
+    "generatedByAI": "Generada por IA",
+    "reviewed": "Revisada",
+    "draft": "Borrador",
+    "published": "Publicada",
+    "generate": "Generar crónica",
+    "generating": "Generando crónica...",
+    "publish": "Publicar",
+    "socialSummary": "Resumen para redes",
+    "mvpPick": "MVP"
+  },
+  "club": {
+    "title": "Clubes",
+    "info": "Información",
+    "teams": "Equipos",
+    "results": "Resultados",
+    "stadium": "Estadio",
+    "delegation": "Delegación",
+    "founded": "Fundado",
+    "allDelegations": "Todas las delegaciones"
+  },
+  "profile": {
+    "title": "Perfil",
+    "favorites": "Favoritos",
+    "language": "Idioma",
+    "catalan": "Català",
+    "spanish": "Castellano",
+    "noFavorites": "No tienes favoritos aún"
+  },
+  "home": {
+    "title": "Inicio",
+    "todayMatches": "Partidos de hoy",
+    "recentResults": "Últimos resultados",
+    "latestChronicle": "Última crónica",
+    "standings": "Clasificación"
+  }
+}

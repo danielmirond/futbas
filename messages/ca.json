@@ -1,0 +1,120 @@
+{
+  "nav": {
+    "home": "Inici",
+    "classification": "Classificació",
+    "matches": "Partits",
+    "clubs": "Clubs",
+    "profile": "Perfil"
+  },
+  "common": {
+    "loading": "Carregant...",
+    "error": "S'ha produït un error",
+    "retry": "Torna-ho a provar",
+    "save": "Desa",
+    "cancel": "Cancel·la",
+    "delete": "Elimina",
+    "edit": "Edita",
+    "search": "Cerca...",
+    "noResults": "No s'han trobat resultats",
+    "seeAll": "Veure tot",
+    "back": "Tornar"
+  },
+  "auth": {
+    "login": "Inicia sessió",
+    "signup": "Registra't",
+    "logout": "Tanca sessió",
+    "email": "Correu electrònic",
+    "password": "Contrasenya",
+    "confirmPassword": "Confirma la contrasenya",
+    "displayName": "Nom d'usuari",
+    "withGoogle": "Continua amb Google",
+    "noAccount": "No tens compte?",
+    "hasAccount": "Ja tens compte?",
+    "forgotPassword": "Has oblidat la contrasenya?"
+  },
+  "classification": {
+    "title": "Classificació",
+    "position": "Pos",
+    "team": "Equip",
+    "played": "PJ",
+    "won": "PG",
+    "drawn": "PE",
+    "lost": "PP",
+    "goalsFor": "GF",
+    "goalsAgainst": "GC",
+    "goalDifference": "DG",
+    "points": "Pts",
+    "form": "Forma",
+    "promotionZone": "Zona d'ascens",
+    "relegationZone": "Zona de descens",
+    "selectCompetition": "Selecciona competició",
+    "selectGroup": "Selecciona grup"
+  },
+  "match": {
+    "title": "Partits",
+    "scheduled": "Programat",
+    "live": "En directe",
+    "finished": "Finalitzat",
+    "postponed": "Ajornat",
+    "cancelled": "Cancel·lat",
+    "matchday": "Jornada",
+    "referee": "Àrbitre",
+    "venue": "Camp",
+    "lineup": "Alineació",
+    "events": "Esdeveniments",
+    "noMatches": "No hi ha partits"
+  },
+  "comments": {
+    "title": "Comentaris",
+    "placeholder": "Escriu un comentari...",
+    "send": "Envia",
+    "passion": "Passió",
+    "prediction": "Predicció",
+    "referee": "Àrbitre",
+    "loginToComment": "Inicia sessió per comentar"
+  },
+  "mvp": {
+    "title": "MVP del partit",
+    "vote": "Vota",
+    "voted": "Votat",
+    "votes": "vots",
+    "selectPlayer": "Selecciona un jugador"
+  },
+  "chronicle": {
+    "title": "Crònica",
+    "generatedByAI": "Generada per IA",
+    "reviewed": "Revisada",
+    "draft": "Esborrany",
+    "published": "Publicada",
+    "generate": "Generar crònica",
+    "generating": "Generant crònica...",
+    "publish": "Publicar",
+    "socialSummary": "Resum per xarxes",
+    "mvpPick": "MVP"
+  },
+  "club": {
+    "title": "Clubs",
+    "info": "Informació",
+    "teams": "Equips",
+    "results": "Resultats",
+    "stadium": "Estadi",
+    "delegation": "Delegació",
+    "founded": "Fundat",
+    "allDelegations": "Totes les delegacions"
+  },
+  "profile": {
+    "title": "Perfil",
+    "favorites": "Favorits",
+    "language": "Idioma",
+    "catalan": "Català",
+    "spanish": "Castellano",
+    "noFavorites": "No tens favorits encara"
+  },
+  "home": {
+    "title": "Inici",
+    "todayMatches": "Partits d'avui",
+    "recentResults": "Últims resultats",
+    "latestChronicle": "Última crònica",
+    "standings": "Classificació"
+  }
+}
