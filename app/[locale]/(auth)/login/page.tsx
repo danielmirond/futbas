@@ -85,7 +85,7 @@ export default function LoginPage() {
 
       <button
         onClick={handleGoogleLogin}
-        className="w-full py-2.5 border border-border text-sm font-sans rounded-sm hover:bg-white/5 transition-colors"
+        className="w-full py-2.5 border border-border text-sm font-sans rounded-sm hover:bg-ink/5 transition-colors"
       >
         {t('withGoogle')}
       </button>

@@ -38,9 +38,9 @@ export function MvpResults({ votes }: MvpResultsProps) {
                     {vote.votes}
                   </span>
                 </div>
-                <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-ink/5 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${isTop ? 'bg-accent' : 'bg-white/10'}`}
+                    className={`h-full rounded-full ${isTop ? 'bg-accent' : 'bg-ink/10'}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

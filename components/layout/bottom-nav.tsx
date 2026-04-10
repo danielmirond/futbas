@@ -46,8 +46,8 @@ export function BottomNav() {
   ]
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-      <div className="flex justify-around items-center h-14">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 shadow-lg">
+      <div className="flex justify-around items-center h-16">
         {tabs.map(({ key, href }) => {
           const isActive = pathname === href || (href !== `/${locale}` && pathname.startsWith(href))
           return (

@@ -24,27 +24,27 @@ export function SocialShare({ summary }: SocialShareProps) {
       <div className="flex items-center gap-2">
         <button
           onClick={handleCopy}
-          className="px-3 py-1.5 text-xs font-sans font-medium border border-border rounded-sm hover:bg-white/5 transition-colors"
+          className="px-3 py-1.5 text-xs font-sans font-medium border border-border rounded-sm hover:bg-ink/5 transition-colors"
         >
           {copied ? 'Copiat!' : 'Copiar text'}
         </button>
 
         <button
-          className="px-3 py-1.5 text-xs font-sans font-medium border border-border rounded-sm hover:bg-white/5 transition-colors"
+          className="px-3 py-1.5 text-xs font-sans font-medium border border-border rounded-sm hover:bg-ink/5 transition-colors"
           title="Compartir a Twitter"
         >
           Twitter
         </button>
 
         <button
-          className="px-3 py-1.5 text-xs font-sans font-medium border border-border rounded-sm hover:bg-white/5 transition-colors"
+          className="px-3 py-1.5 text-xs font-sans font-medium border border-border rounded-sm hover:bg-ink/5 transition-colors"
           title="Compartir a WhatsApp"
         >
           WhatsApp
         </button>
 
         <button
-          className="px-3 py-1.5 text-xs font-sans font-medium border border-border rounded-sm hover:bg-white/5 transition-colors"
+          className="px-3 py-1.5 text-xs font-sans font-medium border border-border rounded-sm hover:bg-ink/5 transition-colors"
           title="Compartir a Instagram"
         >
           Instagram

@@ -41,7 +41,7 @@ export function CommentInput({ onSubmit }: CommentInputProps) {
             className={`px-3 py-1 rounded-full text-xs font-medium font-sans transition-colors ${
               selectedType === t.value
                 ? 'bg-accent text-white'
-                : 'bg-white/5 text-muted hover:text-ink'
+                : 'bg-ink/5 text-muted hover:text-ink'
             }`}
           >
             {t.label}

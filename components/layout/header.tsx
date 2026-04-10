@@ -38,25 +38,26 @@ export function Header() {
   }
 
   return (
-    <header className="border-b border-border bg-surface sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+    <header className="bg-header text-ink-dark sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href={`/${locale}`} className="flex items-center gap-2">
-          <span className="font-serif text-xl tracking-tight">Futbas</span>
+          <span className="font-serif text-2xl tracking-tight text-ink-dark">Futbas</span>
+          <span className="w-2 h-2 rounded-full bg-accent" />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-7">
           <NavLinks locale={locale} />
         </nav>
 
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted font-mono truncate max-w-[120px]">
+              <span className="text-xs text-ink-dark/60 font-mono truncate max-w-[120px]">
                 {user.user_metadata?.full_name || user.email?.split('@')[0]}
               </span>
               <button
                 onClick={handleLogout}
-                className="text-xs font-sans text-muted hover:text-ink transition-colors"
+                className="text-xs font-sans text-ink-dark/60 hover:text-ink-dark transition-colors"
               >
                 {t('logout')}
               </button>
@@ -64,14 +65,14 @@ export function Header() {
           ) : (
             <Link
               href={`/${locale}/login`}
-              className="text-xs font-sans text-accent hover:underline"
+              className="text-xs font-sans text-accent hover:text-accent/80 font-medium"
             >
               {t('login')}
             </Link>
           )}
           <button
             onClick={switchLocale}
-            className="text-xs font-mono uppercase tracking-wider px-2 py-1 border border-border rounded-sm hover:bg-white/5 transition-colors"
+            className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 border border-ink-dark/20 rounded-full text-ink-dark/80 hover:bg-ink-dark/10 transition-colors"
           >
             {locale === 'ca' ? 'ES' : 'CA'}
           </button>
@@ -101,11 +102,16 @@ function NavLinks({ locale }: { locale: string }) {
           <Link
             key={href}
             href={href}
-            className={`text-sm font-sans transition-colors ${
-              isActive ? 'text-ink font-medium' : 'text-muted hover:text-ink'
+            className={`text-sm font-sans transition-colors relative ${
+              isActive
+                ? 'text-ink-dark font-medium'
+                : 'text-ink-dark/60 hover:text-ink-dark'
             }`}
           >
             {label}
+            {isActive && (
+              <span className="absolute -bottom-5 left-0 right-0 h-0.5 bg-accent" />
+            )}
           </Link>
         )
       })}

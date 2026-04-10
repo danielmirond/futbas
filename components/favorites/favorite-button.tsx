@@ -20,7 +20,7 @@ export function FavoriteButton({ initialFavorited = false, onToggle }: FavoriteB
     <button
       onClick={handleToggle}
       aria-label={isFavorited ? 'Treure de favorits' : 'Afegir a favorits'}
-      className="p-1.5 rounded-sm transition-colors hover:bg-white/5"
+      className="p-1.5 rounded-sm transition-colors hover:bg-ink/5"
     >
       <svg
         width="20"

@@ -24,7 +24,7 @@ export function CommentCard({ displayName, text, type, createdAt }: CommentCardP
 
   return (
     <div className="flex gap-3 py-3">
-      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+      <div className="w-8 h-8 rounded-full bg-ink/10 flex items-center justify-center flex-shrink-0">
         <span className="text-xs font-medium text-ink">{initial}</span>
       </div>
       <div className="flex-1 min-w-0">

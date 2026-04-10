@@ -9,11 +9,11 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-white/10 text-ink',
-  accent: 'bg-accent-light text-accent',
+  default: 'bg-ink/10 text-ink',
+  accent: 'bg-accent/10 text-accent',
   win: 'bg-win/10 text-win',
   loss: 'bg-loss/10 text-loss',
-  muted: 'bg-white/5 text-muted',
+  muted: 'bg-ink/5 text-muted',
 }
 
 export function Badge({ variant = 'default', children, className = '' }: BadgeProps) {

@@ -11,40 +11,44 @@
     @apply font-serif;
   }
 
-  /* Scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
-  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
 }
 
 @layer components {
+  /* Base card */
   .card {
-    @apply bg-card border border-border rounded-lg p-4 transition-colors;
+    @apply bg-card border border-border rounded-bento p-5 transition-all;
   }
 
   .card-hover {
-    @apply hover:border-white/10 hover:bg-white/[0.03];
+    @apply hover:shadow-lg hover:-translate-y-0.5 hover:border-ink/20;
   }
 
-  .section-rule {
-    @apply border-t border-white/10 pt-6 mt-6;
-  }
+  /* Bento colored cards */
+  .bento-accent { @apply bg-accent text-white border-0; }
+  .bento-lime { @apply bg-lime text-ink border-0; }
+  .bento-pink { @apply bg-pink text-white border-0; }
+  .bento-violet { @apply bg-violet text-white border-0; }
+  .bento-sky { @apply bg-sky text-white border-0; }
+  .bento-amber { @apply bg-amber text-ink border-0; }
+  .bento-rose { @apply bg-rose text-white border-0; }
+  .bento-dark { @apply bg-header text-ink-dark border-0; }
 
-  .stat-number {
-    @apply font-serif text-2xl tabular-nums;
-  }
-
+  /* Form dots for classification */
   .form-dot {
-    @apply w-5 h-5 rounded-full text-white text-xs flex items-center justify-center font-sans font-bold shadow-sm;
+    @apply w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-sans font-bold;
   }
-
   .form-dot-w { @apply bg-win; }
   .form-dot-d { @apply bg-draw text-black; }
   .form-dot-l { @apply bg-loss; }
+
+  .stat-number {
+    @apply font-serif text-3xl tabular-nums;
+  }
+
+  .section-rule {
+    @apply border-t border-border pt-8 mt-8;
+  }
 }
