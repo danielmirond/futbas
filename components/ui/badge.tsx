@@ -9,18 +9,16 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-ink/10 text-ink',
-  accent: 'bg-accent/10 text-accent',
-  win: 'bg-win/10 text-win',
-  loss: 'bg-loss/10 text-loss',
-  muted: 'bg-ink/5 text-muted',
+  default: 'pill pill-muted',
+  accent: 'pill pill-red',
+  win: 'pill pill-green',
+  loss: 'pill pill-red',
+  muted: 'pill pill-muted',
 }
 
 export function Badge({ variant = 'default', children, className = '' }: BadgeProps) {
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${variantClasses[variant]} ${className}`}
-    >
+    <span className={`${variantClasses[variant]} ${className}`}>
       {children}
     </span>
   )

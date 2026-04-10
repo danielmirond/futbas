@@ -7,9 +7,9 @@
     @apply bg-surface text-ink font-sans antialiased;
   }
 
-  /* Archivo Black es weight 900 de facto — usamos font-display para titulares impact */
   h1, h2, h3, h4 {
-    @apply font-display;
+    @apply font-display uppercase;
+    letter-spacing: -0.02em;
   }
 
   ::-webkit-scrollbar { width: 6px; }
@@ -18,43 +18,98 @@
 }
 
 @layer components {
-  /* Base card */
+  /* Base card — sharp corners, magenta left border */
   .card {
-    @apply bg-card border border-border rounded-bento p-5 transition-all;
+    @apply bg-card border-l-[3px] border-l-accent border-y border-r border-border p-5 transition-all;
   }
 
   .card-hover {
-    @apply hover:shadow-lg hover:-translate-y-0.5 hover:border-ink/20;
+    @apply hover:shadow-lg hover:-translate-y-0.5;
   }
 
-  /* Bento colored cards */
-  .bento-accent { @apply bg-accent text-white border-0; }
-  .bento-lime { @apply bg-lime text-ink border-0; }
-  .bento-pink { @apply bg-pink text-white border-0; }
-  .bento-violet { @apply bg-violet text-white border-0; }
-  .bento-sky { @apply bg-sky text-white border-0; }
-  .bento-amber { @apply bg-amber text-ink border-0; }
-  .bento-rose { @apply bg-rose text-white border-0; }
-  .bento-dark { @apply bg-header text-ink-dark border-0; }
+  /* Hero with purple gradient */
+  .hero {
+    @apply bg-hero-gradient text-white relative overflow-hidden;
+  }
 
-  /* Eyebrow tag style */
+  .hero-glow {
+    @apply absolute -top-20 -right-20 w-96 h-96 rounded-full pointer-events-none;
+    background: radial-gradient(circle, rgba(255,40,130,.15), transparent 65%);
+  }
+
+  /* Accent line (magenta + neon green gradient bottom) */
+  .accent-line {
+    @apply h-[3px] bg-accent-line;
+  }
+
+  /* Premier buttons */
+  .btn-primary {
+    @apply bg-accent text-white font-display font-black uppercase tracking-wider
+           px-4 py-2.5 text-sm transition-colors hover:bg-accent-dark cursor-pointer;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-ink border border-border font-mono text-[10px] uppercase
+           tracking-wider px-3.5 py-2 transition-colors hover:border-ink cursor-pointer;
+  }
+
+  /* Eyebrow mono label */
   .eyebrow {
-    @apply text-[10px] font-mono uppercase tracking-[0.15em] font-medium;
+    @apply font-mono text-[9px] uppercase tracking-[0.2em] text-ink3;
   }
 
-  /* Form dots for classification */
+  .eyebrow-light {
+    @apply font-mono text-[9px] uppercase tracking-[0.2em] text-white/40;
+  }
+
+  /* Section header dark purple */
+  .section-head {
+    @apply bg-primary border-b-2 border-b-accent px-3 py-2
+           font-display font-bold text-sm text-white uppercase tracking-wider;
+  }
+
+  /* Tags / pills */
+  .tag {
+    @apply font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 border;
+  }
+  .tag-neon { @apply border-neon/40 text-neon; }
+  .tag-magenta { @apply border-accent/40 text-accent; }
+  .tag-muted { @apply border-border text-ink3; }
+
+  /* Score display — impact serif numbers with magenta dash */
+  .score {
+    @apply font-display font-black tracking-tighter text-ink;
+    letter-spacing: -0.06em;
+  }
+  .score-dash { @apply text-accent; }
+
+  /* Stat numbers */
+  .stat-num {
+    @apply font-display font-black text-ink;
+  }
+
+  /* Form dots (W/D/L) — circular solid */
   .form-dot {
-    @apply w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-sans font-bold;
+    @apply w-6 h-6 rounded-full flex items-center justify-center
+           font-display font-black text-[11px];
   }
-  .form-dot-w { @apply bg-win; }
-  .form-dot-d { @apply bg-draw text-black; }
-  .form-dot-l { @apply bg-loss; }
+  .form-dot-w { @apply bg-neon text-primary; }
+  .form-dot-d { @apply bg-ink3 text-white; }
+  .form-dot-l { @apply bg-accent text-white; }
 
-  .stat-number {
-    @apply font-display text-3xl tabular-nums;
+  /* Bottom nav */
+  .bnav-wrap {
+    @apply bg-primary border-t-2 border-t-accent;
   }
 
-  .section-rule {
-    @apply border-t border-border pt-8 mt-8;
+  /* Pills colored status */
+  .pill {
+    @apply font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 inline-block border;
   }
+  .pill-green { @apply bg-neon/10 text-[#00875a] border-neon/30; }
+  .pill-yellow { @apply border-[#F5C800]/30 text-[#b88a00];
+    background: rgba(245, 200, 0, 0.1);
+  }
+  .pill-red { @apply bg-accent/10 text-accent border-accent/25; }
+  .pill-muted { @apply bg-border/30 text-ink3 border-border; }
 }

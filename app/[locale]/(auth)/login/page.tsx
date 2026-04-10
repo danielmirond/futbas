@@ -43,22 +43,22 @@ export default function LoginPage() {
     <div className="space-y-6">
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="block text-sm font-sans text-muted mb-1">{t('email')}</label>
+          <label className="block eyebrow mb-2">{t('email')}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-sm text-sm bg-card text-ink focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2.5 border border-border text-sm bg-surface text-ink font-sans focus:outline-none focus:border-accent"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-sans text-muted mb-1">{t('password')}</label>
+          <label className="block eyebrow mb-2">{t('password')}</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-sm text-sm bg-card text-ink focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2.5 border border-border text-sm bg-surface text-ink font-sans focus:outline-none focus:border-accent"
             required
           />
         </div>
@@ -68,7 +68,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-accent text-white text-sm font-sans font-medium rounded-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
+          className="btn-primary w-full disabled:opacity-50"
         >
           {loading ? '...' : t('login')}
         </button>
@@ -79,20 +79,20 @@ export default function LoginPage() {
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-surface px-2 text-muted">o</span>
+          <span className="bg-card px-2 eyebrow">o</span>
         </div>
       </div>
 
       <button
         onClick={handleGoogleLogin}
-        className="w-full py-2.5 border border-border text-sm font-sans rounded-sm hover:bg-ink/5 transition-colors"
+        className="btn-ghost w-full text-center"
       >
         {t('withGoogle')}
       </button>
 
-      <p className="text-center text-sm text-muted">
+      <p className="text-center eyebrow">
         {t('noAccount')}{' '}
-        <Link href={`/${locale}/signup`} className="text-accent hover:underline">
+        <Link href={`/${locale}/signup`} className="text-accent hover:underline font-bold">
           {t('signup')}
         </Link>
       </p>

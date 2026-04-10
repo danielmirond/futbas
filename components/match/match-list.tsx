@@ -59,8 +59,10 @@ const MOCK_MATCHES: MockMatch[] = [
 export function MatchList() {
   return (
     <div>
-      <h3 className="font-serif text-title mb-4">Jornada 25</h3>
-      <div className="flex flex-col gap-3">
+      <h2 className="font-display font-black text-2xl uppercase mb-4 text-ink tracking-tight">
+        Jornada 25
+      </h2>
+      <div className="space-y-4">
         {MOCK_MATCHES.map((match) => (
           <MatchCard
             key={match.id}

@@ -8,9 +8,9 @@ interface CommentInputProps {
 }
 
 const TYPES: { value: CommentType; label: string }[] = [
-  { value: 'passio', label: 'Passio' },
-  { value: 'prediccio', label: 'Prediccio' },
-  { value: 'arbitre', label: 'Arbitre' },
+  { value: 'passio', label: 'PASSIÓ' },
+  { value: 'prediccio', label: 'PREDICCIÓ' },
+  { value: 'arbitre', label: 'ÀRBITRE' },
 ]
 
 export function CommentInput({ onSubmit }: CommentInputProps) {
@@ -31,17 +31,16 @@ export function CommentInput({ onSubmit }: CommentInputProps) {
   }
 
   return (
-    <div className="border-t border-border pt-4">
-      {/* Type selector */}
-      <div className="flex items-center gap-2 mb-3">
+    <div className="border-t border-border pt-4 mt-4">
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
         {TYPES.map((t) => (
           <button
             key={t.value}
             onClick={() => setSelectedType(t.value)}
-            className={`px-3 py-1 rounded-full text-xs font-medium font-sans transition-colors ${
+            className={`font-mono text-[10px] uppercase tracking-wider px-3 py-1.5 border transition-colors ${
               selectedType === t.value
-                ? 'bg-accent text-white'
-                : 'bg-ink/5 text-muted hover:text-ink'
+                ? 'bg-accent text-white border-accent'
+                : 'bg-transparent text-ink2 border-border hover:border-accent'
             }`}
           >
             {t.label}
@@ -49,7 +48,6 @@ export function CommentInput({ onSubmit }: CommentInputProps) {
         ))}
       </div>
 
-      {/* Input + send */}
       <div className="flex items-center gap-2">
         <input
           type="text"
@@ -57,14 +55,14 @@ export function CommentInput({ onSubmit }: CommentInputProps) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Escriu un comentari..."
-          className="flex-1 border border-border rounded-sm px-3 py-2 text-sm font-sans bg-card text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+          className="flex-1 bg-surface border border-border px-3 py-2.5 font-sans text-sm text-ink placeholder:text-ink3 focus:outline-none focus:border-accent"
         />
         <button
           onClick={handleSubmit}
           disabled={!text.trim()}
-          className="px-4 py-2 bg-accent text-white text-sm font-sans font-medium rounded-sm hover:bg-accent/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Enviar
+          ENVIAR
         </button>
       </div>
     </div>

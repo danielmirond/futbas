@@ -1,6 +1,5 @@
 'use client'
 
-import { Badge } from '@/components/ui/badge'
 import { SocialShare } from './social-share'
 
 interface ChronicleViewProps {
@@ -31,37 +30,47 @@ export function ChronicleView({ matchId: _matchId }: ChronicleViewProps) {
   const chronicle = MOCK
 
   return (
-    <article className="max-w-2xl">
+    <article className="max-w-3xl">
+      {/* AI tag */}
+      <div className="mb-4 flex items-center gap-2">
+        <span className="pill pill-red">🤖 IA</span>
+        <span className="eyebrow">CRÒNICA · J25 · FA 2 HORES</span>
+      </div>
+
       {/* Headline */}
-      <h2 className="font-sans text-3xl md:text-5xl font-bold mb-4 leading-[1.1] tracking-tight">
+      <h2 className="font-display font-black text-4xl md:text-6xl uppercase tracking-tighter leading-[0.95] mb-8 text-ink">
         {chronicle.headline}
       </h2>
 
-      {/* AI badge */}
-      <div className="mb-6">
-        <Badge variant="muted">Generada per IA</Badge>
-      </div>
-
       {/* Body with drop cap */}
-      <div className="font-sans text-base leading-relaxed text-ink/85 space-y-4">
+      <div className="font-sans text-base md:text-lg leading-relaxed text-ink2 space-y-5">
         {chronicle.body.split('\n\n').map((paragraph, i) => (
-          <p key={i} className={i === 0 ? 'first-letter:text-6xl first-letter:font-display first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none first-letter:text-ink' : ''}>
+          <p
+            key={i}
+            className={
+              i === 0
+                ? 'first-letter:text-8xl first-letter:font-display first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none first-letter:text-accent'
+                : ''
+            }
+          >
             {paragraph}
           </p>
         ))}
       </div>
 
       {/* MVP callout */}
-      <div className="mt-8 border-l-2 border-accent bg-accent/10 rounded-r-sm p-4">
-        <h4 className="eyebrow text-accent mb-2">
-          MVP del Partit
-        </h4>
-        <p className="font-display text-2xl uppercase text-ink">{chronicle.mvpName}</p>
-        <p className="text-sm text-muted font-sans mt-1">{chronicle.mvpReason}</p>
+      <div className="mt-10 bg-primary text-white p-6 border-l-[3px] border-l-neon">
+        <div className="eyebrow-light mb-2 text-neon">🏆 MVP DEL PARTIT</div>
+        <p className="font-display font-black text-3xl md:text-4xl uppercase tracking-tighter text-neon leading-none">
+          {chronicle.mvpName}
+        </p>
+        <p className="font-sans text-sm text-white/70 mt-3 leading-relaxed">
+          {chronicle.mvpReason}
+        </p>
       </div>
 
       {/* Social share */}
-      <div className="mt-8">
+      <div className="mt-10">
         <SocialShare summary={chronicle.socialSummary} />
       </div>
     </article>

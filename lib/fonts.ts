@@ -1,25 +1,30 @@
-import { Archivo_Black, Inter, JetBrains_Mono } from 'next/font/google'
+import { Barlow_Condensed, Barlow, JetBrains_Mono } from 'next/font/google'
 
-export const archivoBlack = Archivo_Black({
-  weight: ['400'],
+export const barlowCondensed = Barlow_Condensed({
+  weight: ['400', '600', '700', '900'],
+  style: ['normal', 'italic'],
   subsets: ['latin'],
-  variable: '--font-archivo-black',
+  variable: '--font-barlow-condensed',
   display: 'swap',
 })
 
-export const inter = Inter({
+export const barlow = Barlow({
+  weight: ['300', '400', '500', '600', '700'],
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-barlow',
   display: 'swap',
 })
 
 export const jetbrainsMono = JetBrains_Mono({
+  weight: ['400', '500'],
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
 })
 
-// Exports aliased for backwards compat with existing imports
-export const instrumentSerif = archivoBlack
-export const ibmPlexSans = inter
+// Aliased exports for backwards compat
+export const instrumentSerif = barlowCondensed
+export const ibmPlexSans = barlow
 export const ibmPlexMono = jetbrainsMono
+export const archivoBlack = barlowCondensed
+export const inter = barlow

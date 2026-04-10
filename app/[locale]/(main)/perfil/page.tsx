@@ -7,22 +7,28 @@ export default function PerfilPage() {
 
   return (
     <div className="space-y-6">
-      <section className="bento-violet rounded-bento p-6 md:p-10">
-        <h1 className="text-headline font-display uppercase text-white">{t('title')}</h1>
+      <section className="hero p-6 md:p-10">
+        <div className="hero-glow" />
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent-line" />
+        <div className="relative z-10">
+          <h1 className="font-display font-black text-4xl md:text-display text-white uppercase tracking-tight">
+            {t('title')}
+          </h1>
+        </div>
       </section>
 
       <section className="card space-y-4">
-        <h2 className="text-title font-serif">{t('favorites')}</h2>
-        <p className="text-muted text-sm">{t('noFavorites')}</p>
+        <div className="eyebrow">{t('favorites')}</div>
+        <p className="font-sans text-sm text-ink2">{t('noFavorites')}</p>
       </section>
 
       <section className="card space-y-4">
-        <h2 className="text-title font-serif">{t('language')}</h2>
+        <div className="eyebrow">{t('language')}</div>
         <div className="flex gap-2">
-          <button className="px-4 py-2 text-sm bg-accent text-white rounded-full font-medium">
+          <button className="btn-primary">
             {t('catalan')}
           </button>
-          <button className="px-4 py-2 text-sm border border-border text-muted rounded-full hover:border-ink/30 transition-colors">
+          <button className="btn-ghost">
             {t('spanish')}
           </button>
         </div>

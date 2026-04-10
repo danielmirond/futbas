@@ -4,16 +4,18 @@ interface PositionBadgeProps {
 }
 
 export function PositionBadge({ position, totalTeams = 16 }: PositionBadgeProps) {
-  let colorClass = 'text-muted'
+  let colorClass = 'text-ink3'
 
   if (position <= 2) {
-    colorClass = 'text-win font-bold'
+    colorClass = 'text-neon'
+  } else if (position <= 4) {
+    colorClass = 'text-accent'
   } else if (position > totalTeams - 2) {
     colorClass = 'text-loss'
   }
 
   return (
-    <span className={`tabular-nums text-sm ${colorClass}`}>
+    <span className={`font-display font-black tabular-nums text-base ${colorClass}`}>
       {position}
     </span>
   )

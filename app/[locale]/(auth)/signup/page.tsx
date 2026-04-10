@@ -41,32 +41,32 @@ export default function SignupPage() {
     <div className="space-y-6">
       <form onSubmit={handleSignup} className="space-y-4">
         <div>
-          <label className="block text-sm font-sans text-muted mb-1">{t('displayName')}</label>
+          <label className="block eyebrow mb-2">{t('displayName')}</label>
           <input
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-sm text-sm bg-card text-ink focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2.5 border border-border text-sm bg-surface text-ink font-sans focus:outline-none focus:border-accent"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-sans text-muted mb-1">{t('email')}</label>
+          <label className="block eyebrow mb-2">{t('email')}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-sm text-sm bg-card text-ink focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2.5 border border-border text-sm bg-surface text-ink font-sans focus:outline-none focus:border-accent"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-sans text-muted mb-1">{t('password')}</label>
+          <label className="block eyebrow mb-2">{t('password')}</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-sm text-sm bg-card text-ink focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2.5 border border-border text-sm bg-surface text-ink font-sans focus:outline-none focus:border-accent"
             minLength={6}
             required
           />
@@ -77,7 +77,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-accent text-white text-sm font-sans font-medium rounded-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
+          className="btn-primary w-full disabled:opacity-50"
         >
           {loading ? '...' : t('signup')}
         </button>

@@ -5,17 +5,12 @@ interface CommentTypeBadgeProps {
 }
 
 const typeConfig: Record<CommentType, { label: string; className: string }> = {
-  passio:    { label: 'Passio',     className: 'bg-rose-500/20 text-rose-400' },
-  prediccio: { label: 'Prediccio',  className: 'bg-blue-500/20 text-blue-400' },
-  arbitre:   { label: 'Arbitre',    className: 'bg-amber-500/20 text-amber-400' },
+  passio:    { label: 'PASSIÓ',     className: 'pill pill-red' },
+  prediccio: { label: 'PREDICCIÓ',  className: 'pill border-blue-500/30 text-blue-600 bg-blue-500/10' },
+  arbitre:   { label: 'ÀRBITRE',    className: 'pill pill-yellow' },
 }
 
 export function CommentTypeBadge({ type }: CommentTypeBadgeProps) {
   const config = typeConfig[type]
-
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${config.className}`}>
-      {config.label}
-    </span>
-  )
+  return <span className={config.className}>{config.label}</span>
 }

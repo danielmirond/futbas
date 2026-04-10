@@ -24,16 +24,18 @@ export function CommentCard({ displayName, text, type, createdAt }: CommentCardP
 
   return (
     <div className="flex gap-3 py-3">
-      <div className="w-8 h-8 rounded-full bg-ink/10 flex items-center justify-center flex-shrink-0">
-        <span className="text-xs font-medium text-ink">{initial}</span>
+      <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+        <span className="font-display font-black text-xs text-white">{initial}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-sm font-medium text-ink font-sans">{displayName}</span>
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <span className="font-sans font-bold text-ink text-sm">{displayName}</span>
           <CommentTypeBadge type={type} />
-          <span className="text-xs text-muted font-sans">{timeAgo(createdAt)}</span>
+          <span className="font-mono text-[10px] text-ink3 uppercase tracking-wider">
+            {timeAgo(createdAt)}
+          </span>
         </div>
-        <p className="text-sm text-ink/80 font-sans">{text}</p>
+        <p className="font-sans text-sm text-ink2 leading-relaxed">{text}</p>
       </div>
     </div>
   )

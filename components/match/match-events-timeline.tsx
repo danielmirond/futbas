@@ -19,6 +19,13 @@ const EVENT_ICONS: Record<MatchEvent['type'], string> = {
   substitution: '\uD83D\uDD04',
 }
 
+const EVENT_BORDER: Record<MatchEvent['type'], string> = {
+  goal: 'border-l-neon',
+  yellow_card: 'border-l-[#F5C800]',
+  red_card: 'border-l-accent',
+  substitution: 'border-l-ink3',
+}
+
 const MOCK_EVENTS: MatchEvent[] = [
   { id: '1', minute: 12, type: 'goal',         description: 'Gol de Marc Pujol (CE Martinenc)', team: 'home' },
   { id: '2', minute: 23, type: 'yellow_card',  description: 'Targeta groga per Jordi Vila (UE Sants)', team: 'away' },
@@ -31,29 +38,42 @@ const MOCK_EVENTS: MatchEvent[] = [
 
 export function MatchEventsTimeline({ matchId: _matchId }: MatchEventsTimelineProps) {
   return (
-    <div className="relative">
-      {/* Vertical line */}
-      <div className="absolute left-[3.25rem] top-0 bottom-0 w-px bg-border" />
+    <div className="bg-primary text-white p-5">
+      <h3 className="eyebrow-light mb-4">Events</h3>
 
-      <div className="flex flex-col gap-0">
-        {MOCK_EVENTS.map((event) => (
-          <div key={event.id} className="flex items-start gap-4 py-3 relative">
-            {/* Minute */}
-            <div className="w-10 text-right flex-shrink-0">
-              <span className="text-sm font-mono tabular-nums text-muted">{event.minute}&apos;</span>
-            </div>
+      <div className="flex flex-col gap-2">
+        {MOCK_EVENTS.map((event) => {
+          const isGoal = event.type === 'goal'
+          return (
+            <div
+              key={event.id}
+              className={`flex items-start gap-4 border-l-[3px] pl-3 py-2 bg-white/5 ${EVENT_BORDER[event.type]}`}
+            >
+              {/* Minute */}
+              <div className="w-12 flex-shrink-0">
+                <span
+                  className={`font-display font-black text-2xl tabular-nums leading-none ${
+                    isGoal ? 'text-neon' : 'text-white'
+                  }`}
+                >
+                  {event.minute}&apos;
+                </span>
+              </div>
 
-            {/* Icon dot */}
-            <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center bg-card border border-border rounded-full z-10 text-sm">
-              {EVENT_ICONS[event.type]}
-            </div>
+              {/* Icon */}
+              <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center text-sm">
+                {EVENT_ICONS[event.type]}
+              </div>
 
-            {/* Description */}
-            <div className="flex-1 pt-0.5">
-              <p className="text-sm font-sans text-ink">{event.description}</p>
+              {/* Description */}
+              <div className="flex-1 pt-0.5">
+                <p className="font-sans font-semibold text-white text-sm">
+                  {event.description}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

@@ -9,46 +9,53 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Híbrido: dark header + light content
-        surface: '#F5F5F0',       // warm beige content background
-        card: '#FFFFFF',           // white cards
-        ink: '#0A0A0A',            // dark text on light bg
-        'ink-dark': '#FAFAF7',     // light text on dark header
-        header: '#0A0A0A',         // dark header background
-        border: '#E5E5DD',         // warm light border
-        muted: '#737373',          // muted text
+        // Premier League style palette
+        primary: '#37003C',        // púrpura oscuro
+        'primary-light': '#5c0066',
+        'primary-dark': '#1a001d',
+        accent: '#FF2882',         // magenta/rosa fuerte
+        'accent-dark': '#e01f70',
+        neon: '#00FF85',           // verde neón
+        'neon-dark': '#00cc6a',
 
-        // Bento accent palette (vivid colors for cards)
-        accent: '#FF6B35',         // orange primary
-        lime: '#A3E635',           // lime green
-        pink: '#EC4899',           // hot pink
-        violet: '#8B5CF6',         // violet
-        sky: '#0EA5E9',            // sky blue
-        amber: '#F59E0B',          // amber
-        rose: '#F43F5E',           // rose red
+        // Surfaces
+        surface: '#F8F0FF',        // lavender light background
+        card: '#FFFFFF',
+        bg: '#0f0f1a',             // dark sections
 
-        // Semantic (for match states)
-        win: '#16A34A',
-        draw: '#EAB308',
-        loss: '#DC2626',
+        // Text
+        ink: '#37003C',            // primary text (dark purple)
+        ink2: '#6B5478',           // secondary text
+        ink3: '#9B8AA6',           // muted text
+        muted: '#9B8AA6',
+
+        // Borders
+        border: '#EBE4F0',
+        rule: '#EBE4F0',
+
+        // Semantic
+        win: '#00FF85',
+        draw: '#9B8AA6',
+        loss: '#FF2882',
       },
       fontFamily: {
-        // Display: Archivo Black (impact, deportivo bold)
-        serif: ['var(--font-archivo-black)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-archivo-black)', 'system-ui', 'sans-serif'],
-        // Body: Inter (moderna, legible)
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        // Data: JetBrains Mono (código/stats)
-        mono: ['var(--font-jetbrains-mono)', 'monospace'],
+        display: ['var(--font-barlow-condensed)', 'Impact', 'sans-serif'],
+        serif: ['var(--font-barlow-condensed)', 'Impact', 'sans-serif'], // alias
+        sans: ['var(--font-barlow)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-jetbrains-mono)', 'Courier New', 'monospace'],
       },
       fontSize: {
-        'mega': ['6rem', { lineHeight: '0.9', letterSpacing: '-0.05em' }],
-        'display': ['4rem', { lineHeight: '0.95', letterSpacing: '-0.04em' }],
-        'headline': ['2.25rem', { lineHeight: '1.05', letterSpacing: '-0.03em' }],
-        'title': ['1.5rem', { lineHeight: '1.2', letterSpacing: '-0.02em' }],
+        'mega': ['5rem', { lineHeight: '0.85', letterSpacing: '-0.04em' }],
+        'display': ['3.5rem', { lineHeight: '0.9', letterSpacing: '-0.03em' }],
+        'headline': ['2rem', { lineHeight: '1.0', letterSpacing: '-0.02em' }],
+        'title': ['1.375rem', { lineHeight: '1.1', letterSpacing: '-0.01em' }],
       },
-      borderRadius: {
-        'bento': '1.25rem',
+      letterSpacing: {
+        eyebrow: '0.15em',
+      },
+      backgroundImage: {
+        'hero-gradient': 'linear-gradient(135deg, #37003C, #5c0066, #37003C)',
+        'accent-line': 'linear-gradient(90deg, #FF2882, #00FF85)',
       },
     },
   },

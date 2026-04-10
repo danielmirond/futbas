@@ -17,11 +17,11 @@ export function CompetitionSelector() {
   const [group, setGroup] = useState(GROUPS[0])
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       <select
         value={competition}
         onChange={(e) => setCompetition(e.target.value)}
-        className="text-sm border border-border rounded-sm px-3 py-1.5 bg-card font-sans text-ink focus:outline-none focus:ring-1 focus:ring-accent"
+        className="bg-card border border-border px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-ink focus:outline-none focus:border-accent"
       >
         {COMPETITIONS.map((c) => (
           <option key={c} value={c}>{c}</option>
@@ -31,7 +31,7 @@ export function CompetitionSelector() {
       <select
         value={group}
         onChange={(e) => setGroup(e.target.value)}
-        className="text-sm border border-border rounded-sm px-3 py-1.5 bg-card font-sans text-ink focus:outline-none focus:ring-1 focus:ring-accent"
+        className="bg-card border border-border px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-ink focus:outline-none focus:border-accent"
       >
         {GROUPS.map((g) => (
           <option key={g} value={g}>{g}</option>

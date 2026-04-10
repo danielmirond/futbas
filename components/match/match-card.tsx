@@ -26,35 +26,45 @@ export function MatchCard({
   const isScheduled = status === 'scheduled'
 
   return (
-    <div className="card hover:border-ink/10 transition-colors">
-      <div className="text-xs text-muted mb-2 font-sans">{competition}</div>
+    <div className="card card-hover">
+      <div className="eyebrow mb-3">{competition}</div>
 
       <div className="flex items-center justify-between gap-4">
         {/* Home team */}
         <div className="flex-1 text-right">
-          <span className="text-sm font-medium text-ink">{homeTeam}</span>
+          <span className="font-display font-bold uppercase text-sm tracking-tight text-ink">
+            {homeTeam}
+          </span>
         </div>
 
         {/* Score or time */}
-        <div className="flex-shrink-0 text-center min-w-[4rem]">
+        <div className="flex-shrink-0 text-center min-w-[5rem]">
           {isScheduled ? (
-            <span className="font-serif text-lg text-accent">{matchTime ?? '--:--'}</span>
+            <span className="font-display font-black text-2xl md:text-3xl tracking-tighter text-accent">
+              {matchTime ?? '--:--'}
+            </span>
           ) : (
-            <span className="font-serif text-2xl tabular-nums text-ink">
-              {homeScore} - {awayScore}
+            <span className="score font-black text-3xl md:text-4xl tabular-nums">
+              {homeScore}
+              <span className="score-dash mx-1">-</span>
+              {awayScore}
             </span>
           )}
         </div>
 
         {/* Away team */}
         <div className="flex-1 text-left">
-          <span className="text-sm font-medium text-ink">{awayTeam}</span>
+          <span className="font-display font-bold uppercase text-sm tracking-tight text-ink">
+            {awayTeam}
+          </span>
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-2 mt-2">
+      <div className="flex items-center justify-center gap-2 mt-3">
         <MatchStatusBadge status={status} />
-        <span className="text-xs text-muted">{matchDate}</span>
+        <span className="font-mono text-[10px] uppercase tracking-wider text-ink3">
+          {matchDate}
+        </span>
       </div>
     </div>
   )

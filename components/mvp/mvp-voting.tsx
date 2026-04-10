@@ -31,7 +31,6 @@ export function MvpVoting({ matchId: _matchId }: MvpVotingProps) {
 
   function handleVote(playerId: string) {
     if (selectedId === playerId) return
-
     setPlayers((prev) =>
       prev.map((p) => {
         if (p.id === playerId) return { ...p, votes: p.votes + 1 }
@@ -44,9 +43,9 @@ export function MvpVoting({ matchId: _matchId }: MvpVotingProps) {
 
   return (
     <div>
-      <h3 className="font-serif text-headline mb-4">MVP del Partit</h3>
+      <div className="eyebrow mb-4">🏆 MVP DEL PARTIT</div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {players
           .sort((a, b) => b.votes - a.votes)
           .map((player) => {
@@ -58,28 +57,34 @@ export function MvpVoting({ matchId: _matchId }: MvpVotingProps) {
               <button
                 key={player.id}
                 onClick={() => handleVote(player.id)}
-                className={`text-left p-3 rounded-sm border transition-colors ${
+                className={`text-left p-3 border transition-colors ${
                   isSelected
-                    ? 'border-accent bg-accent/10'
-                    : 'border-border bg-card hover:border-ink/10'
+                    ? 'border-accent bg-accent/5'
+                    : isTop
+                    ? 'border-neon bg-neon/10'
+                    : 'border-border bg-card hover:border-accent'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2">
                   <div>
-                    <span className={`text-sm font-medium font-sans ${isTop ? 'text-accent' : 'text-ink'}`}>
+                    <div className={`font-display font-black uppercase text-sm tracking-tight ${isTop ? 'text-neon' : 'text-ink'}`}>
                       {player.name}
-                    </span>
-                    <span className="text-xs text-muted font-sans ml-2">{player.team}</span>
+                    </div>
+                    <div className="font-mono text-[9px] uppercase tracking-wider text-ink3 mt-0.5">
+                      {player.team}
+                    </div>
                   </div>
-                  <span className="text-xs font-mono tabular-nums text-muted">
-                    {player.votes} vots ({pct.toFixed(0)}%)
-                  </span>
+                  <div className="text-right">
+                    <div className={`font-display font-black text-2xl tabular-nums leading-none ${isTop ? 'text-neon' : 'text-accent'}`}>
+                      {player.votes}
+                    </div>
+                    <div className="font-mono text-[9px] uppercase text-ink3">{pct.toFixed(0)}%</div>
+                  </div>
                 </div>
 
-                {/* Bar */}
-                <div className="w-full h-1.5 bg-ink/5 rounded-full overflow-hidden">
+                <div className="w-full h-1 bg-border">
                   <div
-                    className={`h-full rounded-full transition-all ${isTop ? 'bg-accent' : 'bg-ink/10'}`}
+                    className={`h-full transition-all ${isTop ? 'bg-neon' : 'bg-accent'}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

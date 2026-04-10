@@ -6,11 +6,17 @@ export default function PartitsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="bento-accent rounded-bento p-6 md:p-10">
-        <div className="eyebrow text-white/80 mb-4">
-          Jornada 25 · en joc
+      <section className="hero p-6 md:p-10">
+        <div className="hero-glow" />
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent-line" />
+        <div className="relative z-10">
+          <div className="eyebrow-light mb-3">
+            JORNADA 25 · EN JOC · 1ª CATALANA
+          </div>
+          <h1 className="font-display font-black text-4xl md:text-display text-white uppercase tracking-tight">
+            {t('title')}
+          </h1>
         </div>
-        <h1 className="text-headline font-display uppercase text-white">{t('title')}</h1>
       </section>
 
       <MatchList />
