@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { MatchCard } from './match-card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,6 +23,7 @@ interface Match {
 }
 
 export function MatchList() {
+  const locale = useLocale()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -118,6 +120,8 @@ export function MatchList() {
             {grouped[md].map((match) => (
               <MatchCard
                 key={match.id}
+                matchId={match.id}
+                locale={locale}
                 homeTeam={match.homeTeamName || ''}
                 awayTeam={match.awayTeamName || ''}
                 homeScore={match.home_score ?? undefined}

@@ -1,33 +1,104 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface FavoriteButtonProps {
-  initialFavorited?: boolean
-  onToggle?: (isFavorited: boolean) => void
+  clubId?: string
+  teamId?: string
+  competitionId?: string
+  className?: string
 }
 
-export function FavoriteButton({ initialFavorited = false, onToggle }: FavoriteButtonProps) {
-  const [isFavorited, setIsFavorited] = useState(initialFavorited)
+export function FavoriteButton({
+  clubId,
+  teamId,
+  competitionId,
+  className = '',
+}: FavoriteButtonProps) {
+  const [isFavorited, setIsFavorited] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
 
-  function handleToggle() {
-    const next = !isFavorited
-    setIsFavorited(next)
-    onToggle?.(next)
+  const favoriteType = clubId ? 'club' : teamId ? 'team' : competitionId ? 'competition' : null
+  const targetId = clubId || teamId || competitionId || null
+
+  useEffect(() => {
+    if (!favoriteType || !targetId) return
+
+    async function check() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setLoading(false)
+        return
+      }
+      setUserId(user.id)
+
+      const column = `${favoriteType}_id`
+      const { data } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('favorite_type', favoriteType)
+        .eq(column, targetId)
+        .maybeSingle()
+
+      setIsFavorited(!!data)
+      setLoading(false)
+    }
+
+    check()
+  }, [favoriteType, targetId])
+
+  async function handleToggle(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!userId || !favoriteType || !targetId) {
+      // Not logged in — redirect to login
+      window.location.href = '/ca/login'
+      return
+    }
+
+    const supabase = createClient()
+    const column = `${favoriteType}_id`
+
+    if (isFavorited) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', userId)
+        .eq('favorite_type', favoriteType)
+        .eq(column, targetId)
+      setIsFavorited(false)
+    } else {
+      await supabase.from('favorites').insert({
+        user_id: userId,
+        favorite_type: favoriteType,
+        [column]: targetId,
+      })
+      setIsFavorited(true)
+    }
+  }
+
+  if (loading) {
+    return <div className={`w-8 h-8 ${className}`} />
   }
 
   return (
     <button
       onClick={handleToggle}
       aria-label={isFavorited ? 'Treure de favorits' : 'Afegir a favorits'}
-      className="p-1.5 rounded-sm transition-colors hover:bg-ink/5"
+      className={`p-1.5 transition-colors hover:bg-accent/5 ${className}`}
     >
       <svg
-        width="20"
-        height="20"
+        width="22"
+        height="22"
         viewBox="0 0 24 24"
-        fill={isFavorited ? '#DC2626' : 'none'}
-        stroke={isFavorited ? '#DC2626' : '#71717A'}
+        fill={isFavorited ? '#FF2882' : 'none'}
+        stroke={isFavorited ? '#FF2882' : '#9B8AA6'}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
