@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { FormIndicator } from './form-indicator'
 import { PositionBadge } from './position-badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { createClient } from '@/lib/supabase/client'
 
 type FormResult = 'W' | 'D' | 'L'
 
@@ -42,17 +43,70 @@ export function ClassificationTable({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
     setError(null)
 
-    fetch(`/api/scraper/clasificacion?season=${season}&sport=${sport}&category=${category}&group=${group}`)
-      .then(res => res.json())
-      .then(json => {
-        if (json.error) throw new Error(json.error)
-        setData(json.data || [])
+    async function fetchFromSupabase() {
+      const supabase = createClient()
+
+      // Map URL slugs to display names
+      const categoryName = category.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      const groupName = group.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+      // Find competition
+      const { data: comp, error: compErr } = await supabase
+        .from('competitions')
+        .select('id')
+        .eq('category', categoryName)
+        .eq('group_name', groupName)
+        .eq('season', season)
+        .maybeSingle()
+
+      if (compErr || !comp) {
+        throw new Error('No s\'ha trobat la competició')
+      }
+
+      // Get teams for this competition ordered by position
+      const { data: teams, error: teamsErr } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('competition_id', comp.id)
+        .order('position', { ascending: true })
+
+      if (teamsErr) throw new Error(teamsErr.message)
+
+      const rows: TeamRow[] = (teams || []).map((t: any) => {
+        const totalTeams = teams?.length || 16
+        let zone: string | undefined
+        if (t.position <= 1) zone = 'promotion'
+        else if (t.position <= 4) zone = 'playoff'
+        else if (t.position > totalTeams - 2) zone = 'relegation'
+
+        return {
+          position: t.position,
+          teamName: t.team_name,
+          teamSlug: t.team_name.toLowerCase().replace(/\s+/g, '-'),
+          points: t.points,
+          played: t.played,
+          won: t.won,
+          drawn: t.drawn,
+          lost: t.lost,
+          goalsFor: t.goals_for,
+          goalsAgainst: t.goals_against,
+          form: (t.form || []) as ('W' | 'D' | 'L')[],
+          zone,
+        }
       })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
+
+      if (!cancelled) setData(rows)
+    }
+
+    fetchFromSupabase()
+      .catch(err => !cancelled && setError(err.message))
+      .finally(() => !cancelled && setLoading(false))
+
+    return () => { cancelled = true }
   }, [season, sport, category, group])
 
   if (loading) {
