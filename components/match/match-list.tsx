@@ -1,82 +1,135 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { MatchCard } from './match-card'
+import { Skeleton } from '@/components/ui/skeleton'
 
-interface MockMatch {
+interface Match {
   id: string
-  homeTeam: string
-  awayTeam: string
-  homeScore?: number
-  awayScore?: number
-  status: 'scheduled' | 'live' | 'finished' | 'postponed' | 'cancelled'
-  matchDate: string
-  matchTime?: string
-  competition: string
+  matchday: number | null
+  home_score: number | null
+  away_score: number | null
+  venue: string | null
+  status: 'scheduled' | 'finished' | 'live' | 'postponed' | 'cancelled'
+  home_team_id: string
+  away_team_id: string
+  competition_id: string
+  homeTeamName?: string
+  awayTeamName?: string
+  competitionName?: string
+  groupName?: string
 }
 
-const MOCK_MATCHES: MockMatch[] = [
-  {
-    id: '1',
-    homeTeam: 'CE Martinenc',
-    awayTeam: 'UE Sants',
-    homeScore: 2,
-    awayScore: 1,
-    status: 'finished',
-    matchDate: '06/04/2026',
-    competition: 'Primera Catalana - Grup 1',
-  },
-  {
-    id: '2',
-    homeTeam: 'CF Gavà',
-    awayTeam: 'CE Europa B',
-    homeScore: 1,
-    awayScore: 1,
-    status: 'finished',
-    matchDate: '06/04/2026',
-    competition: 'Primera Catalana - Grup 1',
-  },
-  {
-    id: '3',
-    homeTeam: 'CF Damm',
-    awayTeam: 'UE Cornellà B',
-    status: 'scheduled',
-    matchDate: '12/04/2026',
-    matchTime: '17:00',
-    competition: 'Primera Catalana - Grup 1',
-  },
-  {
-    id: '4',
-    homeTeam: 'CF Badalona Futur',
-    awayTeam: 'UE Castelldefels',
-    homeScore: 3,
-    awayScore: 0,
-    status: 'live',
-    matchDate: '09/04/2026',
-    competition: 'Primera Catalana - Grup 1',
-  },
-]
-
 export function MatchList() {
-  return (
-    <div>
-      <h2 className="font-display font-black text-2xl uppercase mb-4 text-ink tracking-tight">
-        Jornada 25
-      </h2>
+  const [matches, setMatches] = useState<Match[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+
+    async function fetchMatches() {
+      const supabase = createClient()
+
+      // Fetch matches with team + competition joins
+      const { data, error } = await supabase
+        .from('matches')
+        .select(`
+          id, matchday, home_score, away_score, venue, status,
+          home_team_id, away_team_id, competition_id,
+          home_team:home_team_id(team_name),
+          away_team:away_team_id(team_name),
+          competition:competition_id(name, group_name)
+        `)
+        .order('matchday', { ascending: false })
+        .limit(30)
+
+      if (error) throw new Error(error.message)
+
+      const normalized: Match[] = (data || []).map((m: any) => ({
+        id: m.id,
+        matchday: m.matchday,
+        home_score: m.home_score,
+        away_score: m.away_score,
+        venue: m.venue,
+        status: m.status,
+        home_team_id: m.home_team_id,
+        away_team_id: m.away_team_id,
+        competition_id: m.competition_id,
+        homeTeamName: m.home_team?.team_name || 'Equip local',
+        awayTeamName: m.away_team?.team_name || 'Equip visitant',
+        competitionName: m.competition?.name || '',
+        groupName: m.competition?.group_name || '',
+      }))
+
+      if (!cancelled) setMatches(normalized)
+    }
+
+    fetchMatches()
+      .catch((err) => !cancelled && setError(err.message))
+      .finally(() => !cancelled && setLoading(false))
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (loading) {
+    return (
       <div className="space-y-4">
-        {MOCK_MATCHES.map((match) => (
-          <MatchCard
-            key={match.id}
-            homeTeam={match.homeTeam}
-            awayTeam={match.awayTeam}
-            homeScore={match.homeScore}
-            awayScore={match.awayScore}
-            status={match.status}
-            matchDate={match.matchDate}
-            matchTime={match.matchTime}
-            competition={match.competition}
-          />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 w-full" />
         ))}
       </div>
+    )
+  }
+
+  if (error) {
+    return <div className="card text-loss text-sm">{error}</div>
+  }
+
+  if (matches.length === 0) {
+    return <div className="card eyebrow py-8 text-center">No hi ha partits disponibles.</div>
+  }
+
+  // Group by matchday
+  const grouped = matches.reduce<Record<number, Match[]>>((acc, m) => {
+    const md = m.matchday ?? 0
+    if (!acc[md]) acc[md] = []
+    acc[md].push(m)
+    return acc
+  }, {})
+
+  const matchdays = Object.keys(grouped)
+    .map(Number)
+    .sort((a, b) => b - a)
+
+  return (
+    <div className="space-y-8">
+      {matchdays.map((md) => (
+        <div key={md}>
+          <h2 className="font-display font-black text-2xl uppercase mb-4 text-ink tracking-tight">
+            Jornada {md}
+          </h2>
+          <div className="space-y-3">
+            {grouped[md].map((match) => (
+              <MatchCard
+                key={match.id}
+                homeTeam={match.homeTeamName || ''}
+                awayTeam={match.awayTeamName || ''}
+                homeScore={match.home_score ?? undefined}
+                awayScore={match.away_score ?? undefined}
+                status={match.status}
+                matchDate={match.venue || ''}
+                competition={`${match.competitionName} · ${match.groupName}`}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
