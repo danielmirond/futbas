@@ -7,8 +7,9 @@
     @apply bg-surface text-ink font-sans antialiased;
   }
 
+  /* Archivo Black es weight 900 de facto — usamos font-display para titulares impact */
   h1, h2, h3, h4 {
-    @apply font-serif;
+    @apply font-display;
   }
 
   ::-webkit-scrollbar { width: 6px; }
@@ -36,6 +37,11 @@
   .bento-rose { @apply bg-rose text-white border-0; }
   .bento-dark { @apply bg-header text-ink-dark border-0; }
 
+  /* Eyebrow tag style */
+  .eyebrow {
+    @apply text-[10px] font-mono uppercase tracking-[0.15em] font-medium;
+  }
+
   /* Form dots for classification */
   .form-dot {
     @apply w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-sans font-bold;
@@ -45,7 +51,7 @@
   .form-dot-l { @apply bg-loss; }
 
   .stat-number {
-    @apply font-serif text-3xl tabular-nums;
+    @apply font-display text-3xl tabular-nums;
   }
 
   .section-rule {

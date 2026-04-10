@@ -33,15 +33,19 @@ const config: Config = {
         loss: '#DC2626',
       },
       fontFamily: {
-        serif: ['var(--font-instrument-serif)', 'Georgia', 'serif'],
-        sans: ['var(--font-ibm-plex-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-ibm-plex-mono)', 'monospace'],
+        // Display: Archivo Black (impact, deportivo bold)
+        serif: ['var(--font-archivo-black)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-archivo-black)', 'system-ui', 'sans-serif'],
+        // Body: Inter (moderna, legible)
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        // Data: JetBrains Mono (código/stats)
+        mono: ['var(--font-jetbrains-mono)', 'monospace'],
       },
       fontSize: {
-        'mega': ['5rem', { lineHeight: '0.95', letterSpacing: '-0.04em' }],
-        'display': ['3.5rem', { lineHeight: '1.0', letterSpacing: '-0.03em' }],
-        'headline': ['2rem', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
-        'title': ['1.375rem', { lineHeight: '1.3', letterSpacing: '-0.01em' }],
+        'mega': ['6rem', { lineHeight: '0.9', letterSpacing: '-0.05em' }],
+        'display': ['4rem', { lineHeight: '0.95', letterSpacing: '-0.04em' }],
+        'headline': ['2.25rem', { lineHeight: '1.05', letterSpacing: '-0.03em' }],
+        'title': ['1.5rem', { lineHeight: '1.2', letterSpacing: '-0.02em' }],
       },
       borderRadius: {
         'bento': '1.25rem',

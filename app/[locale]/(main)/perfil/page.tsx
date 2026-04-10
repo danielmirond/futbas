@@ -7,8 +7,8 @@ export default function PerfilPage() {
 
   return (
     <div className="space-y-6">
-      <section className="bento-violet rounded-bento p-6 md:p-8">
-        <h1 className="text-headline font-serif text-white">{t('title')}</h1>
+      <section className="bento-violet rounded-bento p-6 md:p-10">
+        <h1 className="text-headline font-display uppercase text-white">{t('title')}</h1>
       </section>
 
       <section className="card space-y-4">

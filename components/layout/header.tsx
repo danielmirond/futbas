@@ -41,7 +41,7 @@ export function Header() {
     <header className="bg-header text-ink-dark sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href={`/${locale}`} className="flex items-center gap-2">
-          <span className="font-serif text-2xl tracking-tight text-ink-dark">Futbas</span>
+          <span className="font-display text-xl uppercase tracking-tight text-ink-dark">FUTBAS</span>
           <span className="w-2 h-2 rounded-full bg-accent" />
         </Link>
 

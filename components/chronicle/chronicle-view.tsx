@@ -33,7 +33,7 @@ export function ChronicleView({ matchId: _matchId }: ChronicleViewProps) {
   return (
     <article className="max-w-2xl">
       {/* Headline */}
-      <h2 className="font-serif text-headline md:text-display italic mb-4 leading-tight">
+      <h2 className="font-sans text-3xl md:text-5xl font-bold mb-4 leading-[1.1] tracking-tight">
         {chronicle.headline}
       </h2>
 
@@ -43,9 +43,9 @@ export function ChronicleView({ matchId: _matchId }: ChronicleViewProps) {
       </div>
 
       {/* Body with drop cap */}
-      <div className="font-sans text-sm leading-relaxed text-ink/85 space-y-4">
+      <div className="font-sans text-base leading-relaxed text-ink/85 space-y-4">
         {chronicle.body.split('\n\n').map((paragraph, i) => (
-          <p key={i} className={i === 0 ? 'first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:float-left first-letter:mr-2 first-letter:mt-1 first-letter:leading-none first-letter:text-ink' : ''}>
+          <p key={i} className={i === 0 ? 'first-letter:text-6xl first-letter:font-display first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none first-letter:text-ink' : ''}>
             {paragraph}
           </p>
         ))}
@@ -53,10 +53,10 @@ export function ChronicleView({ matchId: _matchId }: ChronicleViewProps) {
 
       {/* MVP callout */}
       <div className="mt-8 border-l-2 border-accent bg-accent/10 rounded-r-sm p-4">
-        <h4 className="text-xs uppercase tracking-wider text-accent font-sans font-medium mb-1">
+        <h4 className="eyebrow text-accent mb-2">
           MVP del Partit
         </h4>
-        <p className="font-serif text-title text-ink">{chronicle.mvpName}</p>
+        <p className="font-display text-2xl uppercase text-ink">{chronicle.mvpName}</p>
         <p className="text-sm text-muted font-sans mt-1">{chronicle.mvpReason}</p>
       </div>
 

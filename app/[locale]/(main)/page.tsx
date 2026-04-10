@@ -8,16 +8,16 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
       {/* Hero — dark bento card */}
-      <section className="bento-dark rounded-bento p-8 md:p-12 relative overflow-hidden">
+      <section className="bento-dark rounded-bento p-8 md:p-14 relative overflow-hidden">
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/20 text-accent text-xs font-mono uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/20 text-accent eyebrow mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
             Primera Catalana · Grup 1
           </div>
-          <h1 className="text-mega font-serif text-ink-dark leading-none">
-            Futbas.
+          <h1 className="text-mega font-display text-ink-dark uppercase leading-[0.85]">
+            FUTBAS
           </h1>
-          <p className="text-ink-dark/70 mt-4 text-lg max-w-md font-sans">
+          <p className="text-ink-dark/60 mt-6 text-lg max-w-md font-sans font-light">
             Classificacions, resultats i cròmiques del futbol amateur català. Tot en un lloc.
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function HomePage() {
             </svg>
           </div>
           <div className="space-y-4">
-            <div className="text-5xl md:text-6xl font-serif text-white leading-none">
+            <div className="text-6xl md:text-7xl font-display text-white leading-none">
               4
             </div>
             <p className="text-white/90 text-sm font-sans max-w-xs">
@@ -73,10 +73,10 @@ export default function HomePage() {
             </svg>
           </div>
           <div className="flex items-baseline gap-3">
-            <span className="font-serif text-4xl">1r</span>
-            <span className="font-sans text-lg text-ink/80">Argentona CF</span>
+            <span className="font-display text-5xl leading-none">1</span>
+            <span className="font-display text-xl uppercase tracking-tight">Argentona</span>
           </div>
-          <div className="mt-2 text-xs font-mono text-ink/60">45 pts · +14 DG · 24J</div>
+          <div className="mt-3 text-xs font-mono text-ink/70">45 PTS · +14 DG · 24J</div>
         </Link>
 
         {/* Clubs — pink card */}
@@ -92,8 +92,8 @@ export default function HomePage() {
               <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </div>
-          <div className="font-serif text-4xl text-white">16</div>
-          <div className="text-xs font-mono text-white/80 mt-1">equips federats</div>
+          <div className="font-display text-6xl text-white leading-none">16</div>
+          <div className="text-xs font-mono text-white/80 mt-2 uppercase tracking-wider">equips federats</div>
         </Link>
 
         {/* Crònica — violet card */}
@@ -107,10 +107,10 @@ export default function HomePage() {
               Nova
             </span>
           </div>
-          <h3 className="font-serif text-2xl text-white leading-tight mb-2">
+          <h3 className="font-sans text-2xl text-white leading-tight mb-3 font-bold">
             Argentona consolida el liderat amb una victòria clau
           </h3>
-          <p className="text-white/80 text-sm font-sans line-clamp-2">
+          <p className="text-white/75 text-sm font-sans line-clamp-2 font-light">
             Victòria a domicili per 1-3 davant del Figueres amb una actuació destacada del davanter local...
           </p>
         </div>
@@ -120,8 +120,8 @@ export default function HomePage() {
           <span className="text-xs font-mono uppercase tracking-wider text-ink/60">
             Cròmiques IA
           </span>
-          <div className="font-serif text-5xl mt-3">127</div>
-          <div className="text-xs font-mono text-ink/60 mt-1">generades aquesta temporada</div>
+          <div className="font-display text-7xl mt-3 leading-none">127</div>
+          <div className="text-xs font-mono text-ink/70 mt-2 uppercase tracking-wider">generades aquesta temporada</div>
         </div>
 
         {/* Sky — real-time card */}
@@ -130,7 +130,7 @@ export default function HomePage() {
             <span className="text-xs font-mono uppercase tracking-wider text-white/80">
               En directe
             </span>
-            <h3 className="font-serif text-xl text-white mt-2 leading-tight">
+            <h3 className="font-sans text-xl text-white mt-2 leading-tight font-bold">
               Comentaris en temps real durant cada partit
             </h3>
           </div>

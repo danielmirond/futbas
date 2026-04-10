@@ -6,13 +6,11 @@ export default function ClubsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="bento-pink rounded-bento p-6 md:p-8">
-        <div className="flex items-start justify-between mb-3">
-          <span className="text-xs font-mono uppercase tracking-wider text-white/80">
-            16 clubs · 3 delegacions
-          </span>
+      <section className="bento-pink rounded-bento p-6 md:p-10">
+        <div className="eyebrow text-white/80 mb-4">
+          16 clubs · 3 delegacions
         </div>
-        <h1 className="text-headline font-serif text-white">{t('title')}</h1>
+        <h1 className="text-headline font-display uppercase text-white">{t('title')}</h1>
       </section>
 
       <ClubDirectory />
