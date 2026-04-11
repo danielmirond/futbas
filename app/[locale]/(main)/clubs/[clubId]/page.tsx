@@ -90,7 +90,15 @@ export default async function ClubDetailPage({ params: { clubId, locale } }: Pag
                 {club.name}
               </h1>
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center gap-2">
+              <a
+                href={`/api/calendar/${club.id}`}
+                download
+                title="Exportar calendari (iCal)"
+                className="font-mono text-[10px] uppercase tracking-wider px-3 py-2 border border-white/30 text-white hover:bg-white/10 transition-colors inline-flex items-center gap-1.5"
+              >
+                📅 CALENDARI
+              </a>
               <FavoriteButton clubId={club.id} className="bg-white/10 p-2" />
             </div>
           </div>
@@ -123,6 +131,32 @@ export default async function ClubDetailPage({ params: { clubId, locale } }: Pag
           </div>
         </div>
       </section>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-3 gap-[1px] bg-border">
+        <Link
+          href={`/${locale}/botiga/${clubId}`}
+          className="bg-card p-4 text-center hover:bg-surface transition-colors"
+        >
+          <div className="text-2xl mb-1">🛒</div>
+          <div className="eyebrow">BOTIGA</div>
+        </Link>
+        <a
+          href={`/api/calendar/${clubId}`}
+          download
+          className="bg-card p-4 text-center hover:bg-surface transition-colors"
+        >
+          <div className="text-2xl mb-1">📅</div>
+          <div className="eyebrow">CALENDARI</div>
+        </a>
+        <Link
+          href={`/${locale}/admin/${clubId}`}
+          className="bg-card p-4 text-center hover:bg-surface transition-colors"
+        >
+          <div className="text-2xl mb-1">🔐</div>
+          <div className="eyebrow">ADMIN</div>
+        </Link>
+      </div>
 
       {/* Teams in competitions */}
       {teams && teams.length > 0 && (
