@@ -3,6 +3,7 @@ import { MatchHeader } from '@/components/match/match-header'
 import { MatchEventsTimeline } from '@/components/match/match-events-timeline'
 import { CommentFeed } from '@/components/comments/comment-feed'
 import { MvpVoting } from '@/components/mvp/mvp-voting'
+import { AvailabilityVoting } from '@/components/availability/availability-voting'
 import Link from 'next/link'
 
 interface PageProps {
@@ -86,7 +87,8 @@ export default async function MatchDetailPage({ params: { matchId, locale } }: P
         </div>
 
         <div className="space-y-6">
-          <MvpVoting matchId={matchId} />
+          {match.status === 'scheduled' && <AvailabilityVoting matchId={matchId} />}
+          {match.status === 'finished' && <MvpVoting matchId={matchId} />}
         </div>
       </div>
     </div>
