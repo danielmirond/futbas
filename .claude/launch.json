@@ -4,11 +4,11 @@
     {
       "name": "dev",
       "runtimeExecutable": "/Users/danielmd/.nvm/versions/node/v20.20.1/bin/node",
-      "runtimeArgs": ["/Users/danielmd/.nvm/versions/node/v20.20.1/bin/npx", "next", "dev"],
+      "runtimeArgs": ["/Users/danielmd/.nvm/versions/node/v20.20.1/bin/npx", "next", "dev", "-p", "3001"],
       "env": {
         "PATH": "/Users/danielmd/.nvm/versions/node/v20.20.1/bin:/usr/bin:/bin"
       },
-      "port": 3000
+      "port": 3001
     }
   ]
 }

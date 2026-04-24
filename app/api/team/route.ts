@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       return dn === n || sn === n || dn.includes(n) || n.includes(dn)
         || sn.includes(n) || n.includes(sn) || abbr === n
         || slug.includes(n.replace(/ /g, '_'))
-        || (nFirst.length >= 4 && (dn.startsWith(nFirst) || sn.startsWith(nFirst)))
+        || (nFirst.length >= 5 && (dn.startsWith(nFirst) || sn.startsWith(nFirst)))
     })
 
     if (!found) return NextResponse.json({ error: `Team not found: ${name}` })
@@ -122,8 +122,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // Most recent first, limit to 5
-    lastMatches.reverse()
+    // Events already newest-first from ESPN — take first 5
     const last5 = lastMatches.slice(0, 5)
     const form = last5.map(m => m.win === true ? 'W' : m.win === false ? 'L' : 'D')
 

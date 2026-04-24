@@ -20,7 +20,13 @@ interface CompData {
 }
 
 /* ── Date helpers ────────────────────────────────────────────── */
-const today = new Date().toISOString().split('T')[0]
+function getMadridToday(): string {
+  const [dd, mm, yyyy] = new Intl.DateTimeFormat('es-ES', {
+    timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date()).split('/')
+  return `${yyyy}-${mm}-${dd}`
+}
+const today = getMadridToday()
 
 /* No demo data — all matches come from WOSTI API */
 
@@ -455,11 +461,18 @@ export default function GuiaFutbolMD() {
   /* New: polls */ const [polls, setPolls] = useState<Record<number, 'home' | 'away'>>({})
   /* New: interest counters */ const [interests, setInterests] = useState<Record<number, number>>({})
   /* New: notifications */ const [notifEnabled, setNotifEnabled] = useState(false)
+  /* CMS featured match */ const [cmsFeatured, setCmsFeatured] = useState<Match | null>(null)
 
   const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
   const T = darkMode ? DARK : LIGHT
+
+  // Correct selectedDate to real Madrid-timezone today (fixes SSR static build stale date)
+  useEffect(() => {
+    const actual = getMadridToday()
+    setSelectedDate(actual)
+  }, [])
 
   // Load from localStorage
   useEffect(() => {
@@ -574,14 +587,14 @@ export default function GuiaFutbolMD() {
               parseInt(w.time.split(':')[0]) * 60 - parseInt(w.time.split(':')[1])
             ) <= 30)
           })
-          .map((wm: Record<string, unknown>, i: number) => ({
+          .map((wm, i) => ({
             id: 3000 + i,
             time: String(wm.time || '??:??'),
             date: selectedDate,
             home: String(wm.home || '?'),
             away: String(wm.away || '?'),
-            comp: String(wm.competition || ''),
-            ch: Array.isArray(wm.channels) ? (wm.channels as { name: string }[]).map((c: { name: string }) => c.name) : [],
+            comp: String(wm.comp || ''),
+            ch: wm.chs,
           }))
 
         const all = [...merged, ...wostiOnly]
@@ -593,6 +606,15 @@ export default function GuiaFutbolMD() {
     }
     fetchMatches()
   }, [selectedDate])
+
+  // Fetch CMS featured match from Sanity
+  useEffect(() => {
+    fetch('/api/featured').then(r => r.json()).then(({ match }) => {
+      if (match?.override && match?.home) {
+        setCmsFeatured({ id: 99999, time: match.time, date: match.date, home: match.home, away: match.away, comp: match.competition ?? '', ch: match.channels ?? [] })
+      }
+    }).catch(() => {})
+  }, [])
 
   // Clock + notifications for fav matches starting soon
   useEffect(() => {
@@ -675,12 +697,26 @@ export default function GuiaFutbolMD() {
     return byDay
   }, [filtered, groupBy])
 
-  // Featured match: most channels today
+  // Competition sort order: España → Copas EUR → Europa → América → Mundo
+  const COMP_ORDER: Record<string, number> = {
+    'LaLiga EA Sports': 1, 'LaLiga Hypermotion': 2, 'Liga F': 3,
+    'Primera Federación': 4, 'Segunda Federación': 5, 'Tercera Federación': 6,
+    'Copa del Rey': 7, 'Supercopa': 8,
+    'Champions League': 10, 'Europa League': 11, 'Conference League': 12, 'UEFA Nations League': 13,
+    'Premier League': 20, 'Bundesliga': 21, '2. Bundesliga': 22, 'Serie A': 23, 'Serie B Italiana': 24,
+    'Ligue 1': 25, 'Jupiler Pro League': 26, 'Scottish Premiership': 27,
+    'MLS': 40, 'Liga MX': 41,
+    'Primera División Argentina': 50, 'Liga Colombiana': 51, 'Serie A Brasil': 52,
+  }
+  const compSortKey = (comp: string) => COMP_ORDER[comp] ?? 99
+
+  // Featured match: CMS override → else most channels today
   const featuredMatch = useMemo(() => {
+    if (cmsFeatured) return cmsFeatured
     const todayMatches = allMatches.filter(m => m.date === today && !isPast(m.time, m.date))
     if (!todayMatches.length) return null
     return todayMatches.reduce((best, m) => m.ch.length > best.ch.length ? m : best, todayMatches[0])
-  }, [])
+  }, [cmsFeatured, allMatches])
 
   const selectDay = (d: string) => { setSelectedDate(d); setFilter('all'); setCompFilter(''); setTeamFilter(''); setViewMode('day') }
   const resetAll = () => { setFilter('all'); setCompFilter(''); setTeamFilter(''); setSelectedDate(today); setSearchQuery(''); setViewMode('day') }
@@ -718,7 +754,12 @@ export default function GuiaFutbolMD() {
   })
 
   const dayButtons = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(Date.now() + (i - 1) * 86400000).toISOString().split('T')[0]
+    const base = new Date()
+    base.setDate(base.getDate() + (i - 1))
+    const [dd, mm, yyyy] = new Intl.DateTimeFormat('es-ES', {
+      timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(base).split('/')
+    const d = `${yyyy}-${mm}-${dd}`
     const label = i === 0 ? 'Ayer' : i === 1 ? 'Hoy' : i === 2 ? 'Mañana' : new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
     return { date: d, label }
   })
@@ -1001,7 +1042,7 @@ export default function GuiaFutbolMD() {
                     <span>{formatDayHeader(day)}</span>
                     <span className="count">{Object.values(groupedByDay[day]).flat().length} partidos</span>
                   </div>
-                  {Object.entries(groupedByDay[day]).map(([comp, matches]) => (
+                  {Object.entries(groupedByDay[day]).sort(([a], [b]) => compSortKey(a) - compSortKey(b)).map(([comp, matches]) => (
                     <div key={comp} style={{ marginBottom: 14 }}>
                       <div style={{ display: 'flex', alignItems: 'center', borderBottom: `2px solid ${darkMode ? '#222' : '#000'}`, marginBottom: 1 }}>
                         <button onClick={() => showComp(comp)} className="comp-label">{comp} →</button>
