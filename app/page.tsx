@@ -464,6 +464,8 @@ export default function GuiaFutbolMD() {
   /* CMS featured match */ const [cmsFeatured, setCmsFeatured] = useState<Match | null>(null)
 
   const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const drawerRef = useRef<HTMLElement>(null)
+  const drawerBtnRef = useRef<HTMLButtonElement>(null)
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
   const T = darkMode ? DARK : LIGHT
@@ -488,6 +490,16 @@ export default function GuiaFutbolMD() {
       if ('Notification' in window && Notification.permission === 'granted') setNotifEnabled(true)
     } catch {}
   }, [])
+
+  // Close drawer on Escape + lock body scroll when open
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && menuOpen) { setMenuOpen(false); drawerBtnRef.current?.focus() }
+    }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
+  }, [menuOpen])
 
   // Persist
   useEffect(() => { try { localStorage.setItem('md-favorites', JSON.stringify(favorites)) } catch {} }, [favorites])
@@ -710,12 +722,16 @@ export default function GuiaFutbolMD() {
   }
   const compSortKey = (comp: string) => COMP_ORDER[comp] ?? 99
 
-  // Featured match: CMS override → else most channels today
+  // Featured match: CMS override → else top-priority comp + soonest time today
   const featuredMatch = useMemo(() => {
     if (cmsFeatured) return cmsFeatured
     const todayMatches = allMatches.filter(m => m.date === today && !isPast(m.time, m.date))
     if (!todayMatches.length) return null
-    return todayMatches.reduce((best, m) => m.ch.length > best.ch.length ? m : best, todayMatches[0])
+    return [...todayMatches].sort((a, b) => {
+      const ca = compSortKey(a.comp), cb = compSortKey(b.comp)
+      if (ca !== cb) return ca - cb
+      return a.time.localeCompare(b.time)
+    })[0]
   }, [cmsFeatured, allMatches])
 
   const selectDay = (d: string) => { setSelectedDate(d); setFilter('all'); setCompFilter(''); setTeamFilter(''); setViewMode('day') }
@@ -811,10 +827,13 @@ export default function GuiaFutbolMD() {
             </div>
             <div style={{ fontSize: 11, color: T.gray, marginTop: 2 }}>{m.comp}</div>
           </div>
-          <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 }}>
+          <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0, maxWidth: 'min(200px, 42vw)' }}>
             {showScores && <ScoreBox score={m.score} />}
             <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              {m.ch.map((c, i) => <ChTag key={i} name={c} />)}
+              {m.ch.slice(0, 2).map((c, i) => <ChTag key={i} name={c} />)}
+              {m.ch.length > 2 && (
+                <span style={{ fontSize: 9, fontWeight: 700, color: T.gray, padding: '2px 4px', border: `1px solid ${T.border}`, borderRadius: 1, whiteSpace: 'nowrap' }}>+{m.ch.length - 2}</span>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
               {/* Share button */}
@@ -848,11 +867,12 @@ export default function GuiaFutbolMD() {
         .match-row:hover{background:${darkMode ? '#161616' : '#f9f9f9'};border-left-color:${T.yellow}}
         .match-row.past{opacity:.45;border-left:4px solid #ccc;background:${T.lightGray}}
         .match-row.past:hover{background:${T.lightGray};border-left-color:#ccc}
-        .md-logo{display:flex;align-items:center;gap:0;cursor:pointer;user-select:none}
-        .md-logo .bar{width:4px;height:30px;background:#E30613;border-radius:1px}
-        .md-logo .brand{padding:0 6px;display:flex;flex-direction:column;line-height:1}
-        .md-logo .brand-top{font-size:13px;font-weight:900;color:#FFD700;letter-spacing:-.3px;text-transform:uppercase;font-style:italic}
-        .md-logo .brand-bot{font-size:9px;font-weight:800;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+        .md-logo{display:flex;align-items:center;gap:0;cursor:pointer;user-select:none;background:none;border:none;padding:0}
+        .md-logo .md-bar{width:6px;height:30px;background:#E30613;transform:skewX(-10deg);flex-shrink:0}
+        .md-logo .md-bar-l{margin-right:9px}
+        .md-logo .md-bar-r{margin-left:9px}
+        .md-logo .md-mundo{font-size:21px;font-weight:900;color:#FFD700;font-style:italic;text-transform:uppercase;letter-spacing:-.5px;line-height:1}
+        .md-logo .md-dep{font-size:12px;font-weight:900;color:#fff;font-style:italic;text-transform:uppercase;letter-spacing:.5px;line-height:1;align-self:flex-end;padding-bottom:2px;margin-left:5px}
         .comp-label{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:900;color:#fff;background:#E30613;padding:3px 8px 3px 0;border:none;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:.8px}
         .comp-label::before{content:'';display:inline-block;width:3px;height:14px;background:#FFD700;margin-right:5px}
         .day-header{display:flex;align-items:center;margin:14px 0 6px;background:${darkMode?'#111':'#000'};padding:7px 12px;border-left:4px solid #E30613}
@@ -860,68 +880,101 @@ export default function GuiaFutbolMD() {
         .day-header .count{font-size:10px;color:#888;margin-left:auto}
         @keyframes pulse-soon{0%,100%{opacity:1}50%{opacity:.4}}
         .soon-badge{animation:pulse-soon 1.5s infinite;color:#E30613!important}
-        @media(max-width:600px){
+        .featured-hero{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:12px 14px;background:#000;border-bottom:3px solid #E30613}
+        .featured-hero-cta{white-space:nowrap}
+        @media(max-width:540px){
+          .featured-hero{grid-template-columns:auto 1fr;grid-template-rows:auto auto}
+          .featured-hero-cta{grid-column:1/-1;text-align:center;padding:8px 0}
           .match-row{grid-template-columns:46px 1fr;grid-template-rows:auto auto;gap:5px}
           .match-right{grid-column:2;flex-direction:row;justify-content:flex-start;flex-wrap:wrap}
         }
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+        .skip-nav{position:absolute;top:-44px;left:0;padding:8px 14px;background:#E30613;color:#fff;font-size:12px;font-weight:700;z-index:1000;transition:top .2s;border-radius:0 0 4px 0;text-decoration:none}
+        .skip-nav:focus{top:0}
+        :focus-visible{outline:2px solid #E30613;outline-offset:2px}
+        .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:299;animation:fadeIn .2s}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .nav-drawer{position:fixed;top:0;left:0;height:100%;width:min(320px,calc(100vw - 48px));background:${T.bg};z-index:300;overflow-y:auto;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.25)}
+        .nav-drawer.open{transform:translateX(0)}
+        .days-bar{overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:${T.bg};border-bottom:2px solid ${T.border};position:sticky;top:47px;z-index:90}
+        .days-bar::-webkit-scrollbar{display:none}
+        .day-tab{display:inline-flex;align-items:center;justify-content:center;padding:0 14px;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-size:12px;font-weight:600;color:${T.gray};font-family:inherit;height:44px;min-width:54px;white-space:nowrap;transition:color .15s,border-color .15s;margin-bottom:-2px}
+        .day-tab[aria-selected="true"]{color:${T.red};border-bottom-color:${T.red};font-weight:800}
+        .day-tab:hover{color:${T.text}}
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:${darkMode?'#111':'#fff'};border-top:2px solid #E30613;display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.15)}
+        .bottom-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 4px;background:none;border:none;cursor:pointer;font-family:inherit;color:${T.gray};min-height:56px;transition:color .15s;-webkit-tap-highlight-color:transparent}
+        .bottom-nav-btn[aria-current="page"],.bottom-nav-btn[aria-pressed="true"]{color:#E30613}
+        .bottom-nav-btn svg{flex-shrink:0}
+        .bottom-nav-btn span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+        .nav-main-content{padding-bottom:72px}
+        @media(min-width:768px){.bottom-nav{display:none}.nav-main-content{padding-bottom:0!important}}
       `}</style>
 
-      {/* Toast */}
-      {toast && <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: T.red, color: '#fff', padding: '6px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, zIndex: 999 }}>{toast}</div>}
+      {/* Skip navigation */}
+      <a href="#main-content" className="skip-nav">Ir al contenido</a>
 
-      {/* HEADER BAR */}
-      <div style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div className="md-logo" onClick={showMain}>
-            <div className="bar" />
-            <div className="brand">
-              <span className="brand-top">MUNDO</span>
-              <span className="brand-bot">DEPORTIVO</span>
-            </div>
-            <div className="bar" />
-          </div>
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ ...tabBtn(false), background: 'transparent', borderColor: '#555', color: '#ccc' }}>Competiciones ▾</button>
-            {menuOpen && (
-              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, background: T.white, border: `1px solid ${T.border}`, borderRadius: 6, minWidth: 210, boxShadow: '0 4px 14px rgba(0,0,0,.15)', overflow: 'hidden', zIndex: 200, maxHeight: '80vh', overflowY: 'auto' }}>
-                {[
-                  { label: 'España', comps: ['LaLiga EA Sports', 'LaLiga Hypermotion', 'Primera Federación', 'Segunda Federación', 'Tercera Federación', 'Liga F', 'Copa del Rey'] },
-                  { label: 'Copas Internacionales', comps: ['Champions League', 'Europa League', 'Conference League', 'UEFA Nations League'] },
-                  { label: 'Europa', comps: ['Premier League', 'Bundesliga', 'Serie A', 'Ligue 1', 'Jupiler Pro League', 'Scottish Premiership', 'Admiral Bundesliga', '2. Bundesliga', 'Superliga Danesa', 'Liga Polaca', 'Premier League Ucrania'] },
-                  { label: 'América', comps: ['MLS', 'Liga MX', 'Primera División Argentina', 'Primera Nacional Argentina', 'Liga Colombiana', 'Serie A Brasil', 'Liga 1 Perú', 'Liga AUF Uruguaya', 'Liga Pro Ecuador', 'Liga Futve', 'Copa Libertadores', 'Copa Sudamericana'] },
-                  { label: 'Resto del mundo', comps: ['Saudi Pro League', 'Chinese Super League', 'A-League', 'UAE Division 1'] },
-                ].map(({ label, comps }) => {
-                  const available = comps.filter(name => COMPS[name])
-                  if (!available.length) return null
-                  return (
-                    <div key={label}>
-                      <div style={{ padding: '6px 14px 3px', fontSize: 9, fontWeight: 800, color: T.gray, textTransform: 'uppercase', letterSpacing: 1, background: darkMode ? '#111' : '#f5f5f5', borderBottom: `1px solid ${T.border}` }}>{label}</div>
-                      {available.map(name => (
-                        <button key={name} onClick={() => showComp(name)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 14px', background: 'transparent', border: 'none', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 12, color: T.text, fontFamily: 'inherit', textAlign: 'left' }}>
-                          {COMPS[name].emoji} {name}
-                        </button>
-                      ))}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Toast */}
+      {toast && <div role="status" aria-live="polite" style={{ position: 'fixed', bottom: 76, left: '50%', transform: 'translateX(-50%)', background: T.red, color: '#fff', padding: '6px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, zIndex: 999 }}>{toast}</div>}
+
+      {/* HEADER */}
+      <header role="banner" style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
+        <button className="md-logo" onClick={showMain} aria-label="Fútbol en TV · Ir al inicio">
+          <div className="md-bar md-bar-l" />
+          <span className="md-mundo">MUNDO</span>
+          <span className="md-dep">DEPORTIVO</span>
+          <div className="md-bar md-bar-r" />
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Feature 3: Dark mode toggle */}
-          <button onClick={() => setDarkMode(!darkMode)} title={darkMode ? 'Modo claro' : 'Modo oscuro'}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#aaa', padding: '2px 4px' }}>
+          <button onClick={() => setDarkMode(!darkMode)}
+            aria-label={darkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#aaa', padding: '4px', lineHeight: 1 }}>
             {darkMode ? '☀️' : '🌙'}
           </button>
-          <div style={{ fontSize: 10, color: '#aaa', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, letterSpacing: .5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E30613', display: 'inline-block', boxShadow: '0 0 6px #E30613' }} />
-            EN DIRECTO · {clock}
+          <div aria-live="polite" aria-atomic="true" style={{ fontSize: 10, color: '#aaa', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, letterSpacing: .5 }}>
+            <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', background: '#E30613', display: 'inline-block', boxShadow: '0 0 6px #E30613' }} />
+            <span>EN DIRECTO · {clock}</span>
           </div>
         </div>
-      </div>
+      </header>
+
+      {/* DRAWER OVERLAY */}
+      {menuOpen && (
+        <>
+          <div className="drawer-overlay" onClick={() => { setMenuOpen(false); drawerBtnRef.current?.focus() }} aria-hidden="true" />
+          <nav id="nav-drawer" ref={drawerRef} role="dialog" aria-modal="true" aria-label="Menú de competiciones" className={`nav-drawer${menuOpen ? ' open' : ''}`}>
+            <div style={{ position: 'sticky', top: 0, background: '#000', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '3px solid #E30613', zIndex: 1 }}>
+              <span style={{ color: '#fff', fontWeight: 900, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 }}>Competiciones</span>
+              <button onClick={() => { setMenuOpen(false); drawerBtnRef.current?.focus() }}
+                aria-label="Cerrar menú de competiciones"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: 20, lineHeight: 1, padding: '4px 6px' }}>✕</button>
+            </div>
+            {[
+              { label: 'España', comps: ['LaLiga EA Sports', 'LaLiga Hypermotion', 'Primera Federación', 'Segunda Federación', 'Tercera Federación', 'Liga F', 'Copa del Rey'] },
+              { label: 'Copas Internacionales', comps: ['Champions League', 'Europa League', 'Conference League', 'UEFA Nations League'] },
+              { label: 'Europa', comps: ['Premier League', 'Bundesliga', 'Serie A', 'Ligue 1', 'Jupiler Pro League', 'Scottish Premiership', 'Admiral Bundesliga', '2. Bundesliga', 'Superliga Danesa', 'Liga Polaca', 'Premier League Ucrania'] },
+              { label: 'América', comps: ['MLS', 'Liga MX', 'Primera División Argentina', 'Primera Nacional Argentina', 'Liga Colombiana', 'Serie A Brasil', 'Liga 1 Perú', 'Liga AUF Uruguaya', 'Liga Pro Ecuador', 'Liga Futve', 'Copa Libertadores', 'Copa Sudamericana'] },
+              { label: 'Resto del mundo', comps: ['Saudi Pro League', 'Chinese Super League', 'A-League', 'UAE Division 1'] },
+            ].map(({ label, comps }) => {
+              const available = comps.filter(name => COMPS[name])
+              if (!available.length) return null
+              return (
+                <div key={label} role="group" aria-label={label}>
+                  <div style={{ padding: '8px 14px 4px', fontSize: 9, fontWeight: 800, color: T.gray, textTransform: 'uppercase', letterSpacing: 1.2, background: darkMode ? '#0d0d0d' : '#f5f5f5', borderBottom: `1px solid ${T.border}` }}>{label}</div>
+                  {available.map(name => (
+                    <button key={name} onClick={() => showComp(name)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 13, color: T.text, fontFamily: 'inherit', textAlign: 'left', minHeight: 48 }}>
+                      <span aria-hidden="true">{COMPS[name].emoji}</span> {name}
+                    </button>
+                  ))}
+                </div>
+              )
+            })}
+          </nav>
+        </>
+      )}
 
       {/* ══════════ MAIN PAGE ══════════ */}
+      <main id="main-content" className="nav-main-content">
       {page === 'main' && (
         <>
           <div style={{ background: darkMode ? '#0d0d0d' : '#fff', padding: '10px 14px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -934,79 +987,91 @@ export default function GuiaFutbolMD() {
 
           {/* Featured match hero */}
           {featuredMatch && viewMode === 'day' && selectedDate === today && !debouncedSearch && (
-            <div style={{ padding: '12px 14px', background: '#000', borderBottom: `3px solid #E30613`, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ background: '#E30613', padding: '8px 12px', textAlign: 'center', flexShrink: 0, minWidth: 56 }}>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', fontStyle: 'italic', lineHeight: 1 }}>{featuredMatch.time}</div>
+            <div className="featured-hero" role="region" aria-label="Partido destacado">
+              <div style={{ background: '#E30613', padding: '8px 12px', textAlign: 'center', flexShrink: 0, minWidth: 52 }}>
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', fontStyle: 'italic', lineHeight: 1 }}>{featuredMatch.time}</div>
                 <div style={{ fontSize: 7, color: '#fffa', textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 }}>Destacado</div>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 8, fontWeight: 800, color: '#FFD700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 3 }}>{featuredMatch.comp}</div>
-                <div style={{ fontWeight: 900, fontSize: 15, color: '#fff', fontStyle: 'italic' }}>{featuredMatch.home} <span style={{ color: '#E30613' }}>vs</span> {featuredMatch.away}</div>
-                <div style={{ fontSize: 10, color: '#888', marginTop: 3 }}>{featuredMatch.ch.join(' · ')}</div>
+                <div style={{ fontWeight: 900, fontSize: 15, color: '#fff', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {featuredMatch.home} <span style={{ color: '#E30613' }}>vs</span> {featuredMatch.away}
+                </div>
+                {featuredMatch.ch.length > 0 && (
+                  <div style={{ fontSize: 10, color: '#888', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{featuredMatch.ch.slice(0, 3).join(' · ')}</div>
+                )}
               </div>
               {(() => { const cta = getMatchCTA(featuredMatch.ch); return cta ? (
-                <a href={cta.url} target="_blank" rel="noreferrer" style={{ fontSize: 10, fontWeight: 800, padding: '7px 12px', background: 'transparent', color: cta.color, textDecoration: 'none', border: `2px solid ${cta.color}`, whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: .5 }}>{cta.text}</a>
+                <a href={cta.url} target="_blank" rel="noreferrer" className="featured-hero-cta"
+                  style={{ fontSize: 10, fontWeight: 800, padding: '7px 12px', background: 'transparent', color: cta.color, textDecoration: 'none', border: `2px solid ${cta.color}`, textTransform: 'uppercase', letterSpacing: .5 }}>{cta.text}</a>
               ) : null })()}
             </div>
           )}
 
-          {/* Controls */}
-          <div style={{ padding: '9px 14px', borderBottom: `1px solid ${T.border}`, background: T.lightGray }}>
-            {/* Feature 4: Search */}
-            <div style={{ marginBottom: 7, position: 'relative' }}>
-              <input type="text" placeholder="Buscar equipo o competición..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                style={{ width: '100%', padding: '6px 10px 6px 30px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }} />
-              <svg style={{ position: 'absolute', left: 10, top: 8, color: T.gray }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </div>
-            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 7 }}>
+          {/* Days bar — sticky horizontal scroll */}
+          <div className="days-bar" role="tablist" aria-label="Seleccionar día">
+            <div style={{ display: 'inline-flex', padding: '0 8px' }}>
               {dayButtons.map(db => (
-                <button key={db.date} onClick={() => selectDay(db.date)} style={tabBtn(viewMode === 'day' && selectedDate === db.date)}>{db.label}</button>
+                <button key={db.date} role="tab" aria-selected={viewMode === 'day' && selectedDate === db.date}
+                  onClick={() => selectDay(db.date)} className="day-tab">{db.label}</button>
               ))}
-              {/* Feature 7: Week view */}
-              <button onClick={() => setViewMode(viewMode === 'week' ? 'day' : 'week')} style={tabBtn(viewMode === 'week')}>Semana</button>
-              <span style={{ width: 1, height: 16, background: T.border, display: 'inline-block', margin: '0 2px' }} />
-              <button onClick={() => setGroupBy(groupBy === 'comp' ? 'channel' : 'comp')} style={tabBtn(groupBy === 'channel')} title="Agrupar por canal">
+              <button role="tab" aria-selected={viewMode === 'week'} aria-pressed={viewMode === 'week'}
+                onClick={() => setViewMode(viewMode === 'week' ? 'day' : 'week')} className="day-tab">Semana</button>
+              <span aria-hidden="true" style={{ display: 'inline-block', width: 1, height: 20, background: T.border, margin: '12px 4px' }} />
+              <button aria-pressed={groupBy === 'channel'} aria-label={groupBy === 'channel' ? 'Agrupando por canal. Cambiar a por competición' : 'Agrupando por competición. Cambiar a por canal'}
+                onClick={() => setGroupBy(groupBy === 'comp' ? 'channel' : 'comp')} className="day-tab" style={{ fontSize: 11 }}>
                 {groupBy === 'channel' ? 'Por canal' : 'Por comp.'}
               </button>
             </div>
+          </div>
+
+          {/* Controls */}
+          <div style={{ padding: '8px 14px', borderBottom: `1px solid ${T.border}`, background: T.lightGray }}>
+            {/* Search */}
+            <div style={{ marginBottom: 7, position: 'relative' }}>
+              <label htmlFor="search-tv" className="sr-only">Buscar equipo o competición</label>
+              <input id="search-tv" type="search" placeholder="Buscar equipo o competición..." value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)} aria-label="Buscar equipo o competición"
+                style={{ width: '100%', padding: '7px 10px 7px 32px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }} />
+              <svg aria-hidden="true" style={{ position: 'absolute', left: 10, top: 9, color: T.gray }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button onClick={resetAll} style={tabBtn(filter === 'all' && !compFilter && !teamFilter)}>Todos</button>
-              {/* Feature 1: Favorites filter */}
-              {favorites.length > 0 && <button onClick={() => setFilter('favs')} style={tabBtn(filter === 'favs')}>★ Mis equipos</button>}
-              <button onClick={() => setFilter('free')} style={tabBtn(filter === 'free')}>En abierto</button>
-              <button onClick={() => setFilter('pay')} style={tabBtn(filter === 'pay')}>De pago</button>
-              <select value={compFilter} onChange={e => { setCompFilter(e.target.value); setTeamFilter('') }}
+              <button onClick={resetAll} aria-pressed={filter === 'all' && !compFilter && !teamFilter} style={tabBtn(filter === 'all' && !compFilter && !teamFilter)}>Todos</button>
+              <button onClick={() => setFilter('free')} aria-pressed={filter === 'free'} style={tabBtn(filter === 'free')}>En abierto</button>
+              <button onClick={() => setFilter('pay')} aria-pressed={filter === 'pay'} style={tabBtn(filter === 'pay')}>De pago</button>
+              <label className="sr-only" htmlFor="filter-comp">Filtrar por competición</label>
+              <select id="filter-comp" aria-label="Filtrar por competición" value={compFilter} onChange={e => { setCompFilter(e.target.value); setTeamFilter('') }}
                 style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, maxWidth: 150, fontFamily: 'inherit' }}>
                 <option value="">Competición</option>
                 {allComps.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <select value={teamFilter} onChange={e => { setTeamFilter(e.target.value); setCompFilter('') }}
+              <label className="sr-only" htmlFor="filter-team">Filtrar por equipo</label>
+              <select id="filter-team" aria-label="Filtrar por equipo" value={teamFilter} onChange={e => { setTeamFilter(e.target.value); setCompFilter('') }}
                 style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, maxWidth: 170, fontFamily: 'inherit' }}>
                 <option value="">Equipo</option>
                 {clubTeams.length > 0 && <optgroup label="Clubes">{clubTeams.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
                 {nationalTeams.length > 0 && <optgroup label="Selecciones">{nationalTeams.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
               </select>
               {(compFilter || teamFilter) && (
-                <button onClick={() => { setCompFilter(''); setTeamFilter('') }}
+                <button onClick={() => { setCompFilter(''); setTeamFilter('') }} aria-label="Limpiar filtros de competición y equipo"
                   style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.red}`, borderRadius: 2, background: T.redLight, color: T.red, cursor: 'pointer', fontFamily: 'inherit' }}>✕ Limpiar</button>
               )}
-              {/* Notification toggle */}
               {favorites.length > 0 && !notifEnabled && (
-                <button onClick={enableNotifications} title="Activar notificaciones para tus equipos"
+                <button onClick={enableNotifications} aria-label="Activar notificaciones para tus equipos favoritos"
                   style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.gray, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  🔔 Avisos
+                  <span aria-hidden="true">🔔</span> Avisos
                 </button>
               )}
-              {notifEnabled && <span style={{ fontSize: 10, color: '#22c55e' }} title="Notificaciones activas">🔔</span>}
+              {notifEnabled && <span aria-label="Notificaciones activas" role="img" style={{ fontSize: 10, color: '#22c55e' }}>🔔</span>}
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <button onClick={() => setShowScores(!showScores)}
+                <button role="switch" aria-checked={showScores} onClick={() => setShowScores(!showScores)} aria-label={showScores ? 'Ocultar resultados' : 'Mostrar resultados'}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, padding: '4px 8px', border: `1px solid ${showScores ? T.red : T.border}`, borderRadius: 2, background: showScores ? T.redLight : T.white, color: showScores ? T.red : T.gray, cursor: 'pointer', fontFamily: 'inherit', fontWeight: showScores ? 700 : 500 }}>
-                  <span style={{ width: 28, height: 14, borderRadius: 7, background: showScores ? T.red : '#ccc', position: 'relative', display: 'inline-block', transition: 'background .2s' }}>
+                  <span aria-hidden="true" style={{ width: 28, height: 14, borderRadius: 7, background: showScores ? T.red : '#ccc', position: 'relative', display: 'inline-block', transition: 'background .2s' }}>
                     <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: showScores ? 16 : 2, transition: 'left .2s' }} />
                   </span>
                   Resultados
                 </button>
-                <span style={{ fontSize: 11, color: T.gray }}>{filtered.length} partido{filtered.length !== 1 ? 's' : ''}</span>
+                <span aria-live="polite" style={{ fontSize: 11, color: T.gray }}>{filtered.length} partido{filtered.length !== 1 ? 's' : ''}</span>
               </div>
             </div>
           </div>
@@ -1163,6 +1228,29 @@ export default function GuiaFutbolMD() {
           </div>
         </>
       )}
+      </main>
+
+      {/* BOTTOM NAV */}
+      <nav className="bottom-nav" role="navigation" aria-label="Navegación principal">
+        <button className={`bottom-nav-btn${filter === 'favs' ? ' active' : ''}`}
+          aria-pressed={filter === 'favs'}
+          onClick={() => { setFilter(filter === 'favs' ? 'all' : 'favs'); setPage('main') }}>
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill={filter === 'favs' ? '#E30613' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Favoritos</span>
+        </button>
+        <button ref={drawerBtnRef} className={`bottom-nav-btn${menuOpen ? ' active' : ''}`}
+          aria-expanded={menuOpen} aria-controls="nav-drawer" aria-haspopup="dialog"
+          onClick={() => setMenuOpen(!menuOpen)}>
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span>Competiciones</span>
+        </button>
+        <button className={`bottom-nav-btn${page === 'main' && !menuOpen && filter !== 'favs' ? ' active' : ''}`}
+          aria-current={page === 'main' && selectedDate === today && !menuOpen ? 'page' : undefined}
+          onClick={() => { selectDay(getMadridToday()); setPage('main'); setFilter('all') }}>
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Hoy</span>
+        </button>
+      </nav>
     </div>
   )
 }
