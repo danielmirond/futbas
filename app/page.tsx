@@ -96,16 +96,16 @@ for (const name of Object.keys(COMP_EMOJI)) {
 
 /* ── Theme ───────────────────────────────────────────────────── */
 const LIGHT = {
-  red: '#CC0000', redLight: '#fde8e8', yellow: '#FFD700',
-  black: '#1a1a1a', darkGray: '#333', gray: '#666',
-  lightGray: '#f7f7f7', border: '#e5e5e5', white: '#fff',
-  bg: '#fff', text: '#1a1a1a', cardBg: '#fff',
+  red: '#E30613', redLight: '#fde8e8', yellow: '#FFD700',
+  black: '#000', darkGray: '#222', gray: '#666',
+  lightGray: '#f4f4f4', border: '#e8e8e8', white: '#fff',
+  bg: '#f4f4f4', text: '#000', cardBg: '#fff',
 }
 const DARK = {
-  red: '#CC0000', redLight: '#2a1010', yellow: '#FFD700',
-  black: '#fff', darkGray: '#ccc', gray: '#999',
-  lightGray: '#1a1a1a', border: '#333', white: '#0a0a0a',
-  bg: '#0a0a0a', text: '#e5e5e5', cardBg: '#161616',
+  red: '#E30613', redLight: '#2a0a0a', yellow: '#FFD700',
+  black: '#fff', darkGray: '#ccc', gray: '#888',
+  lightGray: '#111', border: '#222', white: '#000',
+  bg: '#000', text: '#f0f0f0', cardBg: '#0d0d0d',
 }
 
 /* ── Helpers ──────────────────────────────────────────────────── */
@@ -801,15 +801,26 @@ export default function GuiaFutbolMD() {
 
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0}
-        body{background:${T.bg};transition:background .3s}
-        .ch-tag{font-size:9px;font-weight:700;padding:2px 5px;border-radius:2px;border-width:1px;border-style:solid;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px}
-        .match-row{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid ${T.border};border-left:3px solid ${T.red};background:${T.cardBg};transition:background .15s}
-        .match-row:hover{background:${darkMode ? '#1e1e1e' : '#fafafa'}}
-        .match-row.past{opacity:.5;border-left:3px solid transparent;background:${T.lightGray}}
+        body{background:${T.bg};transition:background .3s;font-family:'Helvetica Neue',Arial,sans-serif}
+        .ch-tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:1px;border-width:1px;border-style:solid;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
+        .match-row{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid ${T.border};border-left:4px solid ${T.red};background:${T.cardBg};transition:background .15s}
+        .match-row:hover{background:${darkMode ? '#161616' : '#f9f9f9'};border-left-color:${T.yellow}}
+        .match-row.past{opacity:.45;border-left:4px solid #ccc;background:${T.lightGray}}
+        .match-row.past:hover{background:${T.lightGray};border-left-color:#ccc}
+        .md-logo{display:flex;align-items:center;gap:0;cursor:pointer;user-select:none}
+        .md-logo .bar{width:4px;height:30px;background:#E30613;border-radius:1px}
+        .md-logo .brand{padding:0 6px;display:flex;flex-direction:column;line-height:1}
+        .md-logo .brand-top{font-size:13px;font-weight:900;color:#FFD700;letter-spacing:-.3px;text-transform:uppercase;font-style:italic}
+        .md-logo .brand-bot{font-size:9px;font-weight:800;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+        .comp-label{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:900;color:#fff;background:#E30613;padding:3px 8px 3px 0;border:none;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:.8px}
+        .comp-label::before{content:'';display:inline-block;width:3px;height:14px;background:#FFD700;margin-right:5px}
+        .day-header{display:flex;align-items:center;margin:14px 0 6px;background:${darkMode?'#111':'#000'};padding:7px 12px;border-left:4px solid #E30613}
+        .day-header span{font-size:11px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1.2px}
+        .day-header .count{font-size:10px;color:#888;margin-left:auto}
         @keyframes pulse-soon{0%,100%{opacity:1}50%{opacity:.4}}
-        .soon-badge{animation:pulse-soon 1.5s infinite}
+        .soon-badge{animation:pulse-soon 1.5s infinite;color:#E30613!important}
         @media(max-width:600px){
-          .match-row{grid-template-columns:48px 1fr;grid-template-rows:auto auto;gap:5px}
+          .match-row{grid-template-columns:46px 1fr;grid-template-rows:auto auto;gap:5px}
           .match-right{grid-column:2;flex-direction:row;justify-content:flex-start;flex-wrap:wrap}
         }
       `}</style>
@@ -818,9 +829,16 @@ export default function GuiaFutbolMD() {
       {toast && <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: T.red, color: '#fff', padding: '6px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, zIndex: 999 }}>{toast}</div>}
 
       {/* HEADER BAR */}
-      <div style={{ background: '#111', padding: '8px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid ${T.red}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo-md.png" alt="MD" onClick={showMain} style={{ height: 32, cursor: 'pointer' }} />
+      <div style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="md-logo" onClick={showMain}>
+            <div className="bar" />
+            <div className="brand">
+              <span className="brand-top">MUNDO</span>
+              <span className="brand-bot">DEPORTIVO</span>
+            </div>
+            <div className="bar" />
+          </div>
           <div style={{ position: 'relative' }}>
             <button onClick={() => setMenuOpen(!menuOpen)} style={{ ...tabBtn(false), background: 'transparent', borderColor: '#555', color: '#ccc' }}>Competiciones ▾</button>
             {menuOpen && (
@@ -855,8 +873,8 @@ export default function GuiaFutbolMD() {
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#aaa', padding: '2px 4px' }}>
             {darkMode ? '☀️' : '🌙'}
           </button>
-          <div style={{ fontSize: 11, color: '#aaa', display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: T.red, display: 'inline-block', marginRight: 5 }} />
+          <div style={{ fontSize: 10, color: '#aaa', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, letterSpacing: .5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E30613', display: 'inline-block', boxShadow: '0 0 6px #E30613' }} />
             EN DIRECTO · {clock}
           </div>
         </div>
@@ -865,24 +883,28 @@ export default function GuiaFutbolMD() {
       {/* ══════════ MAIN PAGE ══════════ */}
       {page === 'main' && (
         <>
-          <div style={{ background: T.cardBg, padding: '8px 14px 10px', borderBottom: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: T.red, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 2 }}>⚽ Fútbol · Guía TV</div>
-            <h1 style={{ fontSize: 17, fontWeight: 900, fontStyle: 'italic', color: T.text }}>Fútbol en la TV hoy</h1>
+          <div style={{ background: darkMode ? '#0d0d0d' : '#fff', padding: '10px 14px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 4, height: 36, background: '#E30613', borderRadius: 1, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 800, color: '#E30613', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 1 }}>Fútbol · Guía TV</div>
+              <h1 style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: T.text, lineHeight: 1.1 }}>Fútbol en la TV hoy</h1>
+            </div>
           </div>
 
           {/* Featured match hero */}
           {featuredMatch && viewMode === 'day' && selectedDate === today && !debouncedSearch && (
-            <div style={{ padding: '12px 14px', background: `linear-gradient(135deg, ${T.red}22, ${T.cardBg})`, borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ background: T.red, borderRadius: 4, padding: '6px 10px', textAlign: 'center', flexShrink: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', fontStyle: 'italic' }}>{featuredMatch.time}</div>
-                <div style={{ fontSize: 8, color: '#fffa', textTransform: 'uppercase' }}>Destacado</div>
+            <div style={{ padding: '12px 14px', background: '#000', borderBottom: `3px solid #E30613`, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ background: '#E30613', padding: '8px 12px', textAlign: 'center', flexShrink: 0, minWidth: 56 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', fontStyle: 'italic', lineHeight: 1 }}>{featuredMatch.time}</div>
+                <div style={{ fontSize: 7, color: '#fffa', textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 }}>Destacado</div>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 14, color: T.text }}>{featuredMatch.home} vs {featuredMatch.away}</div>
-                <div style={{ fontSize: 10, color: T.gray, marginTop: 2 }}>{featuredMatch.comp} · {featuredMatch.ch.join(', ')}</div>
+                <div style={{ fontSize: 8, fontWeight: 800, color: '#FFD700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 3 }}>{featuredMatch.comp}</div>
+                <div style={{ fontWeight: 900, fontSize: 15, color: '#fff', fontStyle: 'italic' }}>{featuredMatch.home} <span style={{ color: '#E30613' }}>vs</span> {featuredMatch.away}</div>
+                <div style={{ fontSize: 10, color: '#888', marginTop: 3 }}>{featuredMatch.ch.join(' · ')}</div>
               </div>
               {(() => { const cta = getMatchCTA(featuredMatch.ch); return cta ? (
-                <a href={cta.url} target="_blank" rel="noreferrer" style={{ fontSize: 9, fontWeight: 700, padding: '5px 10px', borderRadius: 3, background: '#1a1a1a', color: cta.color, textDecoration: 'none', border: `1px solid ${cta.color}44`, whiteSpace: 'nowrap' }}>{cta.text}</a>
+                <a href={cta.url} target="_blank" rel="noreferrer" style={{ fontSize: 10, fontWeight: 800, padding: '7px 12px', background: 'transparent', color: cta.color, textDecoration: 'none', border: `2px solid ${cta.color}`, whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: .5 }}>{cta.text}</a>
               ) : null })()}
             </div>
           )}
@@ -975,16 +997,15 @@ export default function GuiaFutbolMD() {
             ) : (
               Object.keys(groupedByDay).sort().map(day => (
                 <div key={day}>
-                  <div style={{ display: 'flex', alignItems: 'center', margin: '12px 0 7px', padding: '6px 10px', background: darkMode ? '#1a1a1a' : T.black, borderLeft: `4px solid ${T.red}` }}>
-                    <span style={{ fontSize: 12, fontWeight: 900, color: '#fff', textTransform: 'uppercase', letterSpacing: 1 }}>📅 {formatDayHeader(day)}</span>
-                    <span style={{ fontSize: 10, color: '#aaa', marginLeft: 'auto' }}>{Object.values(groupedByDay[day]).flat().length} partidos</span>
+                  <div className="day-header">
+                    <span>{formatDayHeader(day)}</span>
+                    <span className="count">{Object.values(groupedByDay[day]).flat().length} partidos</span>
                   </div>
                   {Object.entries(groupedByDay[day]).map(([comp, matches]) => (
-                    <div key={comp} style={{ marginBottom: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', padding: '5px 0', borderBottom: `2px solid ${darkMode ? '#333' : T.black}`, marginBottom: 1 }}>
-                        <button onClick={() => showComp(comp)}
-                          style={{ fontSize: 11, fontWeight: 900, color: '#fff', background: T.red, padding: '2px 9px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: 1 }}>{comp} →</button>
-                        <span style={{ fontSize: 11, color: T.gray, marginLeft: 'auto' }}>{matches.length}p</span>
+                    <div key={comp} style={{ marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', borderBottom: `2px solid ${darkMode ? '#222' : '#000'}`, marginBottom: 1 }}>
+                        <button onClick={() => showComp(comp)} className="comp-label">{comp} →</button>
+                        <span style={{ fontSize: 10, color: T.gray, marginLeft: 'auto', fontWeight: 600 }}>{matches.length}p</span>
                       </div>
                       {matches.map(renderMatch)}
                     </div>
@@ -994,9 +1015,15 @@ export default function GuiaFutbolMD() {
             )}
           </div>
 
-          <div style={{ borderTop: `2px solid ${darkMode ? '#333' : T.black}`, padding: '9px 14px', display: 'flex', justifyContent: 'space-between', fontSize: 10, color: T.gray }}>
-            <span>{dataSource === 'api' ? 'EN VIVO' : 'Demo'} · futbolenlatv.es · WOSTI API</span>
-            <span>{dateStr}</span>
+          <div style={{ borderTop: `3px solid #E30613`, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 3, height: 18, background: '#E30613', borderRadius: 1 }} />
+              <span style={{ fontSize: 9, fontWeight: 800, color: '#FFD700', textTransform: 'uppercase', letterSpacing: 1 }}>MUNDO</span>
+              <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: 1 }}>DEPORTIVO</span>
+              <div style={{ width: 3, height: 18, background: '#E30613', borderRadius: 1 }} />
+              <span style={{ fontSize: 9, color: '#555', marginLeft: 4 }}>{dataSource === 'api' ? '● EN VIVO' : '○ Demo'}</span>
+            </div>
+            <span style={{ fontSize: 9, color: '#555' }}>{dateStr}</span>
           </div>
         </>
       )}
@@ -1004,17 +1031,17 @@ export default function GuiaFutbolMD() {
       {/* ══════════ COMPETITION PAGE ══════════ */}
       {page === 'comp' && cp && (
         <>
-          <div style={{ padding: '7px 14px', background: T.lightGray, borderBottom: `1px solid ${T.border}`, fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button onClick={showMain} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.red, fontWeight: 700, fontSize: 11, padding: 0, fontFamily: 'inherit' }}>← Guía TV</button>
-            <span style={{ color: T.gray }}>/</span>
-            <span style={{ fontWeight: 600, color: T.text }}>{currentComp}</span>
+          <div style={{ padding: '7px 14px', background: '#000', borderBottom: `1px solid #222`, fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={showMain} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E30613', fontWeight: 800, fontSize: 11, padding: 0, fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: .5 }}>← Guía TV</button>
+            <span style={{ color: '#444' }}>/</span>
+            <span style={{ fontWeight: 700, color: '#aaa', fontSize: 11 }}>{currentComp}</span>
           </div>
-          <div style={{ padding: '10px 14px 0', borderBottom: `1px solid ${T.border}`, background: T.cardBg }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 22 }}>{cp.emoji}</span>
+          <div style={{ padding: '12px 14px 0', borderBottom: `1px solid ${T.border}`, background: T.cardBg }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div style={{ width: 4, height: 40, background: '#E30613', borderRadius: 1, flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: T.red, textTransform: 'uppercase', letterSpacing: 1.5 }}>Competición</div>
-                <h2 style={{ fontSize: 18, fontWeight: 900, fontStyle: 'italic', color: T.text }}>{currentComp}</h2>
+                <div style={{ fontSize: 9, fontWeight: 800, color: '#E30613', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 2 }}>{cp.emoji} Competición</div>
+                <h2 style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: T.text, lineHeight: 1.1 }}>{currentComp}</h2>
               </div>
             </div>
             <div style={{ display: 'flex' }}>
