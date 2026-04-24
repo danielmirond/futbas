@@ -97,8 +97,8 @@ export function FavoriteButton({
         width="22"
         height="22"
         viewBox="0 0 24 24"
-        fill={isFavorited ? '#FF2882' : 'none'}
-        stroke={isFavorited ? '#FF2882' : '#9B8AA6'}
+        fill={isFavorited ? '#E30613' : 'none'}
+        stroke={isFavorited ? '#E30613' : '#8a8a8a'}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
