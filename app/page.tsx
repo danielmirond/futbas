@@ -26,17 +26,68 @@ const today = new Date().toISOString().split('T')[0]
 
 /* Competitions — all supported, data loaded from /api/standings */
 const COMP_EMOJI: Record<string, string> = {
+  // España — clubes
   'LaLiga EA Sports': '🇪🇸', 'LaLiga Hypermotion': '🇪🇸',
-  'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Bundesliga': '🇩🇪', 'Serie A': '🇮🇹', 'Ligue 1': '🇫🇷',
-  'Champions League': '🏆', 'Europa League': '🏆', 'Conference League': '🏆',
+  'Primera Federación': '🇪🇸', 'Segunda Federación': '🇪🇸', 'Tercera Federación': '🇪🇸',
+  'Liga F': '🇪🇸', 'Primera Federación Femenina': '🇪🇸',
+  'División Honor Juvenil': '🇪🇸', 'División Honor Cadete': '🇪🇸', 'Liga Nacional Juvenil': '🇪🇸',
   'Copa del Rey': '🏆', 'Supercopa': '🏆',
-  'UEFA Nations League': '🌍', 'Amistoso': '🌍', 'Clasificación Mundial': '🌍',
+  // Inglaterra
+  'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'FA Cup': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', "FA Women's Super League": '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'National League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'National League North': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'National League South': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'U18 Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  // Alemania
+  'Bundesliga': '🇩🇪', '2. Bundesliga': '🇩🇪', 'Regionalliga': '🇩🇪', 'Bundesliga Sub-19': '🇩🇪',
+  // Italia
+  'Serie A': '🇮🇹', 'Serie B Italiana': '🇮🇹', 'Serie C': '🇮🇹',
+  // Francia
+  'Ligue 1': '🇫🇷', 'Championnat National': '🇫🇷',
+  // Otros Europa
+  'Jupiler Pro League': '🇧🇪',
+  'Scottish Premiership': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Northern Irish Premiership': '🇬🇧',
+  'Admiral Bundesliga': '🇦🇹',
+  'Superliga Danesa': '🇩🇰',
+  'Superliga de Eslovaquia': '🇸🇰',
+  'Superliga de Letonia': '🇱🇻',
+  'Liga Premier Islandia': '🇮🇸',
+  'Veikkausliiga': '🇫🇮',
+  'Damallsvenskan': '🇸🇪',
+  'Premier League Ucrania': '🇺🇦',
+  'Liga Polaca': '🇵🇱',
+  // Europa — copas internacionales
+  'Champions League': '🏆', 'Europa League': '🏆', 'Conference League': '🏆',
+  'Champions League Femenina': '🏆', 'UEFA Nations League': '🌍',
+  // Norteamérica
+  'MLS': '🇺🇸', 'MLS Next Pro': '🇺🇸', 'NWSL': '🇺🇸',
   'Liga MX': '🇲🇽',
+  // Sudamérica
+  'Primera División Argentina': '🇦🇷', 'Primera Nacional Argentina': '🇦🇷',
+  'Primera B Argentina': '🇦🇷', 'Primera C': '🇦🇷',
+  'Liga Colombiana': '🇨🇴',
+  'Liga 1 Perú': '🇵🇪',
+  'Liga AUF Uruguaya': '🇺🇾', 'Segunda Uruguay': '🇺🇾',
+  'Liga Pro Ecuador': '🇪🇨',
+  'Serie A Brasil': '🇧🇷', 'Campeonato Femenino': '🇧🇷',
+  'Liga Futve': '🇻🇪', 'Liga Futve 2': '🇻🇪',
+  'Copa Libertadores': '🏆', 'Copa Sudamericana': '🏆',
+  'Sudamericano Femenino Sub-17': '🌎',
+  // Resto del mundo
+  'A-League': '🇦🇺', 'A-League Women': '🇦🇺',
+  'Saudi Pro League': '🇸🇦',
+  'UAE Division 1': '🇦🇪',
+  'Chinese Super League': '🇨🇳',
+  'ASEAN Club Championship': '🌏',
+  'Primera División Andorra': '🇦🇩',
+  // Amistosos/selecciones
+  'Amistoso': '🌍', 'Amistoso Sub-15': '🌍', 'Clasificación Mundial': '🌍',
 }
+
 const COMP_LEAGUE_ID: Record<string, string> = {
   'LaLiga EA Sports': 'esp.1', 'LaLiga Hypermotion': 'esp.2',
   'Premier League': 'eng.1', 'Bundesliga': 'ger.1', 'Serie A': 'ita.1', 'Ligue 1': 'fra.1',
-  'Liga MX': 'mex.1',
+  'Liga MX': 'mex.1', 'MLS': 'usa.1',
+  'Champions League': 'uefa.champions', 'Europa League': 'uefa.europa', 'Conference League': 'uefa.europa.conf',
 }
 const COMPS: Record<string, CompData> = {}
 for (const name of Object.keys(COMP_EMOJI)) {
@@ -773,10 +824,27 @@ export default function GuiaFutbolMD() {
           <div style={{ position: 'relative' }}>
             <button onClick={() => setMenuOpen(!menuOpen)} style={{ ...tabBtn(false), background: 'transparent', borderColor: '#555', color: '#ccc' }}>Competiciones ▾</button>
             {menuOpen && (
-              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, background: T.white, border: `1px solid ${T.border}`, borderRadius: 6, minWidth: 190, boxShadow: '0 4px 14px rgba(0,0,0,.15)', overflow: 'hidden', zIndex: 200 }}>
-                {Object.entries(COMPS).map(([name, data]) => (
-                  <button key={name} onClick={() => showComp(name)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: 'transparent', border: 'none', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 12, color: T.text, fontFamily: 'inherit', textAlign: 'left' }}>{data.emoji} {name}</button>
-                ))}
+              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, background: T.white, border: `1px solid ${T.border}`, borderRadius: 6, minWidth: 210, boxShadow: '0 4px 14px rgba(0,0,0,.15)', overflow: 'hidden', zIndex: 200, maxHeight: '80vh', overflowY: 'auto' }}>
+                {[
+                  { label: 'España', comps: ['LaLiga EA Sports', 'LaLiga Hypermotion', 'Primera Federación', 'Segunda Federación', 'Tercera Federación', 'Liga F', 'Copa del Rey'] },
+                  { label: 'Copas Internacionales', comps: ['Champions League', 'Europa League', 'Conference League', 'UEFA Nations League'] },
+                  { label: 'Europa', comps: ['Premier League', 'Bundesliga', 'Serie A', 'Ligue 1', 'Jupiler Pro League', 'Scottish Premiership', 'Admiral Bundesliga', '2. Bundesliga', 'Superliga Danesa', 'Liga Polaca', 'Premier League Ucrania'] },
+                  { label: 'América', comps: ['MLS', 'Liga MX', 'Primera División Argentina', 'Primera Nacional Argentina', 'Liga Colombiana', 'Serie A Brasil', 'Liga 1 Perú', 'Liga AUF Uruguaya', 'Liga Pro Ecuador', 'Liga Futve', 'Copa Libertadores', 'Copa Sudamericana'] },
+                  { label: 'Resto del mundo', comps: ['Saudi Pro League', 'Chinese Super League', 'A-League', 'UAE Division 1'] },
+                ].map(({ label, comps }) => {
+                  const available = comps.filter(name => COMPS[name])
+                  if (!available.length) return null
+                  return (
+                    <div key={label}>
+                      <div style={{ padding: '6px 14px 3px', fontSize: 9, fontWeight: 800, color: T.gray, textTransform: 'uppercase', letterSpacing: 1, background: darkMode ? '#111' : '#f5f5f5', borderBottom: `1px solid ${T.border}` }}>{label}</div>
+                      {available.map(name => (
+                        <button key={name} onClick={() => showComp(name)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 14px', background: 'transparent', border: 'none', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', fontSize: 12, color: T.text, fontFamily: 'inherit', textAlign: 'left' }}>
+                          {COMPS[name].emoji} {name}
+                        </button>
+                      ))}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

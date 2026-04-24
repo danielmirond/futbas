@@ -30,6 +30,12 @@ export async function GET(request: Request) {
     type WostiMatch = Record<string, unknown>
     const rawMatches: WostiMatch[] = Array.isArray(raw) ? raw : []
 
+    const WOSTI_NAME_MAP: Record<string, string> = {
+      'La Liga EA Sports': 'LaLiga EA Sports',
+      'Serie A Italiana': 'Serie A',
+      'Francia Ligue 1': 'Ligue 1',
+    }
+
     const IMG = '/api/badge?img='
     const matches = rawMatches.map((m) => {
       const local = m.LocalTeam  as Record<string, unknown> | undefined
@@ -66,25 +72,13 @@ export async function GET(request: Request) {
         away:        String(away?.Name  ?? '—'),
         homeBadge:   local?.Image ? `${IMG}${String(local.Image)}` : '',
         awayBadge:   away?.Image  ? `${IMG}${String(away.Image)}`  : '',
-        competition: String(comp?.Name  ?? ''),
+        competition: WOSTI_NAME_MAP[String(comp?.Name ?? '')] || String(comp?.Name ?? ''),
         channels:    chs as { name: string; image: string }[],
       }
     })
 
-    // Only show relevant competitions
-    const ALLOWED_COMPS = [
-      'LaLiga EA Sports', 'LaLiga Hypermotion', 'Premier League',
-      'Champions League', 'Europa League', 'Conference League',
-      'Copa del Rey', 'Supercopa', 'UEFA Nations League',
-      'Bundesliga', 'Serie A', 'Ligue 1', 'Liga MX',
-      'Amistoso', 'Clasificación Mundial',
-    ]
     const filtered = matches
-      .filter(m => m.localDate === date)
-      .filter(m => {
-        if (!m.competition) return false
-        return ALLOWED_COMPS.some(c => m.competition.toLowerCase().includes(c.toLowerCase()))
-      })
+      .filter(m => m.localDate === date && m.competition)
     filtered.sort((a, b) => String(a.time).localeCompare(String(b.time)))
 
     return NextResponse.json({
