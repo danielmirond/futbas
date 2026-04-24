@@ -37,24 +37,15 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* Línea MD amarillo|rojo arriba del todo */}
+      {/* Accent line top */}
       <div className="accent-line" />
 
-      {/* Barra negra editorial */}
+      {/* Purple bar */}
       <div className="bg-primary text-white">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Wordmark envuelto en barras verticales amarillo|rojo (firma MD) */}
-          <Link href={`/${locale}`} className="flex items-stretch h-10 gap-0">
-            <span className="flex items-stretch">
-              <span className="block w-[4px] bg-accent" />
-              <span className="block w-[4px] bg-danger ml-[2px]" />
-            </span>
-            <span className="flex items-center px-3 font-display font-black text-2xl uppercase tracking-tight text-white leading-none">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+          <Link href={`/${locale}`} className="flex items-center">
+            <span className="font-display font-black text-2xl uppercase tracking-tight text-white">
               FUT<span className="text-accent">BAS</span>
-            </span>
-            <span className="flex items-stretch">
-              <span className="block w-[4px] bg-danger" />
-              <span className="block w-[4px] bg-accent ml-[2px]" />
             </span>
           </Link>
 
@@ -85,7 +76,7 @@ export function Header() {
             )}
             <button
               onClick={switchLocale}
-              className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 border border-white/25 text-white/80 hover:border-accent hover:text-accent transition-colors"
+              className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 border border-white/20 text-white/80 hover:border-accent hover:text-white transition-colors"
             >
               {locale === 'ca' ? 'ES' : 'CA'}
             </button>
@@ -117,12 +108,12 @@ function NavLinks({ locale }: { locale: string }) {
             key={href}
             href={href}
             className={`text-xs font-display uppercase tracking-wider transition-colors relative ${
-              isActive ? 'text-accent font-bold' : 'text-white/75 hover:text-white'
+              isActive ? 'text-accent font-bold' : 'text-white/70 hover:text-white'
             }`}
           >
             {label}
             {isActive && (
-              <span className="absolute -bottom-[22px] left-0 right-0 h-[3px] bg-accent" />
+              <span className="absolute -bottom-[18px] left-0 right-0 h-[3px] bg-accent" />
             )}
           </Link>
         )
