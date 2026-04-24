@@ -8,10 +8,10 @@ interface PageProps {
 }
 
 const PALETTE = [
-  { p: '#37003C', s: '#FF2882' },
-  { p: '#00FF85', s: '#37003C' },
-  { p: '#FF2882', s: '#0A0A0A' },
-  { p: '#FFFFFF', s: '#37003C' },
+  { p: '#000000', s: '#FFD100' },
+  { p: '#FFD100', s: '#000000' },
+  { p: '#E30613', s: '#FFFFFF' },
+  { p: '#FFFFFF', s: '#E30613' },
 ]
 
 function hashColors(name: string) {

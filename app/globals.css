@@ -18,34 +18,56 @@
 }
 
 @layer components {
-  /* Base card — sharp corners, magenta left border */
+  /* Card — esquinas rectas, borde izquierdo rojo MD */
   .card {
-    @apply bg-card border-l-[3px] border-l-accent border-y border-r border-border p-5 transition-all;
+    @apply bg-card border-l-[3px] border-l-danger border-y border-r border-border p-5 transition-all;
   }
 
   .card-hover {
     @apply hover:shadow-lg hover:-translate-y-0.5;
   }
 
-  /* Hero with purple gradient */
+  /* Hero MD: negro sólido */
   .hero {
-    @apply bg-hero-gradient text-white relative overflow-hidden;
+    @apply bg-primary text-white relative overflow-hidden;
   }
 
   .hero-glow {
     @apply absolute -top-20 -right-20 w-96 h-96 rounded-full pointer-events-none;
-    background: radial-gradient(circle, rgba(255,40,130,.15), transparent 65%);
+    background: radial-gradient(circle, rgba(255,209,0,.12), transparent 65%);
   }
 
-  /* Accent line (magenta + neon green gradient bottom) */
+  /* Línea MD amarillo|rojo (firma visual, dos mitades sólidas) */
   .accent-line {
     @apply h-[3px] bg-accent-line;
   }
 
-  /* Premier buttons */
+  /* Barras verticales MD: |amarillo |rojo ... rojo| amarillo|
+     Envuelven un wordmark para evocar la cabecera de MD */
+  .md-bars-left,
+  .md-bars-right {
+    @apply relative inline-flex items-stretch;
+  }
+  .md-bars-left::before,
+  .md-bars-right::after {
+    content: '';
+    @apply block w-[3px] self-stretch bg-accent;
+  }
+  .md-bars-left::after,
+  .md-bars-right::before {
+    content: '';
+    @apply block w-[3px] self-stretch bg-danger mx-[2px];
+  }
+
+  /* Botón primario MD: amarillo sobre texto negro */
   .btn-primary {
-    @apply bg-accent text-white font-display font-black uppercase tracking-wider
+    @apply bg-accent text-primary font-display font-black uppercase tracking-wider
            px-4 py-2.5 text-sm transition-colors hover:bg-accent-dark cursor-pointer;
+  }
+
+  .btn-danger {
+    @apply bg-danger text-white font-display font-black uppercase tracking-wider
+           px-4 py-2.5 text-sm transition-colors hover:bg-danger-dark cursor-pointer;
   }
 
   .btn-ghost {
@@ -59,12 +81,12 @@
   }
 
   .eyebrow-light {
-    @apply font-mono text-[9px] uppercase tracking-[0.2em] text-white/40;
+    @apply font-mono text-[9px] uppercase tracking-[0.2em] text-white/50;
   }
 
-  /* Section header dark purple */
+  /* Section header MD: negro con barra roja inferior */
   .section-head {
-    @apply bg-primary border-b-2 border-b-accent px-3 py-2
+    @apply bg-primary border-b-2 border-b-danger px-3 py-2
            font-display font-bold text-sm text-white uppercase tracking-wider;
   }
 
@@ -72,44 +94,57 @@
   .tag {
     @apply font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 border;
   }
-  .tag-neon { @apply border-neon/40 text-neon; }
-  .tag-magenta { @apply border-accent/40 text-accent; }
+  .tag-neon { @apply border-accent/50 text-primary bg-accent/20; }
+  .tag-magenta { @apply border-danger/50 text-danger; }
   .tag-muted { @apply border-border text-ink3; }
 
-  /* Score display — impact serif numbers with magenta dash */
+  /* Score: impact numbers con guión rojo MD */
   .score {
     @apply font-display font-black tracking-tighter text-ink;
     letter-spacing: -0.06em;
   }
-  .score-dash { @apply text-accent; }
+  .score-dash { @apply text-danger; }
 
-  /* Stat numbers */
   .stat-num {
     @apply font-display font-black text-ink;
   }
 
-  /* Form dots (W/D/L) — circular solid */
+  /* Form dots W/D/L */
   .form-dot {
     @apply w-6 h-6 rounded-full flex items-center justify-center
            font-display font-black text-[11px];
   }
-  .form-dot-w { @apply bg-neon text-primary; }
+  .form-dot-w { @apply bg-win text-white; }
   .form-dot-d { @apply bg-ink3 text-white; }
-  .form-dot-l { @apply bg-accent text-white; }
+  .form-dot-l { @apply bg-danger text-white; }
 
-  /* Bottom nav */
+  /* Bottom nav: negro con borde superior rojo MD */
   .bnav-wrap {
-    @apply bg-primary border-t-2 border-t-accent;
+    @apply bg-primary border-t-2 border-t-danger;
   }
 
-  /* Pills colored status */
+  /* Pills status */
   .pill {
     @apply font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 inline-block border;
   }
-  .pill-green { @apply bg-neon/10 text-[#00875a] border-neon/30; }
-  .pill-yellow { @apply border-[#F5C800]/30 text-[#b88a00];
-    background: rgba(245, 200, 0, 0.1);
-  }
-  .pill-red { @apply bg-accent/10 text-accent border-accent/25; }
+  .pill-green { @apply bg-win/10 text-win border-win/30; }
+  .pill-yellow { @apply bg-accent/15 text-ink border-accent/40; }
+  .pill-red { @apply bg-danger/10 text-danger border-danger/30; }
   .pill-muted { @apply bg-border/30 text-ink3 border-border; }
+
+  /* LIVE badge: rojo MD parpadeante */
+  .pill-live {
+    @apply font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 inline-block
+           bg-danger text-white font-bold;
+  }
+  .pill-live::before {
+    content: '';
+    @apply inline-block w-1.5 h-1.5 rounded-full bg-white mr-1 align-middle;
+    animation: md-pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes md-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
 }

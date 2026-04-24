@@ -12,9 +12,9 @@ const MOCK = {
   stadium: 'Camp Municipal de Martinenc',
   founded: 1909,
   kits: {
-    home:  { primary: '#37003C', secondary: '#FF2882' },
-    away:  { primary: '#FFFFFF', secondary: '#37003C' },
-    third: { primary: '#0A0A0A', secondary: '#00FF85' },
+    home:  { primary: '#000000', secondary: '#FFD100' },
+    away:  { primary: '#FFFFFF', secondary: '#E30613' },
+    third: { primary: '#E30613', secondary: '#FFD100' },
   },
 }
 
