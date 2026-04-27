@@ -493,15 +493,18 @@ export default function GuiaFutbolMD() {
     } catch {}
   }, [])
 
-  // Close drawer on Escape + lock body scroll when open
+  // Close drawer on Escape + lock body scroll when open or onboarding active
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && menuOpen) { setMenuOpen(false); drawerBtnRef.current?.focus() }
+      if (e.key === 'Escape') {
+        if (obStep) { skipOb(); return }
+        if (menuOpen) { setMenuOpen(false); drawerBtnRef.current?.focus() }
+      }
     }
     document.addEventListener('keydown', onKey)
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    document.body.style.overflow = (menuOpen || !!obStep) ? 'hidden' : ''
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
-  }, [menuOpen])
+  }, [menuOpen, obStep])
 
   // Persist
   useEffect(() => { try { localStorage.setItem('md-favorites', JSON.stringify(favorites)) } catch {} }, [favorites])
@@ -860,11 +863,11 @@ export default function GuiaFutbolMD() {
   /* ── Onboarding helpers ──────────────────────────────────────── */
   const doneOb = () => { try { localStorage.setItem('md-onboarding-done', '1') } catch {} }
   const advanceOb = () => {
+    if (obStep === 'c3') doneOb()   // side effect fuera del updater
     setObStep(prev => {
       if (prev === 'modal') return 'c1'
       if (prev === 'c1')   return 'c2'
       if (prev === 'c2')   return 'c3'
-      if (prev === 'c3')   { doneOb(); return null }
       return null
     })
   }
@@ -920,9 +923,10 @@ export default function GuiaFutbolMD() {
         .bottom-nav-btn span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
         .nav-main-content{padding-bottom:72px}
         @media(min-width:768px){.bottom-nav{display:none}.nav-main-content{padding-bottom:0!important}}
-        .ob-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:950;display:flex;align-items:center;justify-content:center}
-        .ob-modal{background:#111;border:2px solid #E30613;border-radius:10px;padding:30px 22px 22px;max-width:340px;width:calc(100vw - 32px);text-align:center;position:relative}
-        .ob-skip{position:absolute;top:10px;right:12px;background:none;border:none;color:#555;font-size:18px;cursor:pointer;line-height:1;padding:2px 6px}
+        @keyframes ob-fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .ob-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:950;display:flex;align-items:center;justify-content:center;animation:ob-fade .2s ease}
+        .ob-modal{background:#111;border:2px solid #E30613;border-radius:10px;padding:30px 22px 22px;max-width:340px;width:calc(100vw - 32px);text-align:center;position:relative;animation:ob-fade .25s ease}
+        .ob-skip{position:absolute;top:10px;right:12px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;line-height:1;padding:4px 8px}
         .ob-logo{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:18px}
         .ob-feat{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left}
         .ob-feat li{display:flex;align-items:center;gap:10px;color:#ddd;font-size:12px;list-style:none}
@@ -942,7 +946,7 @@ export default function GuiaFutbolMD() {
         @keyframes ob-pulse{0%,100%{box-shadow:0 0 0 0 rgba(227,6,19,.5)}60%{box-shadow:0 0 0 8px transparent}}
         .ob-ring{animation:ob-pulse 1.4s infinite}
         .ob-actions{display:flex;flex-direction:column;gap:6px;margin-top:12px}
-        .ob-link{background:none;border:none;color:#555;font-size:11px;cursor:pointer;font-family:inherit;padding:4px}
+        .ob-link{background:none;border:none;color:#999;font-size:11px;cursor:pointer;font-family:inherit;padding:4px;text-decoration:underline}
       `}</style>
 
       {/* Skip navigation */}
@@ -1306,7 +1310,8 @@ export default function GuiaFutbolMD() {
                 <li key={i}><span>{icon}</span><span>{text}</span></li>
               ))}
             </ul>
-            <button className="ob-btn" onClick={advanceOb}>Empezar →</button>
+            {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+            <button className="ob-btn" onClick={advanceOb} autoFocus>Empezar →</button>
           </div>
         </div>
       )}
@@ -1316,7 +1321,7 @@ export default function GuiaFutbolMD() {
         const step = obStep === 'c1' ? 1 : obStep === 'c2' ? 2 : 3
         // Ring positions (approximate, mobile-first)
         const rings: Record<string, React.CSSProperties> = {
-          c1: { top: 48, left: 0, right: 0, height: 44 },   // days bar
+          c1: { top: 50, left: 0, right: 0, height: 44 },   // days bar (header 47px + border 3px)
           c2: { bottom: 0, left: '33.33%', width: '33.33%', height: 58 }, // Competiciones btn
           c3: { top: '50%', left: 16, right: 16, height: 56, transform: 'translateY(-50%)' }, // match row
         }
