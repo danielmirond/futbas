@@ -858,20 +858,17 @@ export default function GuiaFutbolMD() {
   }
 
   /* ── Onboarding helpers ──────────────────────────────────────── */
+  const doneOb = () => { try { localStorage.setItem('md-onboarding-done', '1') } catch {} }
   const advanceOb = () => {
-    setObStep(prev =>
-      prev === 'modal' ? 'c1' :
-      prev === 'c1'    ? 'c2' :
-      prev === 'c2'    ? 'c3' : null
-    )
-    if (obStep === 'c3') {
-      try { localStorage.setItem('md-onboarding-done', '1') } catch {}
-    }
+    setObStep(prev => {
+      if (prev === 'modal') return 'c1'
+      if (prev === 'c1')   return 'c2'
+      if (prev === 'c2')   return 'c3'
+      if (prev === 'c3')   { doneOb(); return null }
+      return null
+    })
   }
-  const skipOb = () => {
-    setObStep(null)
-    try { localStorage.setItem('md-onboarding-done', '1') } catch {}
-  }
+  const skipOb = () => { doneOb(); setObStep(null) }
 
   return (
     <div style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", background: T.bg, color: T.text, minHeight: '100vh', transition: 'background .3s, color .3s' }}>
@@ -1171,7 +1168,14 @@ export default function GuiaFutbolMD() {
               <div style={{ width: 3, height: 18, background: '#E30613', borderRadius: 1 }} />
               <span style={{ fontSize: 9, color: '#555', marginLeft: 4 }}>{dataSource === 'api' ? '● EN VIVO' : '○ Demo'}</span>
             </div>
-            <span style={{ fontSize: 9, color: '#555' }}>{dateStr}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button onClick={() => { doneOb(); setObStep('modal') }}
+                style={{ fontSize: 9, color: '#444', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                title="Relanzar presentación">
+                ❓ Ayuda
+              </button>
+              <span style={{ fontSize: 9, color: '#555' }}>{dateStr}</span>
+            </div>
           </div>
         </>
       )}
