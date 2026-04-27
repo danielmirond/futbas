@@ -1,5 +1,17 @@
 import { NextResponse } from 'next/server'
 import fallback20260427 from './fallback-2026-04-27.json'
+import fallback20260428 from './fallback-2026-04-28.json'
+import fallback20260429 from './fallback-2026-04-29.json'
+import fallback20260430 from './fallback-2026-04-30.json'
+import fallback20260501 from './fallback-2026-05-01.json'
+import fallback20260502 from './fallback-2026-05-02.json'
+import fallback20260503 from './fallback-2026-05-03.json'
+import fallback20260504 from './fallback-2026-05-04.json'
+import fallback20260505 from './fallback-2026-05-05.json'
+import fallback20260506 from './fallback-2026-05-06.json'
+import fallback20260507 from './fallback-2026-05-07.json'
+import fallback20260508 from './fallback-2026-05-08.json'
+import fallback20260509 from './fallback-2026-05-09.json'
 
 const KEY  = process.env.RAPIDAPI_KEY
 const HOST = process.env.RAPIDAPI_HOST
@@ -9,8 +21,21 @@ const HEADERS = KEY && HOST ? {
 } : null
 
 // Static fallbacks keyed by date (used when WOSTI API is rate-limited)
-const FALLBACKS: Record<string, typeof fallback20260427> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const FALLBACKS: Record<string, any[]> = {
   '2026-04-27': fallback20260427,
+  '2026-04-28': fallback20260428,
+  '2026-04-29': fallback20260429,
+  '2026-04-30': fallback20260430,
+  '2026-05-01': fallback20260501,
+  '2026-05-02': fallback20260502,
+  '2026-05-03': fallback20260503,
+  '2026-05-04': fallback20260504,
+  '2026-05-05': fallback20260505,
+  '2026-05-06': fallback20260506,
+  '2026-05-07': fallback20260507,
+  '2026-05-08': fallback20260508,
+  '2026-05-09': fallback20260509,
 }
 
 export async function GET(request: Request) {
@@ -29,12 +54,8 @@ export async function GET(request: Request) {
     })
 
     if (!res.ok) {
-      // Rate-limited or API error — serve static fallback if available
       const fb = FALLBACKS[date]
-      if (fb) {
-        const filtered = (fb as typeof fallback20260427).filter((m: Record<string, unknown>) => m.localDate === date)
-        return NextResponse.json({ matches: filtered, count: filtered.length, endpoint: 'fallback', date })
-      }
+      if (fb) return NextResponse.json({ matches: fb, count: fb.length, endpoint: 'fallback', date })
       return NextResponse.json({ matches: [], count: 0, endpoint: 'api-error', error: `API ${res.status}`, date })
     }
 
