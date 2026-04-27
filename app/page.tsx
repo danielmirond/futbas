@@ -981,20 +981,8 @@ export default function GuiaFutbolMD() {
       {/* HEADER */}
       <header role="banner" style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
         <button className="md-logo" onClick={showMain} aria-label="Mundo Deportivo · Ir al inicio">
-          <svg viewBox="0 0 80 66" height="36" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-            {/* Fondo gris oscuro redondeado */}
-            <rect width="80" height="66" rx="6" fill="#252525"/>
-            {/* Barras izquierda */}
-            <polygon points="5,5 9,5 7,61 3,61"   fill="#E30613"/>
-            <polygon points="11,5 15,5 13,61 9,61" fill="#E30613"/>
-            {/* Barras derecha */}
-            <polygon points="65,5 69,5 67,61 63,61" fill="#E30613"/>
-            <polygon points="71,5 75,5 73,61 69,61" fill="#E30613"/>
-            {/* M amarilla */}
-            <text x="17" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
-            {/* D blanca */}
-            <text x="46" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
-          </svg>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-md.jpeg" alt="Mundo Deportivo" height="36" style={{ display: 'block', borderRadius: 6 }} />
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setDarkMode(!darkMode)}
@@ -1451,15 +1439,8 @@ export default function GuiaFutbolMD() {
             {/* ── PÁGINA 1: BIENVENIDA ── */}
             {obModalPage === 1 && (<>
               <div className="ob-logo">
-                <svg viewBox="0 0 80 66" height="64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                  <rect width="80" height="66" rx="6" fill="#252525"/>
-                  <polygon points="5,5 9,5 7,61 3,61"   fill="#E30613"/>
-                  <polygon points="11,5 15,5 13,61 9,61" fill="#E30613"/>
-                  <polygon points="65,5 69,5 67,61 63,61" fill="#E30613"/>
-                  <polygon points="71,5 75,5 73,61 69,61" fill="#E30613"/>
-                  <text x="17" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
-                  <text x="46" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-md.jpeg" alt="Mundo Deportivo" height="72" style={{ borderRadius: 8 }} />
               </div>
               <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Fútbol en TV</h2>
               <p style={{ color: '#E30613', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16 }}>by Mundo Deportivo</p>
