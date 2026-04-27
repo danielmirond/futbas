@@ -883,12 +883,8 @@ export default function GuiaFutbolMD() {
         .match-row:hover{background:${darkMode ? '#161616' : '#f9f9f9'};border-left-color:${T.yellow}}
         .match-row.past{opacity:.45;border-left:4px solid #ccc;background:${T.lightGray}}
         .match-row.past:hover{background:${T.lightGray};border-left-color:#ccc}
-        .md-logo{display:flex;align-items:center;gap:0;cursor:pointer;user-select:none;background:none;border:none;padding:0}
-        .md-logo .md-bar{width:6px;height:30px;background:#E30613;transform:skewX(-10deg);flex-shrink:0}
-        .md-logo .md-bar-l{margin-right:9px}
-        .md-logo .md-bar-r{margin-left:9px}
-        .md-logo .md-mundo{font-size:21px;font-weight:900;color:#FFD700;font-style:italic;text-transform:uppercase;letter-spacing:-.5px;line-height:1}
-        .md-logo .md-dep{font-size:12px;font-weight:900;color:#fff;font-style:italic;text-transform:uppercase;letter-spacing:.5px;line-height:1;align-self:flex-end;padding-bottom:2px;margin-left:5px}
+        .md-logo{display:flex;align-items:center;cursor:pointer;user-select:none;background:none;border:none;padding:0}
+        .md-logo img{height:30px;width:auto;display:block}
         .comp-label{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:900;color:#fff;background:#E30613;padding:3px 8px 3px 0;border:none;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:.8px}
         .comp-label::before{content:'';display:inline-block;width:3px;height:14px;background:#FFD700;margin-right:5px}
         .day-header{display:flex;align-items:center;margin:14px 0 6px;background:${darkMode?'#111':'#000'};padding:7px 12px;border-left:4px solid #E30613}
@@ -957,11 +953,8 @@ export default function GuiaFutbolMD() {
 
       {/* HEADER */}
       <header role="banner" style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
-        <button className="md-logo" onClick={showMain} aria-label="Fútbol en TV · Ir al inicio">
-          <div className="md-bar md-bar-l" />
-          <span className="md-mundo">MUNDO</span>
-          <span className="md-dep">DEPORTIVO</span>
-          <div className="md-bar md-bar-r" />
+        <button className="md-logo" onClick={showMain} aria-label="Mundo Deportivo · Ir al inicio">
+          <img src="/logo-md.svg" alt="Mundo Deportivo" />
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setDarkMode(!darkMode)}
@@ -1281,12 +1274,9 @@ export default function GuiaFutbolMD() {
         <div className="ob-backdrop" role="dialog" aria-modal="true" aria-label="Bienvenida a Fútbol en TV">
           <div className="ob-modal">
             <button className="ob-skip" onClick={skipOb} aria-label="Saltar presentación">×</button>
-            {/* Mini logo */}
+            {/* Logo */}
             <div className="ob-logo">
-              <div style={{ width: 5, height: 26, background: '#E30613', transform: 'skewX(-10deg)', marginRight: 8 }} />
-              <span style={{ fontSize: 20, fontWeight: 900, color: '#FFD700', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: -.5 }}>MUNDO</span>
-              <span style={{ fontSize: 12, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', alignSelf: 'flex-end', paddingBottom: 2, marginLeft: 5 }}>DEPORTIVO</span>
-              <div style={{ width: 5, height: 26, background: '#E30613', transform: 'skewX(-10deg)', marginLeft: 8 }} />
+              <img src="/logo-md.svg" alt="Mundo Deportivo" style={{ height: 48, width: 'auto' }} />
             </div>
             <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 6 }}>Fútbol en TV</h2>
             <p style={{ color: '#888', fontSize: 12, lineHeight: 1.5, marginBottom: 20 }}>Todos los partidos del día con sus canales de televisión, en tiempo real.</p>
