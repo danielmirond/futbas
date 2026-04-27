@@ -462,6 +462,7 @@ export default function GuiaFutbolMD() {
   /* New: interest counters */ const [interests, setInterests] = useState<Record<number, number>>({})
   /* New: notifications */ const [notifEnabled, setNotifEnabled] = useState(false)
   /* CMS featured match */ const [cmsFeatured, setCmsFeatured] = useState<Match | null>(null)
+  /* Onboarding */ const [obStep, setObStep] = useState<null | 'modal' | 'c1' | 'c2' | 'c3'>(null)
 
   const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const drawerRef = useRef<HTMLElement>(null)
@@ -488,6 +489,7 @@ export default function GuiaFutbolMD() {
       const int = localStorage.getItem('md-interests')
       if (int) setInterests(JSON.parse(int))
       if ('Notification' in window && Notification.permission === 'granted') setNotifEnabled(true)
+      if (!localStorage.getItem('md-onboarding-done')) setObStep('modal')
     } catch {}
   }, [])
 
@@ -855,6 +857,22 @@ export default function GuiaFutbolMD() {
     )
   }
 
+  /* ── Onboarding helpers ──────────────────────────────────────── */
+  const advanceOb = () => {
+    setObStep(prev =>
+      prev === 'modal' ? 'c1' :
+      prev === 'c1'    ? 'c2' :
+      prev === 'c2'    ? 'c3' : null
+    )
+    if (obStep === 'c3') {
+      try { localStorage.setItem('md-onboarding-done', '1') } catch {}
+    }
+  }
+  const skipOb = () => {
+    setObStep(null)
+    try { localStorage.setItem('md-onboarding-done', '1') } catch {}
+  }
+
   return (
     <div style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", background: T.bg, color: T.text, minHeight: '100vh', transition: 'background .3s, color .3s' }}>
       {/* Feature 9: Schema.org */}
@@ -909,6 +927,29 @@ export default function GuiaFutbolMD() {
         .bottom-nav-btn span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
         .nav-main-content{padding-bottom:72px}
         @media(min-width:768px){.bottom-nav{display:none}.nav-main-content{padding-bottom:0!important}}
+        .ob-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:950;display:flex;align-items:center;justify-content:center}
+        .ob-modal{background:#111;border:2px solid #E30613;border-radius:10px;padding:30px 22px 22px;max-width:340px;width:calc(100vw - 32px);text-align:center;position:relative}
+        .ob-skip{position:absolute;top:10px;right:12px;background:none;border:none;color:#555;font-size:18px;cursor:pointer;line-height:1;padding:2px 6px}
+        .ob-logo{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:18px}
+        .ob-feat{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left}
+        .ob-feat li{display:flex;align-items:center;gap:10px;color:#ddd;font-size:12px;list-style:none}
+        .ob-feat li span:first-child{font-size:18px;flex-shrink:0}
+        .ob-btn{width:100%;background:#E30613;color:#fff;border:none;padding:12px;border-radius:5px;font-size:13px;font-weight:900;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;font-family:inherit;transition:opacity .15s}
+        .ob-btn:hover{opacity:.9}
+        .ob-coach-wrap{position:fixed;inset:0;z-index:950;pointer-events:none}
+        .ob-dim{position:absolute;inset:0;background:rgba(0,0,0,.72);pointer-events:all}
+        .ob-card{position:fixed;left:50%;transform:translateX(-50%);background:#111;border:2px solid #E30613;border-radius:8px;padding:16px;max-width:280px;width:calc(100vw - 40px);z-index:952;box-shadow:0 8px 32px rgba(0,0,0,.8);pointer-events:all}
+        .ob-card::before{content:'';position:absolute;left:50%;transform:translateX(-50%);border:8px solid transparent}
+        .ob-card.arrow-up::before{top:-16px;border-bottom-color:#E30613}
+        .ob-card.arrow-down::before{bottom:-16px;border-top-color:#E30613}
+        .ob-prog{display:flex;gap:5px;justify-content:center;margin-bottom:12px}
+        .ob-dot{width:6px;height:6px;border-radius:50%;background:#333;transition:background .2s}
+        .ob-dot.on{background:#E30613}
+        .ob-ring{position:fixed;border:2.5px solid #E30613;border-radius:5px;pointer-events:none;z-index:951}
+        @keyframes ob-pulse{0%,100%{box-shadow:0 0 0 0 rgba(227,6,19,.5)}60%{box-shadow:0 0 0 8px transparent}}
+        .ob-ring{animation:ob-pulse 1.4s infinite}
+        .ob-actions{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+        .ob-link{background:none;border:none;color:#555;font-size:11px;cursor:pointer;font-family:inherit;padding:4px}
       `}</style>
 
       {/* Skip navigation */}
@@ -1230,6 +1271,74 @@ export default function GuiaFutbolMD() {
         </>
       )}
       </main>
+
+      {/* ── ONBOARDING MODAL ─────────────────────────────────── */}
+      {obStep === 'modal' && (
+        <div className="ob-backdrop" role="dialog" aria-modal="true" aria-label="Bienvenida a Fútbol en TV">
+          <div className="ob-modal">
+            <button className="ob-skip" onClick={skipOb} aria-label="Saltar presentación">×</button>
+            {/* Mini logo */}
+            <div className="ob-logo">
+              <div style={{ width: 5, height: 26, background: '#E30613', transform: 'skewX(-10deg)', marginRight: 8 }} />
+              <span style={{ fontSize: 20, fontWeight: 900, color: '#FFD700', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: -.5 }}>MUNDO</span>
+              <span style={{ fontSize: 12, fontWeight: 900, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', alignSelf: 'flex-end', paddingBottom: 2, marginLeft: 5 }}>DEPORTIVO</span>
+              <div style={{ width: 5, height: 26, background: '#E30613', transform: 'skewX(-10deg)', marginLeft: 8 }} />
+            </div>
+            <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 6 }}>Fútbol en TV</h2>
+            <p style={{ color: '#888', fontSize: 12, lineHeight: 1.5, marginBottom: 20 }}>Todos los partidos del día con sus canales de televisión, en tiempo real.</p>
+            <ul className="ob-feat">
+              {([
+                ['📅', 'Navega entre días y semanas'],
+                ['📺', 'Descubre en qué canal va cada partido'],
+                ['⭐', 'Guarda tus equipos y ligas favoritas'],
+              ] as [string, string][]).map(([icon, text], i) => (
+                <li key={i}><span>{icon}</span><span>{text}</span></li>
+              ))}
+            </ul>
+            <button className="ob-btn" onClick={advanceOb}>Empezar →</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── ONBOARDING COACH MARKS ───────────────────────────── */}
+      {(obStep === 'c1' || obStep === 'c2' || obStep === 'c3') && (() => {
+        const step = obStep === 'c1' ? 1 : obStep === 'c2' ? 2 : 3
+        // Ring positions (approximate, mobile-first)
+        const rings: Record<string, React.CSSProperties> = {
+          c1: { top: 48, left: 0, right: 0, height: 44 },   // days bar
+          c2: { bottom: 0, left: '33.33%', width: '33.33%', height: 58 }, // Competiciones btn
+          c3: { top: '50%', left: 16, right: 16, height: 56, transform: 'translateY(-50%)' }, // match row
+        }
+        const cards: Record<string, { className: string; style: React.CSSProperties }> = {
+          c1: { className: 'ob-card arrow-up', style: { top: 104 } },
+          c2: { className: 'ob-card arrow-down', style: { bottom: 68 } },
+          c3: { className: 'ob-card', style: { top: '50%', marginTop: 44 } },
+        }
+        const titles: Record<string, string> = { c1: '📅 Navega por días', c2: '🏆 Competiciones', c3: '⭐ Detalles del partido' }
+        const texts: Record<string, string> = {
+          c1: 'Desliza la barra para cambiar de día y ver todos los partidos programados.',
+          c2: 'Toca aquí para abrir el menú y filtrar por liga o competición favorita.',
+          c3: 'Toca cualquier partido para ver detalles, canales de TV y añadir tu equipo a favoritos.',
+        }
+        const isLast = obStep === 'c3'
+        return (
+          <div className="ob-coach-wrap" role="dialog" aria-modal="true" aria-label={`Paso ${step} de 3`}>
+            <div className="ob-dim" onClick={advanceOb} />
+            <div className="ob-ring" style={rings[obStep]} />
+            <div className={cards[obStep].className} style={cards[obStep].style}>
+              <div className="ob-prog">
+                {['c1','c2','c3'].map(s => <div key={s} className={`ob-dot${obStep === s ? ' on' : ''}`} />)}
+              </div>
+              <p style={{ color: '#fff', fontSize: 13, fontWeight: 800, marginBottom: 6 }}>{titles[obStep]}</p>
+              <p style={{ color: '#aaa', fontSize: 11, lineHeight: 1.5, marginBottom: 0 }}>{texts[obStep]}</p>
+              <div className="ob-actions">
+                <button className="ob-btn" onClick={advanceOb}>{isLast ? '¡Entendido! →' : 'Siguiente →'}</button>
+                {!isLast && <button className="ob-link" onClick={skipOb}>Saltar presentación</button>}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* BOTTOM NAV */}
       <nav className="bottom-nav" role="navigation" aria-label="Navegación principal">
