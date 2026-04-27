@@ -441,7 +441,7 @@ export default function GuiaFutbolMD() {
   const [compFilter, setCompFilter] = useState('')
   const [teamFilter, setTeamFilter] = useState('')
   const [selectedDate, setSelectedDate] = useState(today)
-  const [page, setPage] = useState<'main' | 'comp'>('main')
+  const [page, setPage] = useState<'main' | 'comp' | 'features'>('main')
   const [currentComp, setCurrentComp] = useState('')
   const [compTab, setCompTab] = useState('tabla')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -463,6 +463,7 @@ export default function GuiaFutbolMD() {
   /* New: notifications */ const [notifEnabled, setNotifEnabled] = useState(false)
   /* CMS featured match */ const [cmsFeatured, setCmsFeatured] = useState<Match | null>(null)
   /* Onboarding */ const [obStep, setObStep] = useState<null | 'modal' | 'c1' | 'c2' | 'c3'>(null)
+  const [obModalPage, setObModalPage] = useState(1)
 
   const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const drawerRef = useRef<HTMLElement>(null)
@@ -863,15 +864,18 @@ export default function GuiaFutbolMD() {
   /* ── Onboarding helpers ──────────────────────────────────────── */
   const doneOb = () => { try { localStorage.setItem('md-onboarding-done', '1') } catch {} }
   const advanceOb = () => {
-    if (obStep === 'c3') doneOb()   // side effect fuera del updater
+    if (obStep === 'modal') {
+      if (obModalPage < 3) { setObModalPage(p => p + 1); return }
+      setObModalPage(1); setObStep('c1'); return
+    }
+    if (obStep === 'c3') doneOb()
     setObStep(prev => {
-      if (prev === 'modal') return 'c1'
-      if (prev === 'c1')   return 'c2'
-      if (prev === 'c2')   return 'c3'
+      if (prev === 'c1') return 'c2'
+      if (prev === 'c2') return 'c3'
       return null
     })
   }
-  const skipOb = () => { doneOb(); setObStep(null) }
+  const skipOb = () => { doneOb(); setObStep(null); setObModalPage(1) }
 
   return (
     <div style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", background: T.bg, color: T.text, minHeight: '100vh', transition: 'background .3s, color .3s' }}>
@@ -947,6 +951,25 @@ export default function GuiaFutbolMD() {
         .ob-ring{animation:ob-pulse 1.4s infinite}
         .ob-actions{display:flex;flex-direction:column;gap:6px;margin-top:12px}
         .ob-link{background:none;border:none;color:#999;font-size:11px;cursor:pointer;font-family:inherit;padding:4px;text-decoration:underline}
+        .ob-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+        .ob-cell{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:10px 10px 8px;text-align:left}
+        .ob-cell-icon{font-size:20px;margin-bottom:4px}
+        .ob-cell-title{font-size:11px;font-weight:700;color:#fff;display:block;margin-bottom:2px}
+        .ob-cell-desc{font-size:10px;color:#666;line-height:1.4}
+        .ob-pager{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+        .ob-pdot{width:20px;height:3px;border-radius:2px;background:#333;transition:background .2s,width .2s;cursor:pointer;border:none}
+        .ob-pdot.on{background:#E30613;width:28px}
+        .ob-step3-msg{background:linear-gradient(135deg,#1a0000,#0d0d0d);border:1px solid #E30613;border-radius:8px;padding:14px;margin-bottom:16px;text-align:left}
+        .feat-page{padding:0 14px 100px;max-width:600px;margin:0 auto}
+        .feat-section{margin-bottom:28px}
+        .feat-section-title{font-size:10px;font-weight:900;color:#E30613;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #222}
+        .feat-card{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #1a1a1a}
+        .feat-card:last-child{border-bottom:none}
+        .feat-icon{font-size:24px;flex-shrink:0;width:36px;text-align:center;margin-top:2px}
+        .feat-body{}
+        .feat-title{font-size:13px;font-weight:800;color:${T.text};margin-bottom:3px}
+        .feat-desc{font-size:11px;color:${T.gray};line-height:1.5}
+        .feat-badge{display:inline-block;font-size:9px;font-weight:700;background:#E30613;color:#fff;padding:1px 5px;border-radius:2px;margin-left:6px;vertical-align:middle;text-transform:uppercase}
       `}</style>
 
       {/* Skip navigation */}
@@ -1179,15 +1202,139 @@ export default function GuiaFutbolMD() {
               <span style={{ fontSize: 9, color: '#555', marginLeft: 4 }}>{dataSource === 'api' ? '● EN VIVO' : '○ Demo'}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <button onClick={() => { doneOb(); setObStep('modal') }}
-                style={{ fontSize: 9, color: '#444', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
-                title="Relanzar presentación">
-                ❓ Ayuda
+              <button onClick={() => setPage('features')}
+                style={{ fontSize: 9, color: '#555', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                title="Ver todas las funciones">
+                ℹ️ Funciones
               </button>
               <span style={{ fontSize: 9, color: '#555' }}>{dateStr}</span>
             </div>
           </div>
         </>
+      )}
+
+      {/* ══════════ FEATURES PAGE ══════════ */}
+      {page === 'features' && (
+        <div className="nav-main-content" style={{ background: T.bg }}>
+          {/* Header */}
+          <div style={{ background: '#000', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '3px solid #E30613', position: 'sticky', top: 0, zIndex: 90 }}>
+            <button onClick={() => setPage('main')} aria-label="Volver"
+              style={{ background: 'none', border: 'none', color: '#aaa', fontSize: 20, cursor: 'pointer', lineHeight: 1, padding: 0 }}>←</button>
+            <div>
+              <p style={{ color: '#fff', fontSize: 14, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5 }}>Funcionalidades</p>
+              <p style={{ color: '#E30613', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Fútbol en TV · Mundo Deportivo</p>
+            </div>
+          </div>
+
+          <div className="feat-page">
+            {/* Hero */}
+            <div style={{ background: 'linear-gradient(135deg,#1a0000,#0d0d0d)', border: '1px solid #E30613', borderRadius: 8, padding: '18px 16px', margin: '16px 0 24px', textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: 8 }}>⚽</div>
+              <p style={{ color: '#fff', fontSize: 15, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 6 }}>Fútbol en TV</p>
+              <p style={{ color: '#aaa', fontSize: 12, lineHeight: 1.6 }}>La guía completa del fútbol en televisión. Más de 50 competiciones, resultados en directo y guía de canales TV en una sola app.</p>
+              <button className="ob-btn" onClick={() => { setPage('main'); doneOb(); setObStep('modal'); setObModalPage(1) }}
+                style={{ marginTop: 14, width: 'auto', padding: '10px 24px', fontSize: 12 }}>
+                Ver el tour →
+              </button>
+            </div>
+
+            {/* Partidos */}
+            <div className="feat-section">
+              <p className="feat-section-title">📺 Guía de televisión</p>
+              {([
+                ['📺','Canales de TV en tiempo real','Consulta qué canales emiten cada partido antes de que empiece: Movistar+, DAZN, La 1, Teledeporte, GOL y más.','Tiempo real'],
+                ['⚡','Resultados en directo','Marcadores actualizados al minuto durante todos los partidos, con el minuto de juego exacto.','En directo'],
+                ['🔔','Alertas de inicio','Activa notificaciones para recibir un aviso 15 minutos antes de que empiece un partido de tu equipo favorito.',null],
+              ] as [string,string,string,string|null][]).map(([icon,title,desc,badge],i) => (
+                <div key={i} className="feat-card">
+                  <div className="feat-icon">{icon}</div>
+                  <div className="feat-body">
+                    <p className="feat-title">{title}{badge && <span className="feat-badge">{badge}</span>}</p>
+                    <p className="feat-desc">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Navegación */}
+            <div className="feat-section">
+              <p className="feat-section-title">📅 Navegación</p>
+              {([
+                ['📅','Navega entre días','Consulta la agenda de cualquier día de la semana. Desliza la barra de días para ir hacia atrás o hacia adelante.',null],
+                ['📋','Vista semanal','Activa la vista semana para ver todos los partidos de 7 días de un vistazo.',null],
+                ['🔍','Búsqueda de equipos','Busca cualquier equipo para filtrar todos sus partidos del día.',null],
+              ] as [string,string,string,string|null][]).map(([icon,title,desc,badge],i) => (
+                <div key={i} className="feat-card">
+                  <div className="feat-icon">{icon}</div>
+                  <div className="feat-body">
+                    <p className="feat-title">{title}{badge && <span className="feat-badge">{badge}</span>}</p>
+                    <p className="feat-desc">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Competiciones */}
+            <div className="feat-section">
+              <p className="feat-section-title">🏆 Competiciones</p>
+              {([
+                ['🏆','Más de 50 competiciones','LaLiga EA Sports, LaLiga Hypermotion, Champions League, Europa League, Conference League, Premier League, Bundesliga, Serie A, Ligue 1, Copa del Rey, MLS, Liga MX y muchas más.',null],
+                ['📊','Clasificaciones en directo','Tabla de clasificación actualizada de cualquier competición, con forma reciente de los últimos 5 partidos.','Live'],
+                ['📈','Resultados y próximos','Consulta los últimos resultados y los próximos partidos de cada competición.',null],
+              ] as [string,string,string,string|null][]).map(([icon,title,desc,badge],i) => (
+                <div key={i} className="feat-card">
+                  <div className="feat-icon">{icon}</div>
+                  <div className="feat-body">
+                    <p className="feat-title">{title}{badge && <span className="feat-badge">{badge}</span>}</p>
+                    <p className="feat-desc">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Estadísticas */}
+            <div className="feat-section">
+              <p className="feat-section-title">📊 Estadísticas</p>
+              {([
+                ['🔁','Historial H2H','Consulta los últimos 5 enfrentamientos directos entre los dos equipos de cualquier partido con resultados completos.',null],
+                ['📉','Forma reciente','Los últimos 5 resultados de cada equipo (V/E/D) para saber quién llega en mejor momento.',null],
+                ['🎯','Posición y puntos','Posición en la tabla, puntos, partidos jugados, victorias, empates y derrotas de cada equipo.',null],
+              ] as [string,string,string,string|null][]).map(([icon,title,desc,badge],i) => (
+                <div key={i} className="feat-card">
+                  <div className="feat-icon">{icon}</div>
+                  <div className="feat-body">
+                    <p className="feat-title">{title}{badge && <span className="feat-badge">{badge}</span>}</p>
+                    <p className="feat-desc">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Personalización */}
+            <div className="feat-section">
+              <p className="feat-section-title">⚙️ Personalización</p>
+              {([
+                ['⭐','Equipos favoritos','Guarda tus equipos favoritos y accede con un toque a todos sus partidos del día con el filtro Favoritos.',null],
+                ['🏆','Filtro por competición','Filtra la lista de partidos por cualquier liga o competición desde el menú lateral.',null],
+                ['🌙','Modo oscuro','Activa el modo oscuro para una experiencia más cómoda de noche.',null],
+                ['🗳️','Vota el ganador','Participa votando qué equipo crees que ganará cada partido.',null],
+              ] as [string,string,string,string|null][]).map(([icon,title,desc,badge],i) => (
+                <div key={i} className="feat-card">
+                  <div className="feat-icon">{icon}</div>
+                  <div className="feat-body">
+                    <p className="feat-title">{title}{badge && <span className="feat-badge">{badge}</span>}</p>
+                    <p className="feat-desc">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div style={{ textAlign: 'center', padding: '20px 0 8px', borderTop: `1px solid ${T.border}` }}>
+              <p style={{ color: T.gray, fontSize: 10 }}>Fútbol en TV · Mundo Deportivo · {new Date().getFullYear()}</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ══════════ COMPETITION PAGE ══════════ */}
@@ -1288,42 +1435,89 @@ export default function GuiaFutbolMD() {
 
       {/* ── ONBOARDING MODAL ─────────────────────────────────── */}
       {obStep === 'modal' && (
-        <div className="ob-backdrop" role="dialog" aria-modal="true" aria-label="Bienvenida a Fútbol en TV">
+        <div className="ob-backdrop" role="dialog" aria-modal="true" aria-label={`Bienvenida — paso ${obModalPage} de 3`}>
           <div className="ob-modal">
             <button className="ob-skip" onClick={skipOb} aria-label="Saltar presentación">×</button>
-            {/* Logo */}
-            <div className="ob-logo">
-              <svg viewBox="0 0 80 66" height="64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                <rect width="80" height="66" rx="6" fill="#252525"/>
-                <polygon points="5,5 9,5 7,61 3,61"   fill="#E30613"/>
-                <polygon points="11,5 15,5 13,61 9,61" fill="#E30613"/>
-                <polygon points="65,5 69,5 67,61 63,61" fill="#E30613"/>
-                <polygon points="71,5 75,5 73,61 69,61" fill="#E30613"/>
-                <text x="17" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
-                <text x="46" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
-              </svg>
-            </div>
-            <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Fútbol en TV</h2>
-            <p style={{ color: '#E30613', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 14 }}>by Mundo Deportivo</p>
-            <p style={{ color: '#aaa', fontSize: 12, lineHeight: 1.6, marginBottom: 20 }}>Todos los partidos del día con sus canales de televisión. Datos en tiempo real de LaLiga, Champions, Premier y más.</p>
-            <ul className="ob-feat">
-              {([
-                ['📅', 'Navega entre días', 'Consulta partidos de hoy, mañana o cualquier día de la semana'],
-                ['📺', 'Canales de TV', 'Descubre en qué canal se emite cada partido antes de que empiece'],
-                ['⭐', 'Equipos favoritos', 'Guarda tus equipos y nunca te pierdas sus partidos'],
-                ['🏆', 'Filtro por liga', 'Filtra por LaLiga, Champions, Premier y todas las competiciones'],
-              ] as [string, string, string][]).map(([icon, title, desc], i) => (
-                <li key={i} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 16 }}>{icon}</span>
-                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 12 }}>{title}</span>
-                  </div>
-                  <span style={{ color: '#666', fontSize: 11, lineHeight: 1.4, paddingLeft: 24 }}>{desc}</span>
-                </li>
+
+            {/* Paginación */}
+            <div className="ob-pager" role="tablist">
+              {[1,2,3].map(n => (
+                <button key={n} role="tab" aria-selected={obModalPage === n}
+                  className={`ob-pdot${obModalPage === n ? ' on' : ''}`}
+                  onClick={() => setObModalPage(n)} aria-label={`Paso ${n}`} />
               ))}
-            </ul>
-            {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-            <button className="ob-btn" onClick={advanceOb} autoFocus>Empezar →</button>
+            </div>
+
+            {/* ── PÁGINA 1: BIENVENIDA ── */}
+            {obModalPage === 1 && (<>
+              <div className="ob-logo">
+                <svg viewBox="0 0 80 66" height="64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                  <rect width="80" height="66" rx="6" fill="#252525"/>
+                  <polygon points="5,5 9,5 7,61 3,61"   fill="#E30613"/>
+                  <polygon points="11,5 15,5 13,61 9,61" fill="#E30613"/>
+                  <polygon points="65,5 69,5 67,61 63,61" fill="#E30613"/>
+                  <polygon points="71,5 75,5 73,61 69,61" fill="#E30613"/>
+                  <text x="17" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
+                  <text x="46" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
+                </svg>
+              </div>
+              <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Fútbol en TV</h2>
+              <p style={{ color: '#E30613', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16 }}>by Mundo Deportivo</p>
+              <p style={{ color: '#aaa', fontSize: 13, lineHeight: 1.7, marginBottom: 10 }}>
+                La guía definitiva del fútbol en televisión. Todos los partidos del día con sus canales, en tiempo real.
+              </p>
+              <p style={{ color: '#666', fontSize: 11, lineHeight: 1.6, marginBottom: 22 }}>
+                LaLiga · Champions League · Premier League · Bundesliga · Serie A · Ligue 1 · Copa del Rey y más de 50 competiciones.
+              </p>
+              {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+              <button className="ob-btn" onClick={advanceOb} autoFocus>Ver funciones →</button>
+            </>)}
+
+            {/* ── PÁGINA 2: FUNCIONES ── */}
+            {obModalPage === 2 && (<>
+              <h2 style={{ color: '#fff', fontSize: 16, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>¿Qué puedes hacer?</h2>
+              <p style={{ color: '#666', fontSize: 11, marginBottom: 14 }}>Todo lo que necesitas para seguir el fútbol en TV</p>
+              <div className="ob-grid">
+                {([
+                  ['📺','Guía TV','Qué canal emite cada partido'],
+                  ['⚡','En directo','Resultados actualizados al minuto'],
+                  ['📅','Por días','Agenda de cualquier día de la semana'],
+                  ['⭐','Favoritos','Acceso rápido a tus equipos'],
+                  ['🏆','Competiciones','+50 ligas y copas internacionales'],
+                  ['📊','Clasificaciones','Tabla actualizada de cualquier liga'],
+                  ['🔁','H2H','Historial entre dos equipos'],
+                  ['🌙','Modo oscuro','Cuida tus ojos de noche'],
+                ] as [string,string,string][]).map(([icon,title,desc],i) => (
+                  <div key={i} className="ob-cell">
+                    <div className="ob-cell-icon">{icon}</div>
+                    <span className="ob-cell-title">{title}</span>
+                    <span className="ob-cell-desc">{desc}</span>
+                  </div>
+                ))}
+              </div>
+              <button className="ob-btn" onClick={advanceOb}>Siguiente →</button>
+              <button className="ob-link" style={{ marginTop: 8, display: 'block', width: '100%' }}
+                onClick={() => { skipOb(); setPage('features') }}>Ver todas las funciones →</button>
+            </>)}
+
+            {/* ── PÁGINA 3: LISTO ── */}
+            {obModalPage === 3 && (<>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>🎯</div>
+              <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 8 }}>¡Todo listo!</h2>
+              <p style={{ color: '#aaa', fontSize: 12, lineHeight: 1.6, marginBottom: 18 }}>
+                Te enseñamos los elementos clave de la app en 3 pasos rápidos para que saques el máximo partido.
+              </p>
+              <div className="ob-step3-msg">
+                <p style={{ color: '#E30613', fontSize: 11, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: .5 }}>💡 Consejo</p>
+                <p style={{ color: '#bbb', fontSize: 11, lineHeight: 1.5 }}>
+                  Usa el filtro de favoritos ⭐ para ver solo los partidos de tus equipos. Activa notificaciones para que te avisemos 15 minutos antes de cada partido.
+                </p>
+              </div>
+              <button className="ob-btn" onClick={advanceOb} autoFocus>Empezar el tour →</button>
+              <button className="ob-link" style={{ marginTop: 8, display: 'block', width: '100%' }}
+                onClick={skipOb}>Explorar directamente</button>
+            </>)}
+
           </div>
         </div>
       )}
