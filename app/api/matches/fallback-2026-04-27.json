@@ -1,0 +1,704 @@
+[
+  {
+    "id": 749132,
+    "time": "00:00",
+    "date": "2026-04-26T22:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "CA Colón",
+    "away": "Godoy Cruz",
+    "homeBadge": "/api/badge?img=20121219051345_colón-de-santa-fe.png",
+    "awayBadge": "/api/badge?img=20121219051410_godoy-cruz.png",
+    "competition": "Primera Nacional Argentina",
+    "channels": [
+      {
+        "name": "LPF Play",
+        "image": "/api/badge?img=20250910231117-lpf-play.png"
+      }
+    ]
+  },
+  {
+    "id": 775826,
+    "time": "00:00",
+    "date": "2026-04-26T22:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Montevideo Wanderers",
+    "away": "Peñarol",
+    "homeBadge": "/api/badge?img=20170306054007-m-wanderers.png",
+    "awayBadge": "/api/badge?img=20130410092630_penarol.png",
+    "competition": "Liga AUF Uruguaya",
+    "channels": [
+      {
+        "name": "Antel TV Internacional",
+        "image": "/api/badge?img=20260221125955-antel-tv-internacional.png"
+      }
+    ]
+  },
+  {
+    "id": 754443,
+    "time": "00:00",
+    "date": "2026-04-26T22:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Metropolitanos",
+    "away": "Estudiantes Mérida",
+    "homeBadge": "/api/badge?img=20170122041430-metropolitanos.png",
+    "awayBadge": "/api/badge?img=20160316021332-estudiantes-merida.png",
+    "competition": "Liga Futve",
+    "channels": [
+      {
+        "name": "LigaFUTVE App",
+        "image": "/api/badge?img=20260419094241-ligafutve-app-international.png"
+      }
+    ]
+  },
+  {
+    "id": 772836,
+    "time": "00:00",
+    "date": "2026-04-26T22:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Angel City FC",
+    "away": "Portland Thorns",
+    "homeBadge": "/api/badge?img=20220623175723-angel-city-fc.png",
+    "awayBadge": "/api/badge?img=20220623182645-portland-thorns.png",
+    "competition": "NWSL",
+    "channels": [
+      {
+        "name": "NWSL+",
+        "image": "/api/badge?img=20240316181010-nwsl-plus.png"
+      }
+    ]
+  },
+  {
+    "id": 748944,
+    "time": "01:00",
+    "date": "2026-04-26T23:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Atlético Tucumán",
+    "away": "Banfield",
+    "homeBadge": "/api/badge?img=20140815121718-atletico-tucuman.png",
+    "awayBadge": "/api/badge?img=20140621094222-banfield.png",
+    "competition": "Primera División Argentina",
+    "channels": [
+      {
+        "name": "Fanatiz (Ver en directo)",
+        "image": "/api/badge?img=20200814002714-fanatiz-portugal.png"
+      }
+    ]
+  },
+  {
+    "id": 738894,
+    "time": "01:00",
+    "date": "2026-04-26T23:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "LA Galaxy",
+    "away": "Real Salt Lake",
+    "homeBadge": "/api/badge?img=20130222095154_la-galaxy.png",
+    "awayBadge": "/api/badge?img=20190401121548-real-salt-lake.png",
+    "competition": "MLS",
+    "channels": [
+      {
+        "name": "Apple TV",
+        "image": "/api/badge?img=20230207091113-apple-tv-usa.png"
+      }
+    ]
+  },
+  {
+    "id": 759138,
+    "time": "01:00",
+    "date": "2026-04-26T23:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Universitario",
+    "away": "Alianza Atlético",
+    "homeBadge": "/api/badge?img=20140603082828-club-universitario-de-deportes.png",
+    "awayBadge": "/api/badge?img=20150130100414-alianza-atletico.png",
+    "competition": "Liga 1 Perú",
+    "channels": [
+      {
+        "name": "Fanatiz (Ver en directo)",
+        "image": "/api/badge?img=20200814002714-fanatiz-portugal.png"
+      }
+    ]
+  },
+  {
+    "id": 788762,
+    "time": "01:00",
+    "date": "2026-04-26T23:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Bolivia",
+    "away": "Paraguay",
+    "homeBadge": "/api/badge?img=20121227105210_bolivia.png",
+    "awayBadge": "/api/badge?img=20130319095210_paraguay.png",
+    "competition": "Sudamericano Femenino Sub-17",
+    "channels": [
+      {
+        "name": "CONMEBOL YouTube",
+        "image": "/api/badge?img=20190901113113-youtube-2.png"
+      }
+    ]
+  },
+  {
+    "id": 777492,
+    "time": "01:00",
+    "date": "2026-04-26T23:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Vancouver Whitecaps 2",
+    "away": "Colorado Rapids 2",
+    "homeBadge": "/api/badge?img=20160719122541-vancouver.png",
+    "awayBadge": "/api/badge?img=20190525111133-colorado-rapids.png",
+    "competition": "MLS Next Pro",
+    "channels": [
+      {
+        "name": "OneFootball",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 763272,
+    "time": "01:10",
+    "date": "2026-04-26T23:10:00Z",
+    "localDate": "2026-04-27",
+    "home": "Orense SC",
+    "away": "Barcelona SC",
+    "homeBadge": "/api/badge?img=20190320121659-orense-sc.png",
+    "awayBadge": "/api/badge?img=20130416105502_barcelona-sporting-club.png",
+    "competition": "Liga Pro Ecuador",
+    "channels": [
+      {
+        "name": "Zapping Internacional",
+        "image": "/api/badge?img=20260228211255-zapping-internacional-peru.png"
+      }
+    ]
+  },
+  {
+    "id": 754214,
+    "time": "01:10",
+    "date": "2026-04-26T23:10:00Z",
+    "localDate": "2026-04-27",
+    "home": "Llaneros",
+    "away": "Alianza",
+    "homeBadge": "/api/badge?img=20250501114320-club-llaneros-fc.png",
+    "awayBadge": "/api/badge?img=20240330075734-alianza.png",
+    "competition": "Liga Colombiana",
+    "channels": [
+      {
+        "name": "RCN Nuestra Tele",
+        "image": "/api/badge?img=20140305064707-nuestra-tele.png"
+      }
+    ]
+  },
+  {
+    "id": 753260,
+    "time": "01:30",
+    "date": "2026-04-26T23:30:00Z",
+    "localDate": "2026-04-27",
+    "home": "Atlético Mineiro",
+    "away": "CR Flamengo",
+    "homeBadge": "/api/badge?img=20180202125146-atletico-mineiro.png",
+    "awayBadge": "/api/badge?img=20121222102708_flamengo.png",
+    "competition": "Serie A Brasil",
+    "channels": [
+      {
+        "name": "Fanatiz (Ver en directo)",
+        "image": "/api/badge?img=20200814002714-fanatiz-portugal.png"
+      },
+      {
+        "name": "M+ Vamos (8 y 50)",
+        "image": "/api/badge?img=20230804220606-vamos-movistar.png"
+      },
+      {
+        "name": "M+ #Vamos Bar (304)",
+        "image": "/api/badge?img=20220128174234-vamos-bar.png"
+      },
+      {
+        "name": "M+ Liga de Campeones (M60 O115)",
+        "image": "/api/badge?img=20220127192452-movistar-liga-campeones.png"
+      }
+    ]
+  },
+  {
+    "id": 753265,
+    "time": "01:30",
+    "date": "2026-04-26T23:30:00Z",
+    "localDate": "2026-04-27",
+    "home": "Fluminense",
+    "away": "Chapecoense",
+    "homeBadge": "/api/badge?img=20180122105234-Fluminense.png",
+    "awayBadge": "/api/badge?img=20140716093041-chapecoense.png",
+    "competition": "Serie A Brasil",
+    "channels": [
+      {
+        "name": "Fanatiz (Ver en directo)",
+        "image": "/api/badge?img=20200814002714-fanatiz-portugal.png"
+      }
+    ]
+  },
+  {
+    "id": 772835,
+    "time": "02:00",
+    "date": "2026-04-27T00:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "OL Reign",
+    "away": "Utah Royals FC",
+    "homeBadge": "/api/badge?img=20220623182706-seattle-reign.png",
+    "awayBadge": "/api/badge?img=20190415070008-utah-royals-fc.png",
+    "competition": "NWSL",
+    "channels": [
+      {
+        "name": "NWSL+",
+        "image": "/api/badge?img=20240316181010-nwsl-plus.png"
+      }
+    ]
+  },
+  {
+    "id": 777491,
+    "time": "02:00",
+    "date": "2026-04-27T00:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Sporting KC II",
+    "away": "Houston Dynamo 2",
+    "homeBadge": "/api/badge?img=20130414110243_sporting-kc.png",
+    "awayBadge": "/api/badge?img=20211013184210-houston-dynamo.png",
+    "competition": "MLS Next Pro",
+    "channels": [
+      {
+        "name": "OneFootball",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 756210,
+    "time": "03:20",
+    "date": "2026-04-27T01:20:00Z",
+    "localDate": "2026-04-27",
+    "home": "Inter Bogotá",
+    "away": "Boyacá Chicó",
+    "homeBadge": "/api/badge?img=20260116090726-internacional-bogota.png",
+    "awayBadge": "/api/badge?img=20130221122302_boyaca-chico.png",
+    "competition": "Liga Colombiana",
+    "channels": [
+      {
+        "name": "RCN Nuestra Tele",
+        "image": "/api/badge?img=20140305064707-nuestra-tele.png"
+      }
+    ]
+  },
+  {
+    "id": 775012,
+    "time": "05:00",
+    "date": "2026-04-27T03:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Tacoma Defiance",
+    "away": "Los Angeles FC 2",
+    "homeBadge": "/api/badge?img=20230928140911-tacoma-defiance.png",
+    "awayBadge": "/api/badge?img=20171228044703-los-angeles-fc.png",
+    "competition": "MLS Next Pro",
+    "channels": [
+      {
+        "name": "OneFootball",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 696058,
+    "time": "12:00",
+    "date": "2026-04-27T10:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "FC Epitsentr",
+    "away": "FC Oleksandriya",
+    "homeBadge": "/api/badge?img=20240531221535-fc-epitsentr.png",
+    "awayBadge": "/api/badge?img=20190830011847-fc-oleksandriya.png",
+    "competition": "Premier League Ucrania",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 696065,
+    "time": "14:30",
+    "date": "2026-04-27T12:30:00Z",
+    "localDate": "2026-04-27",
+    "home": "Zorya",
+    "away": "NK Veres Rivne",
+    "homeBadge": "/api/badge?img=20140224092901-zorya.png",
+    "awayBadge": "/api/badge?img=20220823143342-nk-veres-rivne.png",
+    "competition": "Premier League Ucrania",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 791204,
+    "time": "17:00",
+    "date": "2026-04-27T15:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Eslovenia",
+    "away": "Escocia",
+    "homeBadge": "/api/badge?img=20130204101247_eslovenia.png",
+    "awayBadge": "/api/badge?img=20130425075433_escocia.png",
+    "competition": "Amistoso Sub-15",
+    "channels": [
+      {
+        "name": "FIFA+",
+        "image": "/api/badge?img=20220420185155-fifa-plus-spain.png"
+      }
+    ]
+  },
+  {
+    "id": 775140,
+    "time": "17:00",
+    "date": "2026-04-27T15:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "BFC Daugavpils",
+    "away": "SK Super Nova",
+    "homeBadge": "/api/badge?img=20220304205124-bfc-daugavpils.png",
+    "awayBadge": "/api/badge?img=20220304205145-sk-super-nova.png",
+    "competition": "Superliga de Letonia",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 781378,
+    "time": "18:00",
+    "date": "2026-04-27T16:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "FK Ogre United",
+    "away": "FK Jelgava",
+    "homeBadge": "/api/badge?img=20260316093526-fk-ogre-united.png",
+    "awayBadge": "/api/badge?img=20250616105520-fk-jelgava.png",
+    "competition": "Superliga de Letonia",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 669117,
+    "time": "18:30",
+    "date": "2026-04-27T16:30:00Z",
+    "localDate": "2026-04-27",
+    "home": "Cagliari",
+    "away": "Atalanta",
+    "homeBadge": "/api/badge?img=20170205100747-cagliari.png",
+    "awayBadge": "/api/badge?img=20121219034958_atalanta.png",
+    "competition": "Serie A",
+    "channels": [
+      {
+        "name": "DAZN (Ver en directo)",
+        "image": "/api/badge?img=20190101060228-dazn.png"
+      }
+    ]
+  },
+  {
+    "id": 760100,
+    "time": "20:00",
+    "date": "2026-04-27T18:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "KR Reykjavík",
+    "away": "FH Hafnarfjördur",
+    "homeBadge": "/api/badge?img=20200814132630-kr-reykjavik.png",
+    "awayBadge": "/api/badge?img=20130814021732-fh-hafnarfjordur.png",
+    "competition": "Liga Premier Islandia",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 760101,
+    "time": "20:00",
+    "date": "2026-04-27T18:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Fram Reykjavík",
+    "away": "ÍBV",
+    "homeBadge": "/api/badge?img=20140824075145-fram-reykjavik.png",
+    "awayBadge": "/api/badge?img=20220412192317-iprottabandalag-vestmannaeyja.png",
+    "competition": "Liga Premier Islandia",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 676622,
+    "time": "20:30",
+    "date": "2026-04-27T18:30:00Z",
+    "localDate": "2026-04-27",
+    "home": "Cádiz CF",
+    "away": "UD Las Palmas",
+    "homeBadge": "/api/badge?img=20121227104020_cadiz.png",
+    "awayBadge": "/api/badge?img=20121218094143_las-palmas.png",
+    "competition": "LaLiga Hypermotion",
+    "channels": [
+      {
+        "name": "LALIGA TV Hypermotion (M56 O120): VER PARTIDO",
+        "image": "/api/badge?img=20230704191958-laliga-tv-hypermotion.png"
+      },
+      {
+        "name": "DAZN (Ver en directo)",
+        "image": "/api/badge?img=20190101060228-dazn.png"
+      },
+      {
+        "name": "CayoTV YouTube (ver)",
+        "image": "/api/badge?img=20200515100358-copa90-youtube.png"
+      },
+      {
+        "name": "Canal Sur",
+        "image": "/api/badge?img=20220805123926-canal-sur.png"
+      },
+      {
+        "name": "GOL (Síguelo en directo)",
+        "image": "/api/badge?img=20250703092248-gol.png"
+      },
+      {
+        "name": "TV Canaria",
+        "image": "/api/badge?img=20220827221421-tv-canaria.png"
+      },
+      {
+        "name": "LaLiga TV M2",
+        "image": "/api/badge?img=20161229014208-laliga-tv-2.png"
+      }
+    ]
+  },
+  {
+    "id": 669121,
+    "time": "20:45",
+    "date": "2026-04-27T18:45:00Z",
+    "localDate": "2026-04-27",
+    "home": "Lazio",
+    "away": "Udinese",
+    "homeBadge": "/api/badge?img=20121219035121_lazio.png",
+    "awayBadge": "/api/badge?img=20121219035331_udinese.png",
+    "competition": "Serie A",
+    "channels": [
+      {
+        "name": "DAZN (Ver en directo)",
+        "image": "/api/badge?img=20190101060228-dazn.png"
+      },
+      {
+        "name": "LaLiga TV M3",
+        "image": "/api/badge?img=20161229014214-laliga-tv-3.png"
+      }
+    ]
+  },
+  {
+    "id": 670110,
+    "time": "21:00",
+    "date": "2026-04-27T19:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Manchester Utd.",
+    "away": "Brentford",
+    "homeBadge": "/api/badge?img=20121218101319_manchester-united.png",
+    "awayBadge": "/api/badge?img=20171127121055-brentford.png",
+    "competition": "Premier League",
+    "channels": [
+      {
+        "name": "DAZN (Ver en directo)",
+        "image": "/api/badge?img=20190101060228-dazn.png"
+      },
+      {
+        "name": "DAZN 1 (M71)",
+        "image": "/api/badge?img=20210121105816-dazn-1-espana.png"
+      },
+      {
+        "name": "DAZN 1 Bar (M148)",
+        "image": "/api/badge?img=20220305204920-dazn-1-bar-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 784544,
+    "time": "21:00",
+    "date": "2026-04-27T19:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "LDU Portoviejo",
+    "away": "Cuenca Juniors",
+    "homeBadge": "/api/badge?img=20141113045919-ldu-portoviejo.png",
+    "awayBadge": "/api/badge?img=20250609202225-cuenca-juniors.png",
+    "competition": "Liga Pro Serie B",
+    "channels": [
+      {
+        "name": "Zapping Internacional",
+        "image": "/api/badge?img=20260228211255-zapping-internacional-peru.png"
+      }
+    ]
+  },
+  {
+    "id": 676156,
+    "time": "21:00",
+    "date": "2026-04-27T19:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Espanyol",
+    "away": "Levante",
+    "homeBadge": "/api/badge?img=20121218093321_espanol.png",
+    "awayBadge": "/api/badge?img=20121218092930_levante.png",
+    "competition": "LaLiga EA Sports",
+    "channels": [
+      {
+        "name": "M+ LALIGA (M54 O110)",
+        "image": "/api/badge?img=20230705222735-movistar-laliga.png"
+      },
+      {
+        "name": "M+ LALIGA HDR (M440 O111)",
+        "image": "/api/badge?img=20250813222535-movistar-laliga-hdr.png"
+      },
+      {
+        "name": "LaLiga TV Bar",
+        "image": "/api/badge?img=20161229014154-laliga-tv.png"
+      }
+    ]
+  },
+  {
+    "id": 760102,
+    "time": "21:15",
+    "date": "2026-04-27T19:15:00Z",
+    "localDate": "2026-04-27",
+    "home": "Stjarnan",
+    "away": "Valur Reykjavík",
+    "homeBadge": "/api/badge?img=20140819090758-stjarnan.png",
+    "awayBadge": "/api/badge?img=20190118093037-valur-reykjavik.png",
+    "competition": "Liga Premier Islandia",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 760103,
+    "time": "21:15",
+    "date": "2026-04-27T19:15:00Z",
+    "localDate": "2026-04-27",
+    "home": "Víkingur R",
+    "away": "ÍA Akraness",
+    "homeBadge": "/api/badge?img=20220412192344-vikingur-reykjavik.png",
+    "awayBadge": "/api/badge?img=20220412192332-iprottabandalag-akraness.png",
+    "competition": "Liga Premier Islandia",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 784496,
+    "time": "21:15",
+    "date": "2026-04-27T19:15:00Z",
+    "localDate": "2026-04-27",
+    "home": "Breidablik UBK",
+    "away": "Thor Akureyri",
+    "homeBadge": "/api/badge?img=20140103114350-breidablik-ubk.png",
+    "awayBadge": "/api/badge?img=20180913094914-thorka.png",
+    "competition": "Liga Premier Islandia",
+    "channels": [
+      {
+        "name": "OneFootball PPV",
+        "image": "/api/badge?img=20200916171541-onefootball-espana.png"
+      }
+    ]
+  },
+  {
+    "id": 759142,
+    "time": "22:00",
+    "date": "2026-04-27T20:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "AD Tarma",
+    "away": "CD Los Chankas",
+    "homeBadge": "/api/badge?img=20211027103214-asociacion-deportiva-tarma.png",
+    "awayBadge": "/api/badge?img=20210916191205-santa-rosa.png",
+    "competition": "Liga 1 Perú",
+    "channels": [
+      {
+        "name": "Fanatiz (Ver en directo)",
+        "image": "/api/badge?img=20200814002714-fanatiz-portugal.png"
+      }
+    ]
+  },
+  {
+    "id": 788761,
+    "time": "22:00",
+    "date": "2026-04-27T20:00:00Z",
+    "localDate": "2026-04-27",
+    "home": "Venezuela",
+    "away": "Ecuador",
+    "homeBadge": "/api/badge?img=20130316103615_venezuela.png",
+    "awayBadge": "/api/badge?img=20130204101510_ecuador.png",
+    "competition": "Sudamericano Femenino Sub-17",
+    "channels": [
+      {
+        "name": "CONMEBOL YouTube",
+        "image": "/api/badge?img=20190901113113-youtube-2.png"
+      }
+    ]
+  },
+  {
+    "id": 763270,
+    "time": "23:30",
+    "date": "2026-04-27T21:30:00Z",
+    "localDate": "2026-04-27",
+    "home": "Manta FC",
+    "away": "U. Católica",
+    "homeBadge": "/api/badge?img=20140823020451-manta-fc.png",
+    "awayBadge": "/api/badge?img=20140815025834-u-catolica.png",
+    "competition": "Liga Pro Ecuador",
+    "channels": [
+      {
+        "name": "Zapping Internacional",
+        "image": "/api/badge?img=20260228211255-zapping-internacional-peru.png"
+      }
+    ]
+  },
+  {
+    "id": 780495,
+    "time": "23:30",
+    "date": "2026-04-27T21:30:00Z",
+    "localDate": "2026-04-27",
+    "home": "Talleres Córdoba Femenino",
+    "away": "Racing Avellaneda Femenino",
+    "homeBadge": "/api/badge?img=20160714102309-talleres-cordoba.png",
+    "awayBadge": "/api/badge?img=20121219051639_racing-de-avellaneda.png",
+    "competition": "Campeonato Femenino",
+    "channels": [
+      {
+        "name": "LPF Play",
+        "image": "/api/badge?img=20250910231117-lpf-play.png"
+      }
+    ]
+  },
+  {
+    "id": 748939,
+    "time": "23:45",
+    "date": "2026-04-27T21:45:00Z",
+    "localDate": "2026-04-27",
+    "home": "Vélez Sarsfield",
+    "away": "Unión Santa Fe",
+    "homeBadge": "/api/badge?img=20121219051943_vélez-sarsfield.png",
+    "awayBadge": "/api/badge?img=20160115093449-union-santa-fe.png",
+    "competition": "Primera División Argentina",
+    "channels": [
+      {
+        "name": "Fanatiz (Ver en directo)",
+        "image": "/api/badge?img=20200814002714-fanatiz-portugal.png"
+      }
+    ]
+  }
+]

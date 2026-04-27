@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import fallback20260427 from './fallback-2026-04-27.json'
 
 const KEY  = process.env.RAPIDAPI_KEY
 const HOST = process.env.RAPIDAPI_HOST
@@ -6,6 +7,11 @@ const HEADERS = KEY && HOST ? {
   'x-rapidapi-key':  KEY,
   'x-rapidapi-host': HOST,
 } : null
+
+// Static fallbacks keyed by date (used when WOSTI API is rate-limited)
+const FALLBACKS: Record<string, typeof fallback20260427> = {
+  '2026-04-27': fallback20260427,
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -23,6 +29,12 @@ export async function GET(request: Request) {
     })
 
     if (!res.ok) {
+      // Rate-limited or API error — serve static fallback if available
+      const fb = FALLBACKS[date]
+      if (fb) {
+        const filtered = (fb as typeof fallback20260427).filter((m: Record<string, unknown>) => m.localDate === date)
+        return NextResponse.json({ matches: filtered, count: filtered.length, endpoint: 'fallback', date })
+      }
       return NextResponse.json({ matches: [], count: 0, endpoint: 'api-error', error: `API ${res.status}`, date })
     }
 
