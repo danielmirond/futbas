@@ -954,12 +954,17 @@ export default function GuiaFutbolMD() {
       {/* HEADER */}
       <header role="banner" style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
         <button className="md-logo" onClick={showMain} aria-label="Mundo Deportivo · Ir al inicio">
-          <svg viewBox="0 0 420 54" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-            <polygon points="0,0 414,0 420,54 0,54" fill="#1e1e1e"/>
-            <polygon points="7,5 12,5 9,49 4,49" fill="#E30613"/>
-            <polygon points="16,5 21,5 18,49 13,49" fill="#E30613"/>
-            <text x="28" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#FFD700">MUNDO</text>
-            <text x="168" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#ffffff">DEPORTIVO</text>
+          <svg viewBox="0 0 64 52" height="34" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+            {/* Dark background */}
+            <rect width="64" height="52" rx="4" fill="#1e1e1e"/>
+            {/* Left red bar */}
+            <polygon points="4,3 9,3 7,49 2,49" fill="#E30613"/>
+            {/* Right red bar */}
+            <polygon points="55,3 60,3 62,49 57,49" fill="#E30613"/>
+            {/* M yellow */}
+            <text x="10" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
+            {/* D white */}
+            <text x="35" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
           </svg>
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1282,12 +1287,12 @@ export default function GuiaFutbolMD() {
             <button className="ob-skip" onClick={skipOb} aria-label="Saltar presentación">×</button>
             {/* Logo */}
             <div className="ob-logo">
-              <svg viewBox="0 0 420 54" height="42" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                <polygon points="0,0 414,0 420,54 0,54" fill="#1e1e1e"/>
-                <polygon points="7,5 12,5 9,49 4,49" fill="#E30613"/>
-                <polygon points="16,5 21,5 18,49 13,49" fill="#E30613"/>
-                <text x="28" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#FFD700">MUNDO</text>
-                <text x="168" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#ffffff">DEPORTIVO</text>
+              <svg viewBox="0 0 64 52" height="60" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                <rect width="64" height="52" rx="5" fill="#1e1e1e"/>
+                <polygon points="4,3 9,3 7,49 2,49" fill="#E30613"/>
+                <polygon points="55,3 60,3 62,49 57,49" fill="#E30613"/>
+                <text x="10" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
+                <text x="35" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
               </svg>
             </div>
             <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 6 }}>Fútbol en TV</h2>
