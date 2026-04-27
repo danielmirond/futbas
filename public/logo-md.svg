@@ -1,22 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 72">
-  <!-- Background -->
-  <rect width="220" height="72" fill="#111"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 54" width="420" height="54">
+  <!-- Dark background (parallelogram — right edge slightly angled) -->
+  <polygon points="0,0 414,0 420,54 0,54" fill="#1e1e1e"/>
 
-  <!-- Left red diagonal bar (leans right, like italic) -->
-  <polygon points="7,2 15,2 9,70 1,70" fill="#E30613"/>
+  <!-- Left red bar 1 -->
+  <polygon points="7,5 12,5 9,49 4,49" fill="#E30613"/>
 
-  <!-- Right red diagonal bar -->
-  <polygon points="205,2 213,2 219,70 211,70" fill="#E30613"/>
+  <!-- Left red bar 2 -->
+  <polygon points="16,5 21,5 18,49 13,49" fill="#E30613"/>
 
-  <!-- MUNDO — large, yellow, bold italic -->
-  <text x="22" y="44"
+  <!-- MUNDO — yellow, bold italic -->
+  <text x="28" y="41"
     font-family="Impact,'Arial Narrow',Arial,sans-serif"
-    font-size="42" font-style="italic" font-weight="900"
+    font-size="40" font-style="italic" font-weight="900"
     fill="#FFD700">MUNDO</text>
 
-  <!-- DEPORTIVO — white, bold italic, smaller -->
-  <text x="22" y="68"
+  <!-- DEPORTIVO — white, bold italic, same size -->
+  <text x="168" y="41"
     font-family="Impact,'Arial Narrow',Arial,sans-serif"
-    font-size="25" font-style="italic" font-weight="900"
+    font-size="40" font-style="italic" font-weight="900"
     fill="#ffffff">DEPORTIVO</text>
 </svg>
