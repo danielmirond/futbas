@@ -61,8 +61,8 @@ async function fetchSportMonks(date: string): Promise<MatchOut[] | null> {
       url.searchParams.set('page', String(page))
 
       const res = await fetch(url.toString(), {
-        next: { revalidate: 120 },
-        signal: AbortSignal.timeout(10000),
+        cache: 'no-store',
+        signal: AbortSignal.timeout(12000),
       })
       if (!res.ok) return null   // auth error, quota, etc. → fall back to ESPN
 
@@ -139,15 +139,35 @@ async function fetchSportMonks(date: string): Promise<MatchOut[] | null> {
 
 /* ── ESPN fallback ──────────────────────────────────────────────── */
 const ESPN_LEAGUES = [
-  { id: 'esp.1',          name: 'LaLiga EA Sports' },
-  { id: 'esp.2',          name: 'LaLiga Hypermotion' },
-  { id: 'eng.1',          name: 'Premier League' },
-  { id: 'ger.1',          name: 'Bundesliga' },
-  { id: 'ita.1',          name: 'Serie A' },
-  { id: 'fra.1',          name: 'Ligue 1' },
-  { id: 'uefa.champions', name: 'Champions League' },
-  { id: 'uefa.europa',    name: 'Europa League' },
-  { id: 'uefa.europa.conf', name: 'Conference League' },
+  // España
+  { id: 'esp.1',           name: 'LaLiga EA Sports' },
+  { id: 'esp.2',           name: 'LaLiga Hypermotion' },
+  { id: 'esp.cup',         name: 'Copa del Rey' },
+  // Europa top
+  { id: 'eng.1',           name: 'Premier League' },
+  { id: 'eng.fa',          name: 'FA Cup' },
+  { id: 'ger.1',           name: 'Bundesliga' },
+  { id: 'ger.2',           name: '2. Bundesliga' },
+  { id: 'ita.1',           name: 'Serie A' },
+  { id: 'fra.1',           name: 'Ligue 1' },
+  { id: 'ned.1',           name: 'Eredivisie' },
+  { id: 'por.1',           name: 'Primeira Liga' },
+  { id: 'tur.1',           name: 'Süper Lig' },
+  { id: 'sco.1',           name: 'Scottish Premiership' },
+  // UEFA
+  { id: 'uefa.champions',      name: 'Champions League' },
+  { id: 'uefa.europa',         name: 'Europa League' },
+  { id: 'uefa.europa.conf',    name: 'Conference League' },
+  { id: 'uefa.nations',        name: 'UEFA Nations League' },
+  // América
+  { id: 'usa.1',           name: 'MLS' },
+  { id: 'mex.1',           name: 'Liga MX' },
+  { id: 'arg.1',           name: 'Primera División Argentina' },
+  { id: 'bra.1',           name: 'Serie A Brasil' },
+  { id: 'conmebol.libertadores', name: 'Copa Libertadores' },
+  { id: 'conmebol.sudamericana', name: 'Copa Sudamericana' },
+  // Resto
+  { id: 'sau.1',           name: 'Saudi Pro League' },
 ]
 
 async function fetchESPN(date: string): Promise<MatchOut[]> {
@@ -157,7 +177,7 @@ async function fetchESPN(date: string): Promise<MatchOut[]> {
     ESPN_LEAGUES.map(async (league, li) => {
       const res = await fetch(
         `https://site.api.espn.com/apis/site/v2/sports/soccer/${league.id}/scoreboard?dates=${dateCompact}`,
-        { next: { revalidate: 300 }, signal: AbortSignal.timeout(8000) }
+        { cache: 'no-store', signal: AbortSignal.timeout(8000) }
       )
       if (!res.ok) return []
       const data = await res.json()

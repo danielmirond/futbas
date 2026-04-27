@@ -118,6 +118,10 @@ const DARK = {
 function pad(n: number) { return String(n).padStart(2, '0') }
 function nowStr() { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}` }
 
+function normalize(s: string) {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
 function todayKey() {
   return new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-')
 }
@@ -170,6 +174,14 @@ function getMatchCTA(channels: string[]) {
     if (key) return CHANNEL_CTA[key]
   }
   return null
+}
+
+function matchDayLabel(dateStr: string): string {
+  const tk = todayKey()
+  const tmk = new Date(Date.now() + 86400000).toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-')
+  if (dateStr === tk) return 'Hoy'
+  if (dateStr === tmk) return 'Mañana'
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
 }
 
 function formatDayHeader(dateStr: string): string {
@@ -236,9 +248,32 @@ function downloadICS(m: Match) {
 
 /* Feature 6: Share */
 async function shareMatch(m: Match) {
-  const text = `⚽ ${m.home} vs ${m.away} - ${m.time} - ${m.ch.join(', ')}`
-  if (navigator.share) { try { await navigator.share({ text }) } catch {} }
-  else { await navigator.clipboard.writeText(text) }
+  const [yyyy, mm, dd] = m.date.split('-')
+  const dateLabel = new Date(`${m.date}T12:00:00`).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+  const chLine = m.ch.length > 0 ? `📺 ${m.ch.join(' · ')}` : '📺 Canal por confirmar'
+  const scoreLine = m.score
+    ? `\n⚡ Marcador: ${m.score.h}–${m.score.a}${m.score.st === 'FT' ? ' (FT)' : m.score.st === 'LIVE' ? ' 🔴 EN VIVO' : ''}`
+    : ''
+  const text = [
+    `⚽ ${m.home} vs ${m.away}`,
+    `📅 ${dateLabel} · ${m.time}h`,
+    `🏆 ${m.comp}`,
+    chLine,
+    scoreLine,
+    `\n🔗 musing-snyder.vercel.app`,
+  ].filter(Boolean).join('\n')
+  void [yyyy, mm, dd] // used for dateLabel calculation
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${m.home} vs ${m.away} — ${m.time}h`,
+        text,
+        url: 'https://musing-snyder.vercel.app',
+      })
+    } catch {}
+  } else {
+    await navigator.clipboard.writeText(text)
+  }
   return text
 }
 
@@ -443,7 +478,7 @@ export default function GuiaFutbolMD() {
   const [selectedDate, setSelectedDate] = useState(today)
   const [page, setPage] = useState<'main' | 'comp' | 'features'>('main')
   const [currentComp, setCurrentComp] = useState('')
-  const [compTab, setCompTab] = useState('tabla')
+  const [compTab, setCompTab] = useState<'partidos' | 'resultados' | 'tabla'>('partidos')
   const [menuOpen, setMenuOpen] = useState(false)
   const [showScores, setShowScores] = useState(true)
   /* Feature 1 */ const [favorites, setFavorites] = useState<string[]>([])
@@ -458,6 +493,7 @@ export default function GuiaFutbolMD() {
   /* Live matches from API */ const [liveMatches, setLiveMatches] = useState<Match[]>([])
   /* All week matches for selects */ const [weekMatches, setWeekMatches] = useState<Match[]>([])
   /* API data source indicator */ const [dataSource, setDataSource] = useState<'demo' | 'api'>('demo')
+  /* Loading indicator */ const [loadingMatches, setLoadingMatches] = useState(true)
   /* New: polls */ const [polls, setPolls] = useState<Record<number, 'home' | 'away'>>({})
   /* New: interest counters */ const [interests, setInterests] = useState<Record<number, number>>({})
   /* New: notifications */ const [notifEnabled, setNotifEnabled] = useState(false)
@@ -465,7 +501,6 @@ export default function GuiaFutbolMD() {
   /* Onboarding */ const [obStep, setObStep] = useState<null | 'modal' | 'c1' | 'c2' | 'c3'>(null)
   const [obModalPage, setObModalPage] = useState(1)
 
-  const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const drawerRef = useRef<HTMLElement>(null)
   const drawerBtnRef = useRef<HTMLButtonElement>(null)
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -521,9 +556,13 @@ export default function GuiaFutbolMD() {
   useEffect(() => {
     const fetchWeek = async () => {
       const all: Match[] = []
-      const dates = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(Date.now() + (i - 1) * 86400000)
-        return d.toISOString().split('T')[0]
+      const dates = Array.from({ length: 14 }, (_, i) => {
+        const d = new Date()
+        d.setDate(d.getDate() + (i - 1))
+        const [dd, mm, yyyy] = new Intl.DateTimeFormat('es-ES', {
+          timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit',
+        }).format(d).split('/')
+        return `${yyyy}-${mm}-${dd}`
       })
       const results = await Promise.allSettled(
         dates.map(d => fetch(`/api/allmatches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))
@@ -543,6 +582,7 @@ export default function GuiaFutbolMD() {
   // Fetch matches: ESPN (all comps) + WOSTI (TV channels), merged
   useEffect(() => {
     const fetchMatches = async () => {
+      setLoadingMatches(true)
       try {
         // Fetch ESPN all matches + WOSTI TV channels in parallel
         const [espnRes, wostiRes] = await Promise.all([
@@ -621,7 +661,11 @@ export default function GuiaFutbolMD() {
 
         setLiveMatches(all)
         setDataSource(all.length > 0 ? 'api' : 'demo')
-      } catch {}
+      } catch {
+        setLiveMatches([])
+      } finally {
+        setLoadingMatches(false)
+      }
     }
     fetchMatches()
   }, [selectedDate])
@@ -651,11 +695,9 @@ export default function GuiaFutbolMD() {
     return () => clearInterval(t)
   }, [notifEnabled, favorites])
 
-  // Debounce search
+  // Sync search (sin debounce — respuesta inmediata)
   useEffect(() => {
-    if (searchRef.current) clearTimeout(searchRef.current)
-    searchRef.current = setTimeout(() => setDebouncedSearch(searchQuery), 200)
-    return () => { if (searchRef.current) clearTimeout(searchRef.current) }
+    setDebouncedSearch(searchQuery)
   }, [searchQuery])
 
   const toggleFav = (team: string) => setFavorites(f => f.includes(team) ? f.filter(t => t !== team) : [...f, team])
@@ -674,30 +716,89 @@ export default function GuiaFutbolMD() {
   // ── Filters ──
   // All matches come from API
   const allMatches = liveMatches
-  const baseMatches = viewMode === 'week'
-    ? allMatches
+  const baseMatches = (viewMode === 'week' || compFilter || teamFilter || debouncedSearch)
+    ? weekMatches   // todos los días de la semana o filtro activo
     : allMatches.filter(m => m.date === selectedDate)
 
   // Selects use week data so all teams/comps are always visible
   const selectSource = weekMatches.length > 0 ? weekMatches : allMatches
-  const clubTeams = Array.from(new Set(selectSource.filter(m => !INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
-  const nationalTeams = Array.from(new Set(selectSource.filter(m => INTL_COMPS.includes(m.comp)).flatMap(m => [m.home, m.away]))).sort()
-  const allComps = Array.from(new Set(selectSource.map(m => m.comp))).filter(Boolean).sort()
+
+  // Ligas que aparecen en el selector de equipos (evita equipos de ligas menores/desconocidas)
+  const TEAM_COMP_GROUPS: { label: string; comps: string[] }[] = [
+    { label: 'España', comps: ['LaLiga EA Sports', 'LaLiga Hypermotion', 'Copa del Rey', 'Liga F', 'Primera Federación'] },
+    { label: 'Copas Europa', comps: ['Champions League', 'Europa League', 'Conference League', 'UEFA Nations League', 'Supercopa'] },
+    { label: 'Premier / Bundesliga / Serie A / Ligue 1', comps: ['Premier League', 'FA Cup', 'Bundesliga', '2. Bundesliga', 'Serie A', 'Ligue 1', 'Eredivisie', 'Primeira Liga', 'Süper Lig', 'Scottish Premiership'] },
+    { label: 'América', comps: ['MLS', 'Liga MX', 'Primera División Argentina', 'Serie A Brasil', 'Copa Libertadores', 'Copa Sudamericana'] },
+    { label: 'Resto del mundo', comps: ['Saudi Pro League'] },
+  ]
+  const TEAM_MAJOR_COMPS = new Set(TEAM_COMP_GROUPS.flatMap(g => g.comps))
+  const teamsByGroup = TEAM_COMP_GROUPS.map(g => ({
+    label: g.label,
+    teams: Array.from(new Set(
+      selectSource.filter(m => g.comps.includes(m.comp) && !INTL_COMPS.includes(m.comp))
+        .flatMap(m => [m.home, m.away])
+    )).sort(),
+  })).filter(g => g.teams.length > 0)
+  const nationalTeamsByGroup = TEAM_COMP_GROUPS.filter(g =>
+    g.comps.some(c => INTL_COMPS.includes(c))
+  ).map(g => ({
+    label: g.label,
+    teams: Array.from(new Set(
+      selectSource.filter(m => g.comps.includes(m.comp) && INTL_COMPS.includes(m.comp))
+        .flatMap(m => [m.home, m.away])
+    )).sort(),
+  })).filter(g => g.teams.length > 0)
+  // Backward-compat (still used in some places)
+  const allComps = Array.from(new Set(selectSource.filter(m => TEAM_MAJOR_COMPS.has(m.comp)).map(m => m.comp))).filter(Boolean)
+    .sort((a, b) => {
+      const order = (c: string) => {
+        const idx = TEAM_COMP_GROUPS.findIndex(g => g.comps.includes(c))
+        return idx === -1 ? 99 : idx
+      }
+      return order(a) - order(b)
+    })
 
   const filtered = useMemo(() => baseMatches.filter(m => {
-    if (filter === 'free') return m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
-    if (filter === 'pay') return m.ch.some(c => PAY_KW.some(k => c.toLowerCase().includes(k)))
+    // Si el partido no tiene datos de canal, se deja pasar en todos los filtros (canal desconocido)
+    if (filter === 'free') return m.ch.length === 0 || m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
+    if (filter === 'pay')  return m.ch.length === 0 || m.ch.some(c => PAY_KW.some(k => c.toLowerCase().includes(k)))
     if (filter === 'favs') return favorites.includes(m.home) || favorites.includes(m.away)
     return true
   }).filter(m => {
     if (compFilter && m.comp !== compFilter) return false
     if (teamFilter && m.home !== teamFilter && m.away !== teamFilter) return false
     if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase()
-      return m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q) || m.comp.toLowerCase().includes(q)
+      const q = normalize(debouncedSearch)
+      return (
+        normalize(m.home).includes(q) ||
+        normalize(m.away).includes(q) ||
+        normalize(m.comp).includes(q) ||
+        m.ch.some(c => normalize(c).includes(q))
+      )
     }
     return true
   }), [baseMatches, filter, compFilter, teamFilter, debouncedSearch, favorites])
+
+  // Navegación inteligente: si hay filtro activo y no hay partidos hoy, buscar el próximo día con resultados
+  const nextMatchDate = useMemo(() => {
+    if (viewMode === 'week') return null
+    if (filtered.length > 0) return null
+    if (!compFilter && !teamFilter && !debouncedSearch && filter === 'all') return null
+    const applyFilter = (ms: Match[]) => ms.filter(m => {
+      if (compFilter && m.comp !== compFilter) return false
+      if (teamFilter && m.home !== teamFilter && m.away !== teamFilter) return false
+      if (debouncedSearch) {
+        const q = normalize(debouncedSearch)
+        return normalize(m.home).includes(q) || normalize(m.away).includes(q) || normalize(m.comp).includes(q)
+      }
+      return true
+    })
+    const futureDates = Array.from(new Set(weekMatches.map(m => m.date))).sort().filter(d => d > selectedDate)
+    for (const d of futureDates) {
+      if (applyFilter(weekMatches.filter(m => m.date === d)).length > 0) return d
+    }
+    return null
+  }, [filtered.length, weekMatches, selectedDate, compFilter, teamFilter, debouncedSearch, filter, viewMode])
 
   // Group by date then comp or channel
   const groupedByDay = useMemo(() => {
@@ -745,15 +846,13 @@ export default function GuiaFutbolMD() {
   const resetAll = () => { setFilter('all'); setCompFilter(''); setTeamFilter(''); setSelectedDate(today); setSearchQuery(''); setViewMode('day') }
   const showComp = async (name: string) => {
     setCurrentComp(name); setPage('comp'); setMenuOpen(false); setLoadingComp(true); setLiveComp(null)
-    const fallback = COMPS[name]
-    setCompTab(fallback?.table.length ? 'tabla' : 'resultados')
+    setCompTab('partidos')   // siempre abre en Partidos y TV
     try {
       const res = await fetch(`/api/standings?comp=${encodeURIComponent(name)}`)
       const data = await res.json()
       if (data.table?.length || data.results?.length || data.next?.length) {
         const emoji = COMPS[name]?.emoji || '⚽'
         setLiveComp({ emoji, table: data.table || [], results: data.results || [], next: data.next || [] })
-        if (data.table?.length) setCompTab('tabla'); else setCompTab('resultados')
       }
     } catch {} finally { setLoadingComp(false) }
   }
@@ -776,14 +875,17 @@ export default function GuiaFutbolMD() {
     fontFamily: 'inherit', transition: 'all .15s', whiteSpace: 'nowrap',
   })
 
-  const dayButtons = Array.from({ length: 7 }, (_, i) => {
+  const dayButtons = Array.from({ length: 14 }, (_, i) => {
     const base = new Date()
     base.setDate(base.getDate() + (i - 1))
     const [dd, mm, yyyy] = new Intl.DateTimeFormat('es-ES', {
       timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit',
     }).format(base).split('/')
     const d = `${yyyy}-${mm}-${dd}`
-    const label = i === 0 ? 'Ayer' : i === 1 ? 'Hoy' : i === 2 ? 'Mañana' : new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
+    const label = i === 0 ? 'Ayer'
+      : i === 1 ? 'Hoy'
+      : i === 2 ? 'Mañana'
+      : new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
     return { date: d, label }
   })
 
@@ -819,7 +921,7 @@ export default function GuiaFutbolMD() {
               ? <div className="soon-badge" style={{ fontSize: 8, fontWeight: 800, color: T.red, textTransform: 'uppercase', marginTop: 1 }}>EN {formatCountdown(mins)}</div>
               : mins > 0 && mins < 480
               ? <div style={{ fontSize: 8, color: T.gray, marginTop: 1 }}>{formatCountdown(mins)}</div>
-              : <div style={{ fontSize: 9, color: T.gray, textTransform: 'uppercase', marginTop: 1 }}>{past ? 'Jugado' : 'Hoy'}</div>
+              : <div style={{ fontSize: 9, color: T.gray, textTransform: 'uppercase', marginTop: 1 }}>{past ? 'Jugado' : matchDayLabel(m.date)}</div>
             }
           </div>
           <div style={{ minWidth: 0 }}>
@@ -834,12 +936,15 @@ export default function GuiaFutbolMD() {
             </div>
             <div style={{ fontSize: 11, color: T.gray, marginTop: 2 }}>{m.comp}</div>
           </div>
-          <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0, maxWidth: 'min(200px, 42vw)' }}>
+          <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, maxWidth: 'min(200px, 42vw)', overflow: 'hidden' }}>
             {showScores && <ScoreBox score={m.score} />}
-            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              {m.ch.slice(0, 2).map((c, i) => <ChTag key={i} name={c} />)}
-              {m.ch.length > 2 && (
-                <span style={{ fontSize: 9, fontWeight: 700, color: T.gray, padding: '2px 4px', border: `1px solid ${T.border}`, borderRadius: 1, whiteSpace: 'nowrap' }}>+{m.ch.length - 2}</span>
+            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '100%' }}>
+              {(expanded ? m.ch : m.ch.slice(0, 3)).map((c, i) => <ChTag key={i} name={c} />)}
+              {!expanded && m.ch.length > 3 && (
+                <button onClick={e => { e.stopPropagation(); setExpandedMatch(m.id) }}
+                  style={{ fontSize: 9, fontWeight: 700, color: T.red, padding: '2px 5px', border: `1px solid ${T.red}`, borderRadius: 1, whiteSpace: 'nowrap', background: T.redLight, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  +{m.ch.length - 3} canales
+                </button>
               )}
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
@@ -885,7 +990,7 @@ export default function GuiaFutbolMD() {
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0}
         body{background:${T.bg};transition:background .3s;font-family:'Helvetica Neue',Arial,sans-serif}
-        .ch-tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:1px;border-width:1px;border-style:solid;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
+        .ch-tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:1px;border-width:1px;border-style:solid;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;display:block}
         .match-row{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid ${T.border};border-left:4px solid ${T.red};background:${T.cardBg};transition:background .15s}
         .match-row:hover{background:${darkMode ? '#161616' : '#f9f9f9'};border-left-color:${T.yellow}}
         .match-row.past{opacity:.45;border-left:4px solid #ccc;background:${T.lightGray}}
@@ -1109,8 +1214,16 @@ export default function GuiaFutbolMD() {
               <select id="filter-team" aria-label="Filtrar por equipo" value={teamFilter} onChange={e => { setTeamFilter(e.target.value); setCompFilter('') }}
                 style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, maxWidth: 170, fontFamily: 'inherit' }}>
                 <option value="">Equipo</option>
-                {clubTeams.length > 0 && <optgroup label="Clubes">{clubTeams.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
-                {nationalTeams.length > 0 && <optgroup label="Selecciones">{nationalTeams.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
+                {teamsByGroup.map(g => g.teams.length > 0 && (
+                  <optgroup key={g.label} label={g.label}>
+                    {g.teams.map(t => <option key={t} value={t}>{t}</option>)}
+                  </optgroup>
+                ))}
+                {nationalTeamsByGroup.map(g => g.teams.length > 0 && (
+                  <optgroup key={'sel-' + g.label} label={'Selecciones — ' + g.label}>
+                    {g.teams.map(t => <option key={t} value={t}>{t}</option>)}
+                  </optgroup>
+                ))}
               </select>
               {(compFilter || teamFilter) && (
                 <button onClick={() => { setCompFilter(''); setTeamFilter('') }} aria-label="Limpiar filtros de competición y equipo"
@@ -1154,11 +1267,29 @@ export default function GuiaFutbolMD() {
 
           {/* Match list */}
           <div style={{ padding: '8px 14px 40px', maxWidth: 880, margin: '0 auto' }}>
-            {filtered.length === 0 ? (
+            {loadingMatches ? (
+              <div style={{ textAlign: 'center', padding: 48, color: T.gray }}>
+                <div style={{ fontSize: 24, marginBottom: 12, animation: 'pulse-soon 1.2s infinite' }}>⚽</div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: T.text }}>Cargando partidos…</p>
+              </div>
+            ) : filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 40, color: T.gray }}>
                 <p style={{ fontSize: 28, marginBottom: 8 }}>📅</p>
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: T.text }}>No hay partidos</p>
-                <p style={{ fontSize: 12 }}>Prueba otro día o filtro</p>
+                <p style={{ fontSize: 12, marginBottom: 14 }}>
+                  {compFilter || teamFilter || debouncedSearch ? 'No hay partidos con ese filtro este día' : 'Sin partidos programados'}
+                </p>
+                {nextMatchDate && (
+                  <button onClick={() => selectDay(nextMatchDate)}
+                    style={{ fontSize: 12, padding: '8px 18px', background: T.red, color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, marginBottom: 10 }}>
+                    ➡ Próximo partido: {formatDayHeader(nextMatchDate)}
+                  </button>
+                )}
+                <div>
+                  <button onClick={resetAll} style={{ fontSize: 11, padding: '5px 12px', background: 'none', color: T.gray, border: `1px solid ${T.border}`, borderRadius: 2, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Quitar filtros · Ver hoy
+                  </button>
+                </div>
               </div>
             ) : (
               Object.keys(groupedByDay).sort().map(day => (
@@ -1170,7 +1301,15 @@ export default function GuiaFutbolMD() {
                   {Object.entries(groupedByDay[day]).sort(([a], [b]) => compSortKey(a) - compSortKey(b)).map(([comp, matches]) => (
                     <div key={comp} style={{ marginBottom: 14 }}>
                       <div style={{ display: 'flex', alignItems: 'center', borderBottom: `2px solid ${darkMode ? '#222' : '#000'}`, marginBottom: 1 }}>
-                        <button onClick={() => showComp(comp)} className="comp-label">{comp} →</button>
+                        {/* Clic → filtrar por esta liga en la lista principal */}
+                        <button onClick={() => { setCompFilter(f => f === comp ? '' : comp); setTeamFilter(''); setViewMode('day') }} className="comp-label">
+                          {compFilter === comp ? '✕ ' : ''}{comp}
+                        </button>
+                        {/* Acceso rápido a clasificación / tabla */}
+                        {COMPS[comp] && (
+                          <button onClick={() => showComp(comp)} title="Ver tabla y resultados"
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: T.gray, padding: '0 6px', fontFamily: 'inherit' }}>📊</button>
+                        )}
                         <span style={{ fontSize: 10, color: T.gray, marginLeft: 'auto', fontWeight: 600 }}>{matches.length}p</span>
                       </div>
                       {matches.map(renderMatch)}
@@ -1342,9 +1481,11 @@ export default function GuiaFutbolMD() {
               </div>
             </div>
             <div style={{ display: 'flex' }}>
-              {(cp.table.length ? ['tabla', 'resultados', 'proximos'] : ['resultados', 'proximos']).map(t => {
-                const labels: Record<string, string> = { tabla: 'Clasificación', resultados: 'Resultados', proximos: 'Próximos' }
+              {(['partidos', 'resultados', 'tabla'] as const).map(t => {
+                const labels = { partidos: '📺 Partidos y TV', resultados: 'Resultados', tabla: 'Clasificación' }
                 const active = compTab === t
+                // Ocultar "Clasificación" si no hay tabla
+                if (t === 'tabla' && !cp.table.length) return null
                 return (
                   <button key={t} onClick={() => setCompTab(t)}
                     style={{ padding: '8px 14px', fontSize: 11, fontWeight: active ? 700 : 500, color: active ? '#fff' : T.darkGray, background: active ? T.red : 'transparent', border: 'none', borderBottom: active ? 'none' : `2px solid ${T.border}`, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: 0.3 }}>
@@ -1355,6 +1496,76 @@ export default function GuiaFutbolMD() {
             </div>
           </div>
           <div style={{ padding: '10px 14px 32px', maxWidth: 860, margin: '0 auto' }}>
+
+            {/* ── PARTIDOS Y TV ── */}
+            {compTab === 'partidos' && (() => {
+              // For today use liveMatches (has WOSTI channels), for other dates use weekMatches
+              const todayLive = liveMatches.filter(m => m.comp === currentComp && m.date === today)
+              const todayLiveIds = new Set(todayLive.map(m => m.id))
+              const otherWeek = weekMatches.filter(m => m.comp === currentComp && m.date !== today)
+              // Also include week matches for today not in liveMatches (edge case)
+              const todayWeekExtra = weekMatches.filter(m => m.comp === currentComp && m.date === today && !todayLiveIds.has(m.id))
+              const compMatches = [...todayLive, ...todayWeekExtra, ...otherWeek]
+                .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+              const byDate = compMatches.reduce<Record<string, Match[]>>((acc, m) => {
+                if (!acc[m.date]) acc[m.date] = []
+                acc[m.date].push(m)
+                return acc
+              }, {})
+              const dates = Object.keys(byDate).sort()
+              if (loadingComp && !compMatches.length) return (
+                <div style={{ textAlign: 'center', padding: 40, color: T.gray }}>
+                  <div style={{ animation: 'pulse-soon 1.2s infinite', fontSize: 24, marginBottom: 8 }}>⚽</div>
+                  <p style={{ fontSize: 13 }}>Cargando partidos…</p>
+                </div>
+              )
+              if (!compMatches.length) return (
+                <p style={{ color: T.gray, fontSize: 13, padding: '24px 0' }}>Sin partidos programados en los próximos 14 días</p>
+              )
+              return (
+                <>
+                  {dates.map(d => (
+                    <div key={d} style={{ marginBottom: 16 }}>
+                      <div className="day-header">
+                        <span>{formatDayHeader(d)}</span>
+                        <span className="count">{byDate[d].length} partidos</span>
+                      </div>
+                      {byDate[d].map(m => {
+                        const past = isPast(m.time, m.date)
+                        return (
+                          <div key={m.id} className={`match-row${past ? ' past' : ''}`}
+                            onClick={() => { showMain(); setSelectedDate(m.date); setCompFilter(currentComp) }}
+                            style={{ cursor: 'pointer', borderLeftColor: past ? 'transparent' : T.red }}>
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: 14, color: past ? T.gray : T.red, fontStyle: 'italic' }}>{m.time}</div>
+                              <div style={{ fontSize: 9, color: T.gray, textTransform: 'uppercase', marginTop: 1 }}>{past ? 'Jugado' : matchDayLabel(m.date)}</div>
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontWeight: 700, fontSize: 13, color: T.text }}>{m.home} <span style={{ color: T.gray, fontWeight: 400 }}>vs</span> {m.away}</div>
+                              {showScores && m.score && (
+                                <div style={{ fontSize: 11, fontWeight: 900, color: m.score.st === 'LIVE' ? '#22c55e' : T.gray, marginTop: 2 }}>
+                                  {m.score.h} – {m.score.a} {m.score.st === 'LIVE' ? `🔴 ${m.score.min ? m.score.min + "'" : 'EN VIVO'}` : m.score.st === 'FT' ? '(FT)' : ''}
+                                </div>
+                              )}
+                            </div>
+                            <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, maxWidth: 'min(180px, 42vw)', overflow: 'hidden' }}>
+                              {m.ch.length > 0
+                                ? <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                    {m.ch.map((c, i) => <ChTag key={i} name={c} />)}
+                                  </div>
+                                : <span style={{ fontSize: 9, color: T.gray }}>Canal desc.</span>
+                              }
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </>
+              )
+            })()}
+
+            {/* ── CLASIFICACIÓN ── */}
             {compTab === 'tabla' && cp.table.length > 0 && (
               <>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -1401,18 +1612,6 @@ export default function GuiaFutbolMD() {
                     <span style={{ fontWeight: 600, fontSize: 13, textAlign: 'right', color: T.text }}>{r.h}</span>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontWeight: 900, fontSize: 15, color: T.text }}><span>{r.sh}</span><span style={{ color: T.gray, fontSize: 11 }}>-</span><span>{r.sa}</span></div>
                     <span style={{ fontWeight: 600, fontSize: 13, color: T.text }}>{r.a}</span>
-                  </div>
-                ))
-            )}
-            {compTab === 'proximos' && (
-              cp.next.length === 0 ? <p style={{ color: T.gray, fontSize: 13, padding: 16 }}>Sin próximos partidos</p>
-                : cp.next.map((u, i) => (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '95px 1fr auto 1fr auto', alignItems: 'center', gap: 7, padding: '9px 12px', borderBottom: `1px solid ${T.border}`, borderLeft: `3px solid ${T.red}`, background: T.cardBg, marginBottom: 2 }}>
-                    <span style={{ fontSize: 10, color: T.red, fontWeight: 700 }}>{u.d}</span>
-                    <span style={{ fontWeight: 600, fontSize: 13, textAlign: 'right', color: T.text }}>{u.h}</span>
-                    <span style={{ fontSize: 11, color: T.gray, padding: '0 3px' }}>vs</span>
-                    <span style={{ fontWeight: 600, fontSize: 13, color: T.text }}>{u.a}</span>
-                    <ChTag name={u.tv} />
                   </div>
                 ))
             )}
