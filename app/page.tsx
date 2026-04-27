@@ -954,7 +954,13 @@ export default function GuiaFutbolMD() {
       {/* HEADER */}
       <header role="banner" style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
         <button className="md-logo" onClick={showMain} aria-label="Mundo Deportivo · Ir al inicio">
-          <img src="/logo-md.svg" alt="Mundo Deportivo" />
+          <svg viewBox="0 0 420 54" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+            <polygon points="0,0 414,0 420,54 0,54" fill="#1e1e1e"/>
+            <polygon points="7,5 12,5 9,49 4,49" fill="#E30613"/>
+            <polygon points="16,5 21,5 18,49 13,49" fill="#E30613"/>
+            <text x="28" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#FFD700">MUNDO</text>
+            <text x="168" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#ffffff">DEPORTIVO</text>
+          </svg>
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setDarkMode(!darkMode)}
@@ -1276,7 +1282,13 @@ export default function GuiaFutbolMD() {
             <button className="ob-skip" onClick={skipOb} aria-label="Saltar presentación">×</button>
             {/* Logo */}
             <div className="ob-logo">
-              <img src="/logo-md.svg" alt="Mundo Deportivo" style={{ height: 48, width: 'auto' }} />
+              <svg viewBox="0 0 420 54" height="42" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                <polygon points="0,0 414,0 420,54 0,54" fill="#1e1e1e"/>
+                <polygon points="7,5 12,5 9,49 4,49" fill="#E30613"/>
+                <polygon points="16,5 21,5 18,49 13,49" fill="#E30613"/>
+                <text x="28" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#FFD700">MUNDO</text>
+                <text x="168" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#ffffff">DEPORTIVO</text>
+              </svg>
             </div>
             <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 6 }}>Fútbol en TV</h2>
             <p style={{ color: '#888', fontSize: 12, lineHeight: 1.5, marginBottom: 20 }}>Todos los partidos del día con sus canales de televisión, en tiempo real.</p>
