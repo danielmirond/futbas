@@ -560,13 +560,14 @@ export default function GuiaFutbolMD() {
           chs: Array.isArray(m.channels) ? (m.channels as { name: string }[]).map((c: { name: string }) => c.name) : [],
         })).filter((w: WostiEntry) => w.chs.length > 0)
 
-        // Fuzzy team match: first word with 4+ chars, or contains
+        // Fuzzy team match: first word prefix (≥3 chars) or substring
         const fuzzyTeam = (a: string, b: string) => {
           const al = a.toLowerCase(), bl = b.toLowerCase()
           if (al === bl) return true
           if (al.includes(bl) || bl.includes(al)) return true
           const af = al.split(/[\s.]+/)[0], bf = bl.split(/[\s.]+/)[0]
-          if (af.length >= 4 && bf.length >= 4 && (af.startsWith(bf.slice(0, 4)) || bf.startsWith(af.slice(0, 4)))) return true
+          // min 3 chars prefix — catches "Man"/"Manchester", "Atl"/"Atlético", etc.
+          if (Math.min(af.length, bf.length) >= 3 && (af.startsWith(bf.slice(0, 3)) || bf.startsWith(af.slice(0, 3)))) return true
           return false
         }
 
