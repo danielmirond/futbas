@@ -958,17 +958,19 @@ export default function GuiaFutbolMD() {
       {/* HEADER */}
       <header role="banner" style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
         <button className="md-logo" onClick={showMain} aria-label="Mundo Deportivo · Ir al inicio">
-          <svg viewBox="0 0 64 52" height="34" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-            {/* Dark background */}
-            <rect width="64" height="52" rx="4" fill="#1e1e1e"/>
-            {/* Left red bar */}
-            <polygon points="4,3 9,3 7,49 2,49" fill="#E30613"/>
-            {/* Right red bar */}
-            <polygon points="55,3 60,3 62,49 57,49" fill="#E30613"/>
-            {/* M yellow */}
-            <text x="10" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
-            {/* D white */}
-            <text x="35" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
+          <svg viewBox="0 0 80 66" height="36" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+            {/* Fondo gris oscuro redondeado */}
+            <rect width="80" height="66" rx="6" fill="#252525"/>
+            {/* Barras izquierda */}
+            <polygon points="5,5 9,5 7,61 3,61"   fill="#E30613"/>
+            <polygon points="11,5 15,5 13,61 9,61" fill="#E30613"/>
+            {/* Barras derecha */}
+            <polygon points="65,5 69,5 67,61 63,61" fill="#E30613"/>
+            <polygon points="71,5 75,5 73,61 69,61" fill="#E30613"/>
+            {/* M amarilla */}
+            <text x="17" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
+            {/* D blanca */}
+            <text x="46" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
           </svg>
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1291,23 +1293,33 @@ export default function GuiaFutbolMD() {
             <button className="ob-skip" onClick={skipOb} aria-label="Saltar presentación">×</button>
             {/* Logo */}
             <div className="ob-logo">
-              <svg viewBox="0 0 64 52" height="60" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                <rect width="64" height="52" rx="5" fill="#1e1e1e"/>
-                <polygon points="4,3 9,3 7,49 2,49" fill="#E30613"/>
-                <polygon points="55,3 60,3 62,49 57,49" fill="#E30613"/>
-                <text x="10" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
-                <text x="35" y="41" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="40" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
+              <svg viewBox="0 0 80 66" height="64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                <rect width="80" height="66" rx="6" fill="#252525"/>
+                <polygon points="5,5 9,5 7,61 3,61"   fill="#E30613"/>
+                <polygon points="11,5 15,5 13,61 9,61" fill="#E30613"/>
+                <polygon points="65,5 69,5 67,61 63,61" fill="#E30613"/>
+                <polygon points="71,5 75,5 73,61 69,61" fill="#E30613"/>
+                <text x="17" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#FFD700">M</text>
+                <text x="46" y="51" fontFamily="Impact,'Arial Narrow',Arial,sans-serif" fontSize="46" fontStyle="italic" fontWeight="900" fill="#ffffff">D</text>
               </svg>
             </div>
-            <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 6 }}>Fútbol en TV</h2>
-            <p style={{ color: '#888', fontSize: 12, lineHeight: 1.5, marginBottom: 20 }}>Todos los partidos del día con sus canales de televisión, en tiempo real.</p>
+            <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Fútbol en TV</h2>
+            <p style={{ color: '#E30613', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 14 }}>by Mundo Deportivo</p>
+            <p style={{ color: '#aaa', fontSize: 12, lineHeight: 1.6, marginBottom: 20 }}>Todos los partidos del día con sus canales de televisión. Datos en tiempo real de LaLiga, Champions, Premier y más.</p>
             <ul className="ob-feat">
               {([
-                ['📅', 'Navega entre días y semanas'],
-                ['📺', 'Descubre en qué canal va cada partido'],
-                ['⭐', 'Guarda tus equipos y ligas favoritas'],
-              ] as [string, string][]).map(([icon, text], i) => (
-                <li key={i}><span>{icon}</span><span>{text}</span></li>
+                ['📅', 'Navega entre días', 'Consulta partidos de hoy, mañana o cualquier día de la semana'],
+                ['📺', 'Canales de TV', 'Descubre en qué canal se emite cada partido antes de que empiece'],
+                ['⭐', 'Equipos favoritos', 'Guarda tus equipos y nunca te pierdas sus partidos'],
+                ['🏆', 'Filtro por liga', 'Filtra por LaLiga, Champions, Premier y todas las competiciones'],
+              ] as [string, string, string][]).map(([icon, title, desc], i) => (
+                <li key={i} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>{icon}</span>
+                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 12 }}>{title}</span>
+                  </div>
+                  <span style={{ color: '#666', fontSize: 11, lineHeight: 1.4, paddingLeft: 24 }}>{desc}</span>
+                </li>
               ))}
             </ul>
             {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
