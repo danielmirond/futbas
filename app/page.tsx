@@ -591,8 +591,8 @@ export default function GuiaFutbolMD() {
         Promise.allSettled(dates.map(d => fetch(`/api/matches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))),
       ])
 
-      // Construir mapa WOSTI por fecha: { home, time, chs }[]
-      type WE = { time: string; home: string; chs: string[] }
+      // Construir mapa WOSTI por fecha — incluye home/away de WOSTI para normalizar nombres
+      type WE = { time: string; home: string; away: string; chs: string[] }
       const wostiByDate: Record<string, WE[]> = {}
       wostiResults.forEach((r, i) => {
         if (r.status === 'fulfilled' && Array.isArray(r.value.matches)) {
@@ -600,6 +600,7 @@ export default function GuiaFutbolMD() {
             .map(m => ({
               time: String(m.time || ''),
               home: String(m.home || ''),
+              away: String(m.away || ''),
               chs: Array.isArray(m.channels)
                 ? (m.channels as { name: string }[]).map(c => c.name)
                 : [],
@@ -614,9 +615,10 @@ export default function GuiaFutbolMD() {
         const wostiList = wostiByDate[dates[i]] || []
         const usedW = new Set<number>()
         for (const m of r.value.matches as Record<string, unknown>[]) {
-          let ch: string[] = []  // canales SOLO de WOSTI, ESPN/SportMonks no aportan canales
+          let ch: string[] = []
+          let home = String(m.home || '')
+          let away = String(m.away || '')
           const mTime = String(m.time || '00:00')
-          const mHome = String(m.home || '')
           for (let j = 0; j < wostiList.length; j++) {
             if (usedW.has(j)) continue
             const w = wostiList[j]
@@ -624,9 +626,15 @@ export default function GuiaFutbolMD() {
               (parseInt(mTime.split(':')[0]) * 60 + parseInt(mTime.split(':')[1])) -
               (parseInt(w.time.split(':')[0]) * 60 + parseInt(w.time.split(':')[1]))
             )
-            if (td <= 30 && fuzzyTeam(mHome, w.home)) { usedW.add(j); ch = w.chs; break }
+            if (td <= 30 && fuzzyTeam(home, w.home)) {
+              usedW.add(j)
+              ch = w.chs
+              home = w.home  // normalizar nombre con WOSTI
+              away = w.away  // normalizar nombre con WOSTI
+              break
+            }
           }
-          all.push({ id: m.id as number, time: mTime, date: String(m.date || ''), home: mHome, away: String(m.away || ''), comp: String(m.comp || ''), ch, score: m.score as Match['score'] })
+          all.push({ id: m.id as number, time: mTime, date: String(m.date || ''), home, away, comp: String(m.comp || ''), ch, score: m.score as Match['score'] })
         }
       })
 
@@ -665,20 +673,21 @@ export default function GuiaFutbolMD() {
 
         // Usar fuzzyTeam global (definida a nivel de módulo)
 
-        // Merge: ESPN matches with WOSTI channels (by time + fuzzy home)
+        // Merge: ESPN matches con WOSTI (time + fuzzy home)
+        // Cuando hay match: usar nombre home/away de WOSTI (normalización)
         const usedWosti = new Set<number>()
         const merged = espnMatches.map(m => {
           for (let i = 0; i < wostiList.length; i++) {
             if (usedWosti.has(i)) continue
             const w = wostiList[i]
-            // Same time (within 30 min) + fuzzy home match
             const timeDiff = Math.abs(
               parseInt(m.time.split(':')[0]) * 60 + parseInt(m.time.split(':')[1]) -
               parseInt(w.time.split(':')[0]) * 60 - parseInt(w.time.split(':')[1])
             )
             if (timeDiff <= 30 && fuzzyTeam(m.home, w.home)) {
               usedWosti.add(i)
-              return { ...m, ch: w.chs }
+              // Normalizar: nombres de WOSTI son la fuente de verdad
+              return { ...m, home: w.home, away: w.away, ch: w.chs }
             }
           }
           return m
