@@ -552,10 +552,9 @@ export default function GuiaFutbolMD() {
     document.body.style.background = T.bg
   }, [darkMode, T.bg])
 
-  // Fetch ALL week matches for selects (competiciones, equipos, favoritos)
+  // Fetch ALL week matches for selects (competiciones, equipos, favoritos) — ESPN + WOSTI merged
   useEffect(() => {
     const fetchWeek = async () => {
-      const all: Match[] = []
       const dates = Array.from({ length: 14 }, (_, i) => {
         const d = new Date()
         d.setDate(d.getDate() + (i - 1))
@@ -564,16 +563,61 @@ export default function GuiaFutbolMD() {
         }).format(d).split('/')
         return `${yyyy}-${mm}-${dd}`
       })
-      const results = await Promise.allSettled(
-        dates.map(d => fetch(`/api/allmatches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))
-      )
-      for (const r of results) {
-        if (r.status === 'fulfilled' && r.value.matches) {
-          for (const m of r.value.matches) {
-            all.push({ id: m.id, time: m.time, date: m.date, home: m.home, away: m.away, comp: m.comp, ch: m.ch || [], score: m.score })
-          }
+
+      // Fetch ESPN + WOSTI para todos los días en paralelo
+      const [espnResults, wostiResults] = await Promise.all([
+        Promise.allSettled(dates.map(d => fetch(`/api/allmatches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))),
+        Promise.allSettled(dates.map(d => fetch(`/api/matches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))),
+      ])
+
+      // Construir mapa WOSTI por fecha: { home, time, chs }[]
+      type WE = { time: string; home: string; chs: string[] }
+      const wostiByDate: Record<string, WE[]> = {}
+      wostiResults.forEach((r, i) => {
+        if (r.status === 'fulfilled' && Array.isArray(r.value.matches)) {
+          wostiByDate[dates[i]] = (r.value.matches as Record<string, unknown>[])
+            .map(m => ({
+              time: String(m.time || ''),
+              home: String(m.home || ''),
+              chs: Array.isArray(m.channels)
+                ? (m.channels as { name: string }[]).map(c => c.name)
+                : [],
+            }))
+            .filter((w: WE) => w.chs.length > 0)
         }
+      })
+
+      // Mismo fuzzyTeam que en fetchMatches
+      const fuzzyTeam = (a: string, b: string) => {
+        const al = a.toLowerCase(), bl = b.toLowerCase()
+        if (al === bl) return true
+        if (al.includes(bl) || bl.includes(al)) return true
+        const af = al.split(/[\s.]+/)[0], bf = bl.split(/[\s.]+/)[0]
+        return Math.min(af.length, bf.length) >= 3 && (af.startsWith(bf.slice(0, 3)) || bf.startsWith(af.slice(0, 3)))
       }
+
+      const all: Match[] = []
+      espnResults.forEach((r, i) => {
+        if (r.status !== 'fulfilled' || !Array.isArray(r.value.matches)) return
+        const wostiList = wostiByDate[dates[i]] || []
+        const usedW = new Set<number>()
+        for (const m of r.value.matches as Record<string, unknown>[]) {
+          let ch: string[] = (m.ch as string[]) || []
+          const mTime = String(m.time || '00:00')
+          const mHome = String(m.home || '')
+          for (let j = 0; j < wostiList.length; j++) {
+            if (usedW.has(j)) continue
+            const w = wostiList[j]
+            const td = Math.abs(
+              (parseInt(mTime.split(':')[0]) * 60 + parseInt(mTime.split(':')[1])) -
+              (parseInt(w.time.split(':')[0]) * 60 + parseInt(w.time.split(':')[1]))
+            )
+            if (td <= 30 && fuzzyTeam(mHome, w.home)) { usedW.add(j); ch = w.chs; break }
+          }
+          all.push({ id: m.id as number, time: mTime, date: String(m.date || ''), home: mHome, away: String(m.away || ''), comp: String(m.comp || ''), ch, score: m.score as Match['score'] })
+        }
+      })
+
       setWeekMatches(all)
     }
     fetchWeek()
