@@ -281,6 +281,26 @@ const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta'
 const PAY_KW = ['dazn', 'movistar', 'laliga', 'ppv', 'm+']
 const INTL_COMPS = ['Amistoso', 'UEFA Nations League', 'Clasificación Mundial', 'Eurocopa', 'Copa América']
 
+/**
+ * Fuzzy team name match: cubre abreviaciones ESPN vs nombres completos WOSTI
+ * ej. "C Palace" → "Crystal Palace", "Man United" → "Manchester United"
+ */
+function fuzzyTeam(a: string, b: string): boolean {
+  const al = a.toLowerCase(), bl = b.toLowerCase()
+  if (al === bl) return true
+  if (al.includes(bl) || bl.includes(al)) return true
+  const aParts = al.split(/[\s.]+/)
+  const bParts = bl.split(/[\s.]+/)
+  const af = aParts[0], bf = bParts[0]
+  // Coincidencia por prefijo de 3 chars en la primera palabra
+  if (Math.min(af.length, bf.length) >= 3 && (af.startsWith(bf.slice(0, 3)) || bf.startsWith(af.slice(0, 3)))) return true
+  // Coincidencia por última palabra significativa (≥4 chars): "C Palace" → "Crystal Palace"
+  const al_last = aParts[aParts.length - 1]
+  const bl_last = bParts[bParts.length - 1]
+  if (al_last.length >= 4 && al_last === bl_last) return true
+  return false
+}
+
 /* ── Sub-components ──────────────────────────────────────────── */
 function ScoreBox({ score }: { score?: Score }) {
   if (!score) return null
@@ -588,15 +608,6 @@ export default function GuiaFutbolMD() {
         }
       })
 
-      // Mismo fuzzyTeam que en fetchMatches
-      const fuzzyTeam = (a: string, b: string) => {
-        const al = a.toLowerCase(), bl = b.toLowerCase()
-        if (al === bl) return true
-        if (al.includes(bl) || bl.includes(al)) return true
-        const af = al.split(/[\s.]+/)[0], bf = bl.split(/[\s.]+/)[0]
-        return Math.min(af.length, bf.length) >= 3 && (af.startsWith(bf.slice(0, 3)) || bf.startsWith(af.slice(0, 3)))
-      }
-
       const all: Match[] = []
       espnResults.forEach((r, i) => {
         if (r.status !== 'fulfilled' || !Array.isArray(r.value.matches)) return
@@ -652,16 +663,7 @@ export default function GuiaFutbolMD() {
           chs: Array.isArray(m.channels) ? (m.channels as { name: string }[]).map((c: { name: string }) => c.name) : [],
         })).filter((w: WostiEntry) => w.chs.length > 0)
 
-        // Fuzzy team match: first word prefix (≥3 chars) or substring
-        const fuzzyTeam = (a: string, b: string) => {
-          const al = a.toLowerCase(), bl = b.toLowerCase()
-          if (al === bl) return true
-          if (al.includes(bl) || bl.includes(al)) return true
-          const af = al.split(/[\s.]+/)[0], bf = bl.split(/[\s.]+/)[0]
-          // min 3 chars prefix — catches "Man"/"Manchester", "Atl"/"Atlético", etc.
-          if (Math.min(af.length, bf.length) >= 3 && (af.startsWith(bf.slice(0, 3)) || bf.startsWith(af.slice(0, 3)))) return true
-          return false
-        }
+        // Usar fuzzyTeam global (definida a nivel de módulo)
 
         // Merge: ESPN matches with WOSTI channels (by time + fuzzy home)
         const usedWosti = new Set<number>()
