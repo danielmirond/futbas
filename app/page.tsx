@@ -376,7 +376,7 @@ function FavStar({ team, favorites, toggle }: { team: string; favorites: string[
   return (
     <button onClick={e => { e.stopPropagation(); toggle(team) }} title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 1px', fontSize: 12, color: isFav ? '#f59e0b' : '#ccc', transition: 'color .15s', lineHeight: 1 }}>
-      {isFav ? '★' : '☆'}
+      {Ic.star(isFav)}
     </button>
   )
 }
@@ -504,6 +504,21 @@ function MatchPreview({ m, T, polls, votePoll, interests, trackInterest }: {
       </div>
     </div>
   )
+}
+
+/* ── Icon system (SVG, MD-friendly, no emoji) ────────────────── */
+const S = 'currentColor'
+const ico = (w=14,h=14) => ({ width:w, height:h, viewBox:`0 0 ${w} ${h}`, fill:'none', stroke:S, strokeWidth:1.6, strokeLinecap:'round' as const, strokeLinejoin:'round' as const })
+const Ic = {
+  chart:  <svg {...ico()}><rect x="1"  y="9"  width="3" height="4" rx=".5"/><rect x="5.5" y="5.5" width="3" height="7.5" rx=".5"/><rect x="10" y="2" width="3" height="11" rx=".5"/></svg>,
+  star:   (on:boolean) => <svg {...ico()} fill={on?S:'none'}><polygon points="7,1 8.8,5.2 13.5,5.7 10.2,8.8 11.2,13.4 7,11 2.8,13.4 3.8,8.8 .5,5.7 5.2,5.2"/></svg>,
+  bell:   <svg {...ico()}><path d="M7 1.5A4 4 0 0 1 11 5.5v2.5l1.5 2.5H1.5L3 8V5.5A4 4 0 0 1 7 1.5z"/><path d="M5.5 11.5a1.5 1.5 0 0 0 3 0"/></svg>,
+  info:   <svg {...ico()}><circle cx="7" cy="7" r="6"/><line x1="7" y1="6.5" x2="7" y2="10.5"/><circle cx="7" cy="4" r=".6" fill={S} stroke="none"/></svg>,
+  share:  <svg {...ico()}><circle cx="11.5" cy="2.5" r="1.5"/><circle cx="2.5" cy="7" r="1.5"/><circle cx="11.5" cy="11.5" r="1.5"/><line x1="4" y1="6.2" x2="10" y2="3.3"/><line x1="4" y1="7.8" x2="10" y2="10.7"/></svg>,
+  cal:    <svg {...ico()}><rect x="1" y="2.5" width="12" height="10.5" rx="1"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4.5" y1="1" x2="4.5" y2="4"/><line x1="9.5" y1="1" x2="9.5" y2="4"/></svg>,
+  table:  <svg {...ico()}><rect x="1" y="1" width="12" height="12" rx="1"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="1" y1="9" x2="13" y2="9"/><line x1="5" y1="5" x2="5" y2="13"/></svg>,
+  menu:   <svg {...ico()}><line x1="1" y1="4" x2="13" y2="4"/><line x1="1" y1="7" x2="13" y2="7"/><line x1="1" y1="10" x2="13" y2="10"/></svg>,
+  tv:     <svg {...ico()}><rect x="1" y="3" width="12" height="8" rx="1"/><line x1="4.5" y1="11" x2="4.5" y2="13"/><line x1="9.5" y1="11" x2="9.5" y2="13"/><line x1="3" y1="13" x2="11" y2="13"/></svg>,
 }
 
 /* ── Main Component ──────────────────────────────────────────── */
@@ -1335,11 +1350,11 @@ export default function GuiaFutbolMD() {
               )}
               {favorites.length > 0 && !notifEnabled && (
                 <button onClick={enableNotifications} aria-label="Activar notificaciones para tus equipos favoritos"
-                  style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.gray, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  <span aria-hidden="true">🔔</span> Avisos
+                  style={{ display:'flex', alignItems:'center', gap:4, fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.gray, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {Ic.bell} Avisos
                 </button>
               )}
-              {notifEnabled && <span aria-label="Notificaciones activas" role="img" style={{ fontSize: 10, color: '#22c55e' }}>🔔</span>}
+              {notifEnabled && <span aria-label="Notificaciones activas" title="Notificaciones activas" style={{ color: '#22c55e', display:'flex' }}>{Ic.bell}</span>}
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <button role="switch" aria-checked={showScores} onClick={() => setShowScores(!showScores)} aria-label={showScores ? 'Ocultar resultados' : 'Mostrar resultados'}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, padding: '4px 8px', border: `1px solid ${showScores ? T.red : T.border}`, borderRadius: 2, background: showScores ? T.redLight : T.white, color: showScores ? T.red : T.gray, cursor: 'pointer', fontFamily: 'inherit', fontWeight: showScores ? 700 : 500 }}>
@@ -1374,12 +1389,16 @@ export default function GuiaFutbolMD() {
           <div style={{ padding: '8px 14px 40px', maxWidth: 880, margin: '0 auto' }}>
             {loadingMatches ? (
               <div style={{ textAlign: 'center', padding: 48, color: T.gray }}>
-                <div style={{ fontSize: 24, marginBottom: 12, animation: 'pulse-soon 1.2s infinite' }}>⚽</div>
+                <div style={{ display:'flex', justifyContent:'center', marginBottom: 12, animation: 'pulse-soon 1.2s infinite' }}>
+                  <svg width="28" height="28" viewBox="0 0 14 14" fill="none" stroke={T.red} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="6"/><path d="M7 1a6 6 0 0 1 4.2 10.2M7 13a6 6 0 0 1-4.2-10.2"/><circle cx="7" cy="7" r="2"/></svg>
+                </div>
                 <p style={{ fontSize: 13, fontWeight: 600, color: T.text }}>Cargando partidos…</p>
               </div>
             ) : filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 40, color: T.gray }}>
-                <p style={{ fontSize: 28, marginBottom: 8 }}>📅</p>
+                <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}>
+                  <svg width="32" height="32" viewBox="0 0 14 14" fill="none" stroke={T.gray} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="2.5" width="12" height="10.5" rx="1"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4.5" y1="1" x2="4.5" y2="4"/><line x1="9.5" y1="1" x2="9.5" y2="4"/></svg>
+                </div>
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: T.text }}>No hay partidos</p>
                 <p style={{ fontSize: 12, marginBottom: 14 }}>
                   {compFilter || teamFilter || debouncedSearch ? 'No hay partidos con ese filtro este día' : 'Sin partidos programados'}
@@ -1413,7 +1432,8 @@ export default function GuiaFutbolMD() {
                         {/* Acceso rápido a clasificación / tabla */}
                         {COMPS[comp] && (
                           <button onClick={() => showComp(comp)} title="Ver tabla y resultados"
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: T.gray, padding: '0 6px', fontFamily: 'inherit' }}>📊</button>
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.gray, padding: '0 6px', display:'inline-flex', alignItems:'center' }}>
+                              {Ic.chart}</button>
                         )}
                         <span style={{ fontSize: 10, color: T.gray, marginLeft: 'auto', fontWeight: 600 }}>{matches.length}p</span>
                       </div>
@@ -1435,9 +1455,9 @@ export default function GuiaFutbolMD() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={() => setPage('features')}
-                style={{ fontSize: 9, color: '#555', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                style={{ display:'flex', alignItems:'center', gap:4, fontSize: 9, color: '#555', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
                 title="Ver todas las funciones">
-                ℹ️ Funciones
+                {Ic.info} Funciones
               </button>
               <span style={{ fontSize: 9, color: '#555' }}>{dateStr}</span>
             </div>
