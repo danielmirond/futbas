@@ -281,6 +281,23 @@ const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta'
 const PAY_KW = ['dazn', 'movistar', 'laliga', 'ppv', 'm+']
 const INTL_COMPS = ['Amistoso', 'UEFA Nations League', 'Clasificación Mundial', 'Eurocopa', 'Copa América']
 
+/** Plataformas unificadas para el filtro de canal */
+const PLATFORM_GROUPS: { label: string; kw: string[] }[] = [
+  { label: 'Movistar+',        kw: ['m+', 'movistar plus', 'movistar+'] },
+  { label: 'DAZN',             kw: ['dazn'] },
+  { label: 'LaLiga TV',        kw: ['laliga tv', 'laliga+', 'laliga+ plus'] },
+  { label: 'GOL',              kw: ['gol'] },
+  { label: 'Orange Fútbol',    kw: ['orange fútbol', 'orange futbol'] },
+  { label: 'Teledeporte/RTVE', kw: ['teledeporte', 'rtve', 'tdp'] },
+  { label: 'TV autonómica',    kw: ['tv3', 'canal sur', 'tv canaria', 'aragón', 'aragon', 'esport3', 'ten tv'] },
+  { label: 'YouTube / Gratis', kw: ['youtube', 'fifa+', 'uefa tv', 'conmebol', 'concacaf', 'fanatiz'] },
+  { label: 'OneFootball',      kw: ['onefootball'] },
+]
+function matchesPlatform(ch: string[], platform: string): boolean {
+  const kws = PLATFORM_GROUPS.find(p => p.label === platform)?.kw ?? []
+  return ch.some(c => kws.some(k => c.toLowerCase().includes(k)))
+}
+
 /**
  * Fuzzy team name match: cubre abreviaciones ESPN vs nombres completos WOSTI
  * ej. "C Palace" → "Crystal Palace", "Man United" → "Manchester United"
@@ -514,6 +531,7 @@ export default function GuiaFutbolMD() {
   /* All week matches for selects */ const [weekMatches, setWeekMatches] = useState<Match[]>([])
   /* API data source indicator */ const [dataSource, setDataSource] = useState<'demo' | 'api'>('demo')
   /* Loading indicator */ const [loadingMatches, setLoadingMatches] = useState(true)
+  /* Filtro de canal/plataforma */ const [channelFilter, setChannelFilter] = useState('')
   /* New: polls */ const [polls, setPolls] = useState<Record<number, 'home' | 'away'>>({})
   /* New: interest counters */ const [interests, setInterests] = useState<Record<number, number>>({})
   /* New: notifications */ const [notifEnabled, setNotifEnabled] = useState(false)
@@ -784,7 +802,7 @@ export default function GuiaFutbolMD() {
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
   }, [liveMatches, weekMatches, today])
 
-  const baseMatches = (viewMode === 'week' || compFilter || teamFilter || debouncedSearch)
+  const baseMatches = (viewMode === 'week' || compFilter || teamFilter || channelFilter || debouncedSearch)
     ? mergedWeek   // today with channels + other days from weekMatches
     : allMatches.filter(m => m.date === selectedDate)
 
@@ -793,13 +811,23 @@ export default function GuiaFutbolMD() {
 
   // Ligas que aparecen en el selector de equipos (evita equipos de ligas menores/desconocidas)
   const TEAM_COMP_GROUPS: { label: string; comps: string[] }[] = [
-    { label: 'España', comps: ['LaLiga EA Sports', 'LaLiga Hypermotion', 'Copa del Rey', 'Supercopa', 'Liga F', 'Primera Federación'] },
-    { label: 'Champions League', comps: ['Champions League'] },
-    { label: 'Europa League', comps: ['Europa League'] },
-    { label: 'Conference League', comps: ['Conference League'] },
-    { label: 'Premier / Bundesliga / Serie A / Ligue 1', comps: ['Premier League', 'FA Cup', 'Bundesliga', '2. Bundesliga', 'Serie A', 'Ligue 1', 'Eredivisie', 'Primeira Liga', 'Süper Lig', 'Scottish Premiership'] },
-    { label: 'América', comps: ['MLS', 'Liga MX', 'Primera División Argentina', 'Serie A Brasil', 'Copa Libertadores', 'Copa Sudamericana'] },
-    { label: 'Resto del mundo', comps: ['Saudi Pro League'] },
+    { label: 'LaLiga EA Sports',     comps: ['LaLiga EA Sports'] },
+    { label: 'LaLiga Hypermotion',   comps: ['LaLiga Hypermotion'] },
+    { label: 'Copa del Rey',         comps: ['Copa del Rey'] },
+    { label: 'Liga F',               comps: ['Liga F'] },
+    { label: 'Primera Federación',   comps: ['Primera Federación'] },
+    { label: 'Champions League',     comps: ['Champions League'] },
+    { label: 'Europa League',        comps: ['Europa League'] },
+    { label: 'Conference League',    comps: ['Conference League'] },
+    { label: 'Premier League',       comps: ['Premier League', 'FA Cup'] },
+    { label: 'Bundesliga',           comps: ['Bundesliga', '2. Bundesliga'] },
+    { label: 'Serie A',              comps: ['Serie A'] },
+    { label: 'Ligue 1',              comps: ['Ligue 1'] },
+    { label: 'Otras ligas europeas', comps: ['Eredivisie', 'Primeira Liga', 'Süper Lig', 'Scottish Premiership'] },
+    { label: 'MLS',                  comps: ['MLS'] },
+    { label: 'Liga MX',              comps: ['Liga MX'] },
+    { label: 'Sudamérica',           comps: ['Primera División Argentina', 'Serie A Brasil', 'Copa Libertadores', 'Copa Sudamericana'] },
+    { label: 'Resto del mundo',      comps: ['Saudi Pro League'] },
   ]
   const TEAM_MAJOR_COMPS = new Set(TEAM_COMP_GROUPS.flatMap(g => g.comps))
   const teamsByGroup = TEAM_COMP_GROUPS.map(g => ({
@@ -829,7 +857,6 @@ export default function GuiaFutbolMD() {
     })
 
   const filtered = useMemo(() => baseMatches.filter(m => {
-    // Si el partido no tiene datos de canal, se deja pasar en todos los filtros (canal desconocido)
     if (filter === 'free') return m.ch.length === 0 || m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
     if (filter === 'pay')  return m.ch.length === 0 || m.ch.some(c => PAY_KW.some(k => c.toLowerCase().includes(k)))
     if (filter === 'favs') return favorites.includes(m.home) || favorites.includes(m.away)
@@ -837,6 +864,7 @@ export default function GuiaFutbolMD() {
   }).filter(m => {
     if (compFilter && m.comp !== compFilter) return false
     if (teamFilter && m.home !== teamFilter && m.away !== teamFilter) return false
+    if (channelFilter && !matchesPlatform(m.ch, channelFilter)) return false
     if (debouncedSearch) {
       const q = normalize(debouncedSearch)
       return (
@@ -847,7 +875,7 @@ export default function GuiaFutbolMD() {
       )
     }
     return true
-  }), [baseMatches, filter, compFilter, teamFilter, debouncedSearch, favorites])
+  }), [baseMatches, filter, compFilter, teamFilter, channelFilter, debouncedSearch, favorites])
 
   // Navegación inteligente: si hay filtro activo y no hay partidos hoy, buscar el próximo día con resultados
   const nextMatchDate = useMemo(() => {
@@ -912,8 +940,8 @@ export default function GuiaFutbolMD() {
     })[0]
   }, [cmsFeatured, allMatches])
 
-  const selectDay = (d: string) => { setSelectedDate(d); setFilter('all'); setCompFilter(''); setTeamFilter(''); setViewMode('day') }
-  const resetAll = () => { setFilter('all'); setCompFilter(''); setTeamFilter(''); setSelectedDate(today); setSearchQuery(''); setViewMode('day') }
+  const selectDay = (d: string) => { setSelectedDate(d); setFilter('all'); setCompFilter(''); setTeamFilter(''); setChannelFilter(''); setViewMode('day') }
+  const resetAll = () => { setFilter('all'); setCompFilter(''); setTeamFilter(''); setChannelFilter(''); setSelectedDate(today); setSearchQuery(''); setViewMode('day') }
   const showComp = async (name: string) => {
     setCurrentComp(name); setPage('comp'); setMenuOpen(false); setLoadingComp(true); setLiveComp(null)
     setCompTab('partidos')   // siempre abre en Partidos y TV
@@ -1295,8 +1323,14 @@ export default function GuiaFutbolMD() {
                   </optgroup>
                 ))}
               </select>
-              {(compFilter || teamFilter) && (
-                <button onClick={() => { setCompFilter(''); setTeamFilter('') }} aria-label="Limpiar filtros de competición y equipo"
+              <label className="sr-only" htmlFor="filter-channel">Filtrar por canal</label>
+              <select id="filter-channel" aria-label="Filtrar por canal" value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
+                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${channelFilter ? T.red : T.border}`, borderRadius: 2, background: channelFilter ? T.redLight : T.white, color: channelFilter ? T.red : T.text, maxWidth: 130, fontFamily: 'inherit', fontWeight: channelFilter ? 700 : 400 }}>
+                <option value="">Canal / Plataforma</option>
+                {PLATFORM_GROUPS.map(p => <option key={p.label} value={p.label}>{p.label}</option>)}
+              </select>
+              {(compFilter || teamFilter || channelFilter) && (
+                <button onClick={() => { setCompFilter(''); setTeamFilter(''); setChannelFilter('') }} aria-label="Limpiar filtros"
                   style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.red}`, borderRadius: 2, background: T.redLight, color: T.red, cursor: 'pointer', fontFamily: 'inherit' }}>✕ Limpiar</button>
               )}
               {favorites.length > 0 && !notifEnabled && (
@@ -1320,7 +1354,7 @@ export default function GuiaFutbolMD() {
           </div>
 
           {/* Active filters breadcrumb */}
-          {(filter !== 'all' || compFilter || teamFilter || debouncedSearch || viewMode === 'week' || groupBy === 'channel') && (
+          {(filter !== 'all' || compFilter || teamFilter || channelFilter || debouncedSearch || viewMode === 'week' || groupBy === 'channel') && (
             <div style={{ padding: '6px 14px', display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', borderBottom: `1px solid ${T.border}`, background: T.cardBg }}>
               <span style={{ fontSize: 10, color: T.gray }}>Filtros:</span>
               {filter === 'favs' && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#f59e0b22', color: '#f59e0b', fontWeight: 600 }}>★ Mis equipos</span>}
@@ -1328,6 +1362,7 @@ export default function GuiaFutbolMD() {
               {filter === 'pay' && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#3b82f622', color: '#3b82f6', fontWeight: 600 }}>De pago</span>}
               {compFilter && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: T.redLight, color: T.red, fontWeight: 600 }}>{compFilter}</span>}
               {teamFilter && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: T.redLight, color: T.red, fontWeight: 600 }}>{teamFilter}</span>}
+              {channelFilter && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#06b6d422', color: '#06b6d4', fontWeight: 600 }}>📺 {channelFilter}</span>}
               {debouncedSearch && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: T.redLight, color: T.red, fontWeight: 600 }}>"{debouncedSearch}"</span>}
               {viewMode === 'week' && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#8b5cf622', color: '#8b5cf6', fontWeight: 600 }}>Semana</span>}
               {groupBy === 'channel' && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#06b6d422', color: '#06b6d4', fontWeight: 600 }}>Por canal</span>}
