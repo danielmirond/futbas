@@ -114,10 +114,34 @@ export async function GET(request: Request) {
       .filter(m => m.localDate === date && m.competition)
     filtered.sort((a, b) => String(a.time).localeCompare(String(b.time)))
 
+    // Suplementar con fallback: añadir partidos del fallback que WOSTI live no tenga
+    const fb = FALLBACKS[date]
+    if (fb && fb.length > 0) {
+      const fuzzy = (a: string, b: string) => {
+        const al = a.toLowerCase(), bl = b.toLowerCase()
+        if (al === bl || al.includes(bl) || bl.includes(al)) return true
+        const af = al.split(/[\s.]+/)[0], bf = bl.split(/[\s.]+/)[0]
+        return Math.min(af.length, bf.length) >= 3 &&
+          (af.startsWith(bf.slice(0, 3)) || bf.startsWith(af.slice(0, 3)))
+      }
+      for (const fbMatch of fb) {
+        const alreadyInLive = filtered.some(lm =>
+          fuzzy(String(lm.home), String((fbMatch as Record<string, unknown>).home ?? '')) &&
+          Math.abs(
+            (parseInt(String(lm.time).split(':')[0]) * 60 + parseInt(String(lm.time).split(':')[1])) -
+            (parseInt(String((fbMatch as Record<string, unknown>).time ?? '0:0').split(':')[0]) * 60 +
+             parseInt(String((fbMatch as Record<string, unknown>).time ?? '0:0').split(':')[1]))
+          ) <= 30
+        )
+        if (!alreadyInLive) filtered.push(fbMatch as typeof filtered[0])
+      }
+      filtered.sort((a, b) => String(a.time).localeCompare(String(b.time)))
+    }
+
     return NextResponse.json({
       matches:  filtered,
       count:    filtered.length,
-      endpoint: '/api/Events',
+      endpoint: '/api/Events+fallback',
       date,
     })
   } catch (err) {
