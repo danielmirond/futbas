@@ -564,7 +564,8 @@ export default function GuiaFutbolMD() {
         return `${yyyy}-${mm}-${dd}`
       })
 
-      // Fetch ESPN + WOSTI para todos los días en paralelo
+      // Fuente de partidos: SportMonks (primario) → ESPN (fallback) — NUNCA aportan canales
+      // Fuente de canales: EXCLUSIVAMENTE WOSTI (/api/matches)
       const [espnResults, wostiResults] = await Promise.all([
         Promise.allSettled(dates.map(d => fetch(`/api/allmatches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))),
         Promise.allSettled(dates.map(d => fetch(`/api/matches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))),
@@ -602,7 +603,7 @@ export default function GuiaFutbolMD() {
         const wostiList = wostiByDate[dates[i]] || []
         const usedW = new Set<number>()
         for (const m of r.value.matches as Record<string, unknown>[]) {
-          let ch: string[] = (m.ch as string[]) || []
+          let ch: string[] = []  // canales SOLO de WOSTI, ESPN/SportMonks no aportan canales
           const mTime = String(m.time || '00:00')
           const mHome = String(m.home || '')
           for (let j = 0; j < wostiList.length; j++) {
@@ -628,7 +629,8 @@ export default function GuiaFutbolMD() {
     const fetchMatches = async () => {
       setLoadingMatches(true)
       try {
-        // Fetch ESPN all matches + WOSTI TV channels in parallel
+        // Fuente de partidos: SportMonks → ESPN fallback (lista+competición, NUNCA canales)
+        // Fuente de canales: EXCLUSIVAMENTE WOSTI (/api/matches)
         const [espnRes, wostiRes] = await Promise.all([
           fetch(`/api/allmatches?date=${selectedDate}`).then(r => r.json()).catch(() => ({ matches: [] })),
           fetch(`/api/matches?date=${selectedDate}`).then(r => r.json()).catch(() => ({ matches: [] })),
@@ -636,7 +638,7 @@ export default function GuiaFutbolMD() {
 
         const espnMatches: Match[] = (espnRes.matches || []).map((m: Record<string, unknown>) => ({
           id: m.id, time: m.time, date: m.date, home: m.home, away: m.away, comp: m.comp,
-          ch: (m.ch as string[]) || [],
+          ch: [],  // canales SOLO de WOSTI — ESPN/SportMonks no aportan
           score: m.score as Match['score'],
         }))
 
