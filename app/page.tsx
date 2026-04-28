@@ -736,8 +736,10 @@ export default function GuiaFutbolMD() {
 
   // Ligas que aparecen en el selector de equipos (evita equipos de ligas menores/desconocidas)
   const TEAM_COMP_GROUPS: { label: string; comps: string[] }[] = [
-    { label: 'España', comps: ['LaLiga EA Sports', 'LaLiga Hypermotion', 'Copa del Rey', 'Liga F', 'Primera Federación'] },
-    { label: 'Copas Europa', comps: ['Champions League', 'Europa League', 'Conference League', 'UEFA Nations League', 'Supercopa'] },
+    { label: 'España', comps: ['LaLiga EA Sports', 'LaLiga Hypermotion', 'Copa del Rey', 'Supercopa', 'Liga F', 'Primera Federación'] },
+    { label: 'Champions League', comps: ['Champions League'] },
+    { label: 'Europa League', comps: ['Europa League'] },
+    { label: 'Conference League', comps: ['Conference League'] },
     { label: 'Premier / Bundesliga / Serie A / Ligue 1', comps: ['Premier League', 'FA Cup', 'Bundesliga', '2. Bundesliga', 'Serie A', 'Ligue 1', 'Eredivisie', 'Primeira Liga', 'Süper Lig', 'Scottish Premiership'] },
     { label: 'América', comps: ['MLS', 'Liga MX', 'Primera División Argentina', 'Serie A Brasil', 'Copa Libertadores', 'Copa Sudamericana'] },
     { label: 'Resto del mundo', comps: ['Saudi Pro League'] },
