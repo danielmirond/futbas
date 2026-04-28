@@ -716,8 +716,19 @@ export default function GuiaFutbolMD() {
   // ── Filters ──
   // All matches come from API
   const allMatches = liveMatches
+
+  // Merged week: liveMatches for today (has WOSTI channels) + weekMatches for other dates
+  const mergedWeek = useMemo(() => {
+    const liveIds = new Set(liveMatches.filter(m => m.date === today).map(m => m.id))
+    const todayLive = liveMatches.filter(m => m.date === today)
+    const todayExtra = weekMatches.filter(m => m.date === today && !liveIds.has(m.id))
+    const otherDays = weekMatches.filter(m => m.date !== today)
+    return [...todayLive, ...todayExtra, ...otherDays]
+      .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+  }, [liveMatches, weekMatches, today])
+
   const baseMatches = (viewMode === 'week' || compFilter || teamFilter || debouncedSearch)
-    ? weekMatches   // todos los días de la semana o filtro activo
+    ? mergedWeek   // today with channels + other days from weekMatches
     : allMatches.filter(m => m.date === selectedDate)
 
   // Selects use week data so all teams/comps are always visible
@@ -937,7 +948,7 @@ export default function GuiaFutbolMD() {
             <div style={{ fontSize: 11, color: T.gray, marginTop: 2 }}>{m.comp}</div>
           </div>
           <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, maxWidth: 'min(200px, 42vw)', overflow: 'hidden' }}>
-            {showScores && <ScoreBox score={m.score} />}
+            {showScores && m.score && (m.score.st !== 'FT' || past) && <ScoreBox score={m.score} />}
             <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '100%' }}>
               {(expanded ? m.ch : m.ch.slice(0, 3)).map((c, i) => <ChTag key={i} name={c} />)}
               {!expanded && m.ch.length > 3 && (
@@ -1542,7 +1553,7 @@ export default function GuiaFutbolMD() {
                             </div>
                             <div style={{ minWidth: 0 }}>
                               <div style={{ fontWeight: 700, fontSize: 13, color: T.text }}>{m.home} <span style={{ color: T.gray, fontWeight: 400 }}>vs</span> {m.away}</div>
-                              {showScores && m.score && (
+                              {showScores && m.score && (m.score.st !== 'FT' || past) && (
                                 <div style={{ fontSize: 11, fontWeight: 900, color: m.score.st === 'LIVE' ? '#22c55e' : T.gray, marginTop: 2 }}>
                                   {m.score.h} – {m.score.a} {m.score.st === 'LIVE' ? `🔴 ${m.score.min ? m.score.min + "'" : 'EN VIVO'}` : m.score.st === 'FT' ? '(FT)' : ''}
                                 </div>
