@@ -1144,11 +1144,11 @@ export default function GuiaFutbolMD() {
         .soon-badge{animation:pulse-soon 1.5s infinite;color:#E30613!important}
         .featured-hero{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:12px 14px;background:#000;border-bottom:3px solid #E30613}
         .featured-hero-cta{white-space:nowrap}
-        @media(max-width:540px){
+        @media(max-width:900px){
           .featured-hero{grid-template-columns:auto 1fr;grid-template-rows:auto auto}
           .featured-hero-cta{grid-column:1/-1;text-align:center;padding:8px 0}
           .match-row{grid-template-columns:46px 1fr;grid-template-rows:auto auto;gap:5px}
-          .match-right{grid-column:2;flex-direction:row;justify-content:flex-start;flex-wrap:wrap}
+          .match-right{grid-column:2;flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap;max-width:100%}
         }
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
         .skip-nav{position:absolute;top:-44px;left:0;padding:8px 14px;background:#E30613;color:#fff;font-size:12px;font-weight:700;z-index:1000;transition:top .2s;border-radius:0 0 4px 0;text-decoration:none}
@@ -1418,7 +1418,7 @@ export default function GuiaFutbolMD() {
           )}
 
           {/* Match list */}
-          <div style={{ padding: '8px 14px 40px', maxWidth: 880, margin: '0 auto' }}>
+          <div style={{ padding: '8px 14px 40px' }}>
             {loadingMatches ? (
               <div style={{ textAlign: 'center', padding: 48, color: T.gray }}>
                 <div style={{ display:'flex', justifyContent:'center', marginBottom: 12, animation: 'pulse-soon 1.2s infinite' }}>
@@ -1652,7 +1652,7 @@ export default function GuiaFutbolMD() {
               })}
             </div>
           </div>
-          <div style={{ padding: '10px 14px 32px', maxWidth: 860, margin: '0 auto' }}>
+          <div style={{ padding: '10px 14px 32px' }}>
 
             {/* ── PARTIDOS Y TV ── */}
             {compTab === 'partidos' && (() => {
