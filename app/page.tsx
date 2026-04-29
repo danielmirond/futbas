@@ -302,16 +302,71 @@ function matchesPlatform(ch: string[], platform: string): boolean {
  * Fuzzy team name match: cubre abreviaciones ESPN vs nombres completos WOSTI
  * ej. "C Palace" → "Crystal Palace", "Man United" → "Manchester United"
  */
+// Mapa de alias ESPN/SportMonks → nombre canónico (WOSTI es la fuente de verdad)
+const TEAM_ALIASES: Record<string, string> = {
+  // Atlético de Madrid
+  'atletico':            'atletico de madrid',
+  'atletico madrid':     'atletico de madrid',
+  'at. madrid':          'atletico de madrid',
+  'at madrid':           'atletico de madrid',
+  'atl madrid':          'atletico de madrid',
+  'atletico de madrid':  'atletico de madrid',
+  // Manchester
+  'man city':            'manchester city',
+  'man. city':           'manchester city',
+  'man united':          'manchester united',
+  'man utd':             'manchester united',
+  'man. united':         'manchester united',
+  // Madrid
+  'real madrid cf':      'real madrid',
+  // Bayern
+  'b. munich':           'fc bayern munchen',
+  'b munich':            'fc bayern munchen',
+  'bayer munich':        'fc bayern munchen',
+  'fc bayern munich':    'fc bayern munchen',
+  'bayern munich':       'fc bayern munchen',
+  'fc bayern munchen':   'fc bayern munchen',
+  // PSG
+  'psg':                 'paris saint-germain',
+  'paris sg':            'paris saint-germain',
+  'paris saint germain': 'paris saint-germain',
+  // Inter
+  'inter':               'inter milan',
+  'fc internazionale':   'inter milan',
+  'internazionale':      'inter milan',
+  // Crystal Palace
+  'c palace':            'crystal palace',
+  // Dortmund
+  'bvb':                 'borussia dortmund',
+  'borussia dortm':      'borussia dortmund',
+  // Sociedad
+  'real sociedad cf':    'real sociedad',
+  // Betis
+  'real betis balompie': 'real betis',
+  // Villarreal
+  'villarreal cf':       'villarreal',
+  // Athletic
+  'athletic bilbao':     'athletic club',
+}
+
+/** Normaliza un nombre de equipo: sin acentos, sin puntuación extra, con alias resuelto */
+function normTeam(s: string): string {
+  const base = s.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')  // quitar tildes
+    .replace(/[.]/g, ' ').replace(/\s+/g, ' ').trim()
+  return TEAM_ALIASES[base] ?? base
+}
+
 function fuzzyTeam(a: string, b: string): boolean {
-  const al = a.toLowerCase(), bl = b.toLowerCase()
+  const al = normTeam(a), bl = normTeam(b)
   if (al === bl) return true
   if (al.includes(bl) || bl.includes(al)) return true
-  const aParts = al.split(/[\s.]+/)
-  const bParts = bl.split(/[\s.]+/)
+  const aParts = al.split(/\s+/)
+  const bParts = bl.split(/\s+/)
   const af = aParts[0], bf = bParts[0]
-  // Coincidencia por prefijo de 3 chars en la primera palabra
+  // Prefijo de 3 chars en la primera palabra
   if (Math.min(af.length, bf.length) >= 3 && (af.startsWith(bf.slice(0, 3)) || bf.startsWith(af.slice(0, 3)))) return true
-  // Coincidencia por última palabra significativa (≥4 chars): "C Palace" → "Crystal Palace"
+  // Última palabra significativa (≥4 chars): "C Palace" → "Crystal Palace"
   const al_last = aParts[aParts.length - 1]
   const bl_last = bParts[bParts.length - 1]
   if (al_last.length >= 4 && al_last === bl_last) return true
