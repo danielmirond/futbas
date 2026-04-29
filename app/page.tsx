@@ -379,6 +379,11 @@ const DISPLAY_NAMES: Record<string, string> = {
   'borussia monchengladbach':  'B. Mönchengladbach',
 }
 
+/** Aplica el nombre canónico de display si existe, si no devuelve el original */
+function applyDisplayName(name: string): string {
+  return DISPLAY_NAMES[normTeam(name)] ?? name
+}
+
 function fuzzyTeam(a: string, b: string): boolean {
   const al = normTeam(a), bl = normTeam(b)
   if (al === bl) return true
@@ -782,7 +787,7 @@ export default function GuiaFutbolMD() {
               break
             }
           }
-          all.push({ id: m.id as number, time: mTime, date: String(m.date || ''), home, away, comp: String(m.comp || ''), ch, score: m.score as Match['score'] })
+          all.push({ id: m.id as number, time: mTime, date: String(m.date || ''), home: applyDisplayName(home), away: applyDisplayName(away), comp: String(m.comp || ''), ch, score: m.score as Match['score'] })
         }
       })
 
@@ -835,17 +840,17 @@ export default function GuiaFutbolMD() {
             if (timeDiff <= 30 && fuzzyTeam(m.home, w.home)) {
               usedWosti.add(i)
               // Normalizar: nombres de WOSTI son la fuente de verdad
-              return { ...m, home: w.home, away: w.away, ch: w.chs }
+              return { ...m, home: applyDisplayName(w.home), away: applyDisplayName(w.away), ch: w.chs }
             }
           }
-          return m
+          // Sin match WOSTI: aplicar displayName igual para normalizar nombre ESPN
+          return { ...m, home: applyDisplayName(m.home), away: applyDisplayName(m.away) }
         })
 
         // Add WOSTI-only matches not matched to ESPN
         const wostiOnly: Match[] = wostiList
           .filter((_w, i) => !usedWosti.has(i))
           .filter(w => {
-            // Skip if ESPN already has this match
             return !merged.some(em => fuzzyTeam(em.home, w.home) && Math.abs(
               parseInt(em.time.split(':')[0]) * 60 + parseInt(em.time.split(':')[1]) -
               parseInt(w.time.split(':')[0]) * 60 - parseInt(w.time.split(':')[1])
@@ -855,8 +860,8 @@ export default function GuiaFutbolMD() {
             id: 3000 + i,
             time: String(wm.time || '??:??'),
             date: selectedDate,
-            home: String(wm.home || '?'),
-            away: String(wm.away || '?'),
+            home: applyDisplayName(String(wm.home || '?')),
+            away: applyDisplayName(String(wm.away || '?')),
             comp: String(wm.comp || ''),
             ch: wm.chs,
           }))
