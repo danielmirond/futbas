@@ -1067,7 +1067,7 @@ export default function GuiaFutbolMD() {
             </div>
             <div style={{ fontSize: 11, color: T.gray, marginTop: 2 }}>{m.comp}</div>
           </div>
-          <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, maxWidth: 'min(200px, 42vw)', overflow: 'hidden' }}>
+          <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, overflow: 'hidden' }}>
             {showScores && m.score && (m.score.st !== 'FT' || past) && <ScoreBox score={m.score} />}
             <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '100%' }}>
               {(() => {
@@ -1148,7 +1148,10 @@ export default function GuiaFutbolMD() {
           .featured-hero{grid-template-columns:auto 1fr;grid-template-rows:auto auto}
           .featured-hero-cta{grid-column:1/-1;text-align:center;padding:8px 0}
           .match-row{grid-template-columns:46px 1fr;grid-template-rows:auto auto;gap:5px}
-          .match-right{grid-column:2;flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap;max-width:100%}
+          .match-right{grid-column:2;flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap;max-width:100%;overflow:visible}
+        }
+        @media(min-width:901px){
+          .match-right{max-width:220px}
         }
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
         .skip-nav{position:absolute;top:-44px;left:0;padding:8px 14px;background:#E30613;color:#fff;font-size:12px;font-weight:700;z-index:1000;transition:top .2s;border-radius:0 0 4px 0;text-decoration:none}
@@ -1705,7 +1708,7 @@ export default function GuiaFutbolMD() {
                                 </div>
                               )}
                             </div>
-                            <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, maxWidth: 'min(180px, 42vw)', overflow: 'hidden' }}>
+                            <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, overflow: 'hidden' }}>
                               {m.ch.length > 0
                                 ? <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                     {m.ch.map((c, i) => <ChTag key={i} name={c} />)}
