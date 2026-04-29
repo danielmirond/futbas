@@ -318,6 +318,22 @@ function fuzzyTeam(a: string, b: string): boolean {
   return false
 }
 
+/** Deduplica nombres de equipo: fusiona variantes ESPN/WOSTI conservando el más frecuente/largo */
+function dedupeTeams(rawNames: string[]): string[] {
+  const freq = new Map<string, number>()
+  for (const n of rawNames) freq.set(n, (freq.get(n) ?? 0) + 1)
+  const seen = new Set<string>(); const uniqArr: string[] = []; for (const n of rawNames) { if (!seen.has(n)) { seen.add(n); uniqArr.push(n) } }
+  const uniq = uniqArr.sort((a, b) => {
+    const fd = (freq.get(b) ?? 0) - (freq.get(a) ?? 0)
+    return fd !== 0 ? fd : b.length - a.length  // más frecuente → primero; empate → más largo
+  })
+  const canonical: string[] = []
+  for (const name of uniq) {
+    if (!canonical.some(c => fuzzyTeam(c, name))) canonical.push(name)
+  }
+  return canonical.sort()
+}
+
 /* ── Sub-components ──────────────────────────────────────────── */
 function ScoreBox({ score }: { score?: Score }) {
   if (!score) return null
@@ -537,6 +553,12 @@ const Ic = {
   table:  <svg {...ico()}><rect x="1" y="1" width="12" height="12" rx="1"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="1" y1="9" x2="13" y2="9"/><line x1="5" y1="5" x2="5" y2="13"/></svg>,
   menu:   <svg {...ico()}><line x1="1" y1="4" x2="13" y2="4"/><line x1="1" y1="7" x2="13" y2="7"/><line x1="1" y1="10" x2="13" y2="10"/></svg>,
   tv:     <svg {...ico()}><rect x="1" y="3" width="12" height="8" rx="1"/><line x1="4.5" y1="11" x2="4.5" y2="13"/><line x1="9.5" y1="11" x2="9.5" y2="13"/><line x1="3" y1="13" x2="11" y2="13"/></svg>,
+  live:   <svg {...ico()}><path d="M8 1.5 4.5 7.5H8l-2 5L12.5 6H8z"/></svg>,
+  trophy: <svg {...ico()}><path d="M3.5 1.5h7v4a3.5 3.5 0 0 1-7 0z"/><path d="M1.5 1.5h2M10.5 1.5h2"/><path d="M2.5 2c0 2 .5 3.5 1 4M11.5 2c0 2-.5 3.5-1 4"/><line x1="7" y1="9" x2="7" y2="11"/><line x1="4.5" y1="12.5" x2="9.5" y2="12.5"/></svg>,
+  h2h:    <svg {...ico()}><polyline points="10,3 12,5 10,7"/><line x1="2" y1="5" x2="12" y2="5"/><polyline points="4,11 2,9 4,7"/><line x1="12" y1="9" x2="2" y2="9"/></svg>,
+  moon:   <svg {...ico()}><path d="M11.5 8.5A5 5 0 1 1 5.5 2.5a3.5 3.5 0 0 0 6 6z"/></svg>,
+  target: <svg {...ico(16,16)}><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="2.5"/><line x1="8" y1="1" x2="8" y2="5.5"/><line x1="8" y1="10.5" x2="8" y2="15"/></svg>,
+  bulb:   <svg {...ico()}><path d="M7 1.5a3.5 3.5 0 0 1 2 6.3L8.5 9.5h-3L5 7.8A3.5 3.5 0 0 1 7 1.5z"/><line x1="5.5" y1="11" x2="8.5" y2="11"/><line x1="6" y1="12.5" x2="8" y2="12.5"/></svg>,
 }
 
 /* ── Main Component ──────────────────────────────────────────── */
@@ -865,19 +887,19 @@ export default function GuiaFutbolMD() {
   const TEAM_MAJOR_COMPS = new Set(TEAM_COMP_GROUPS.flatMap(g => g.comps))
   const teamsByGroup = TEAM_COMP_GROUPS.map(g => ({
     label: g.label,
-    teams: Array.from(new Set(
+    teams: dedupeTeams(
       selectSource.filter(m => g.comps.includes(m.comp) && !INTL_COMPS.includes(m.comp))
         .flatMap(m => [m.home, m.away])
-    )).sort(),
+    ),
   })).filter(g => g.teams.length > 0)
   const nationalTeamsByGroup = TEAM_COMP_GROUPS.filter(g =>
     g.comps.some(c => INTL_COMPS.includes(c))
   ).map(g => ({
     label: g.label,
-    teams: Array.from(new Set(
+    teams: dedupeTeams(
       selectSource.filter(m => g.comps.includes(m.comp) && INTL_COMPS.includes(m.comp))
         .flatMap(m => [m.home, m.away])
-    )).sort(),
+    ),
   })).filter(g => g.teams.length > 0)
   // Backward-compat (still used in some places)
   const allComps = Array.from(new Set(selectSource.filter(m => TEAM_MAJOR_COMPS.has(m.comp)).map(m => m.comp))).filter(Boolean)
@@ -892,11 +914,11 @@ export default function GuiaFutbolMD() {
   const filtered = useMemo(() => baseMatches.filter(m => {
     if (filter === 'free') return m.ch.length === 0 || m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
     if (filter === 'pay')  return m.ch.length === 0 || m.ch.some(c => PAY_KW.some(k => c.toLowerCase().includes(k)))
-    if (filter === 'favs') return favorites.includes(m.home) || favorites.includes(m.away)
+    if (filter === 'favs') return favorites.some(f => fuzzyTeam(m.home, f) || fuzzyTeam(m.away, f))
     return true
   }).filter(m => {
     if (compFilter && m.comp !== compFilter) return false
-    if (teamFilter && m.home !== teamFilter && m.away !== teamFilter) return false
+    if (teamFilter && !fuzzyTeam(m.home, teamFilter) && !fuzzyTeam(m.away, teamFilter)) return false
     if (channelFilter && !matchesPlatform(m.ch, channelFilter)) return false
     if (debouncedSearch) {
       const q = normalize(debouncedSearch)
@@ -917,7 +939,7 @@ export default function GuiaFutbolMD() {
     if (!compFilter && !teamFilter && !debouncedSearch && filter === 'all') return null
     const applyFilter = (ms: Match[]) => ms.filter(m => {
       if (compFilter && m.comp !== compFilter) return false
-      if (teamFilter && m.home !== teamFilter && m.away !== teamFilter) return false
+      if (teamFilter && !fuzzyTeam(m.home, teamFilter) && !fuzzyTeam(m.away, teamFilter)) return false
       if (debouncedSearch) {
         const q = normalize(debouncedSearch)
         return normalize(m.home).includes(q) || normalize(m.away).includes(q) || normalize(m.comp).includes(q)
@@ -1180,7 +1202,7 @@ export default function GuiaFutbolMD() {
         .ob-logo{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:18px}
         .ob-feat{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left}
         .ob-feat li{display:flex;align-items:center;gap:10px;color:#ddd;font-size:12px;list-style:none}
-        .ob-feat li span:first-child{font-size:18px;flex-shrink:0}
+        .ob-feat li span:first-child{font-size:18px;flex-shrink:0;display:flex;align-items:center}
         .ob-btn{width:100%;background:#E30613;color:#fff;border:none;padding:12px;border-radius:5px;font-size:13px;font-weight:900;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;font-family:inherit;transition:opacity .15s}
         .ob-btn:hover{opacity:.9}
         .ob-coach-wrap{position:fixed;inset:0;z-index:950;pointer-events:none}
@@ -1199,7 +1221,7 @@ export default function GuiaFutbolMD() {
         .ob-link{background:none;border:none;color:#999;font-size:11px;cursor:pointer;font-family:inherit;padding:4px;text-decoration:underline}
         .ob-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
         .ob-cell{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:10px 10px 8px;text-align:left}
-        .ob-cell-icon{font-size:20px;margin-bottom:4px}
+        .ob-cell-icon{font-size:20px;margin-bottom:6px;display:flex;align-items:center;color:#E30613}
         .ob-cell-title{font-size:11px;font-weight:700;color:#fff;display:block;margin-bottom:2px}
         .ob-cell-desc{font-size:10px;color:#666;line-height:1.4}
         .ob-pager{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
@@ -1819,17 +1841,17 @@ export default function GuiaFutbolMD() {
               <p style={{ color: '#666', fontSize: 11, marginBottom: 14 }}>Todo lo que necesitas para seguir el fútbol en TV</p>
               <div className="ob-grid">
                 {([
-                  ['📺','Guía TV','Qué canal emite cada partido'],
-                  ['⚡','En directo','Resultados actualizados al minuto'],
-                  ['📅','Por días','Agenda de cualquier día de la semana'],
-                  ['⭐','Favoritos','Acceso rápido a tus equipos'],
-                  ['🏆','Competiciones','+50 ligas y copas internacionales'],
-                  ['📊','Clasificaciones','Tabla actualizada de cualquier liga'],
-                  ['🔁','H2H','Historial entre dos equipos'],
-                  ['🌙','Modo oscuro','Cuida tus ojos de noche'],
-                ] as [string,string,string][]).map(([icon,title,desc],i) => (
+                  [Ic.tv,        'Guía TV',        'Qué canal emite cada partido'],
+                  [Ic.live,      'En directo',      'Resultados al minuto'],
+                  [Ic.cal,       'Por días',        'Agenda de la semana'],
+                  [Ic.star(true),'Favoritos',       'Acceso rápido a tus equipos'],
+                  [Ic.trophy,    'Competiciones',   '+50 ligas y copas'],
+                  [Ic.chart,     'Clasificaciones', 'Tabla de cualquier liga'],
+                  [Ic.h2h,       'H2H',             'Historial entre dos equipos'],
+                  [Ic.moon,      'Modo oscuro',     'Cuida tus ojos de noche'],
+                ] as [React.ReactNode,string,string][]).map(([icon,title,desc],i) => (
                   <div key={i} className="ob-cell">
-                    <div className="ob-cell-icon">{icon}</div>
+                    <div className="ob-cell-icon" style={{transform:'scale(1.4)',transformOrigin:'left center'}}>{icon}</div>
                     <span className="ob-cell-title">{title}</span>
                     <span className="ob-cell-desc">{desc}</span>
                   </div>
@@ -1842,13 +1864,13 @@ export default function GuiaFutbolMD() {
 
             {/* ── PÁGINA 3: LISTO ── */}
             {obModalPage === 3 && (<>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🎯</div>
+              <div style={{ display:'flex',justifyContent:'center',marginBottom:12,color:'#E30613' }}><svg width="48" height="48" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="2.5"/><line x1="8" y1="1" x2="8" y2="5.5"/><line x1="8" y1="10.5" x2="8" y2="15"/></svg></div>
               <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 8 }}>¡Todo listo!</h2>
               <p style={{ color: '#aaa', fontSize: 12, lineHeight: 1.6, marginBottom: 18 }}>
                 Te enseñamos los elementos clave de la app en 3 pasos rápidos para que saques el máximo partido.
               </p>
               <div className="ob-step3-msg">
-                <p style={{ color: '#E30613', fontSize: 11, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: .5 }}>💡 Consejo</p>
+                <p style={{ color: '#E30613', fontSize: 11, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: .5, display:'flex', alignItems:'center', gap:5 }}><span style={{color:'#E30613'}}>{Ic.bulb}</span>Consejo</p>
                 <p style={{ color: '#bbb', fontSize: 11, lineHeight: 1.5 }}>
                   Usa el filtro de favoritos ⭐ para ver solo los partidos de tus equipos. Activa notificaciones para que te avisemos 15 minutos antes de cada partido.
                 </p>
@@ -1876,7 +1898,11 @@ export default function GuiaFutbolMD() {
           c2: { className: 'ob-card arrow-down', style: { bottom: 68 } },
           c3: { className: 'ob-card', style: { top: '50%', marginTop: 44 } },
         }
-        const titles: Record<string, string> = { c1: '📅 Navega por días', c2: '🏆 Competiciones', c3: '⭐ Detalles del partido' }
+        const titles: Record<string, React.ReactNode> = {
+          c1: <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{color:'#E30613'}}>{Ic.cal}</span>Navega por días</span>,
+          c2: <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{color:'#E30613'}}>{Ic.trophy}</span>Competiciones</span>,
+          c3: <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{color:'#E30613'}}>{Ic.star(true)}</span>Detalles del partido</span>,
+        }
         const texts: Record<string, string> = {
           c1: 'Desliza la barra para cambiar de día y ver todos los partidos programados.',
           c2: 'Toca aquí para abrir el menú y filtrar por liga o competición favorita.',
