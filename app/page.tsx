@@ -353,8 +353,30 @@ const TEAM_ALIASES: Record<string, string> = {
 function normTeam(s: string): string {
   const base = s.toLowerCase()
     .normalize('NFD').replace(/[̀-ͯ]/g, '')  // quitar tildes
-    .replace(/[.]/g, ' ').replace(/\s+/g, ' ').trim()
+    .replace(/\./g, ' ').replace(/\s+/g, ' ').trim()
   return TEAM_ALIASES[base] ?? base
+}
+
+// Nombres canónicos a mostrar (WOSTI como fuente de verdad)
+// clave = resultado de normTeam(), valor = nombre a mostrar en UI
+const DISPLAY_NAMES: Record<string, string> = {
+  'atletico de madrid':        'Atlético de Madrid',
+  'real madrid':               'Real Madrid',
+  'fc barcelona':              'FC Barcelona',
+  'athletic club':             'Athletic Club',
+  'real sociedad':             'Real Sociedad',
+  'villarreal':                'Villarreal CF',
+  'real betis':                'Real Betis',
+  'manchester city':           'Manchester City',
+  'manchester united':         'Manchester United',
+  'paris saint-germain':       'Paris Saint-Germain',
+  'inter milan':               'Inter Milán',
+  'fc bayern munchen':         'FC Bayern München',
+  'borussia dortmund':         'Borussia Dortmund',
+  'crystal palace':            'Crystal Palace',
+  'tottenham hotspur':         'Tottenham Hotspur',
+  'wolverhampton wanderers':   'Wolverhampton',
+  'borussia monchengladbach':  'B. Mönchengladbach',
 }
 
 function fuzzyTeam(a: string, b: string): boolean {
@@ -373,20 +395,18 @@ function fuzzyTeam(a: string, b: string): boolean {
   return false
 }
 
-/** Deduplica nombres de equipo: fusiona variantes ESPN/WOSTI conservando el más frecuente/largo */
+/** Deduplica nombres de equipo: fusiona variantes ESPN/WOSTI y aplica DISPLAY_NAMES */
 function dedupeTeams(rawNames: string[]): string[] {
-  const freq = new Map<string, number>()
-  for (const n of rawNames) freq.set(n, (freq.get(n) ?? 0) + 1)
-  const seen = new Set<string>(); const uniqArr: string[] = []; for (const n of rawNames) { if (!seen.has(n)) { seen.add(n); uniqArr.push(n) } }
-  const uniq = uniqArr.sort((a, b) => {
-    const fd = (freq.get(b) ?? 0) - (freq.get(a) ?? 0)
-    return fd !== 0 ? fd : b.length - a.length  // más frecuente → primero; empate → más largo
-  })
+  // Preferir el nombre más largo (WOSTI suele ser más completo que ESPN)
+  const seen = new Set<string>(); const uniqArr: string[] = []
+  for (const n of rawNames) { if (!seen.has(n)) { seen.add(n); uniqArr.push(n) } }
+  uniqArr.sort((a, b) => b.length - a.length)  // más largo primero
   const canonical: string[] = []
-  for (const name of uniq) {
+  for (const name of uniqArr) {
     if (!canonical.some(c => fuzzyTeam(c, name))) canonical.push(name)
   }
-  return canonical.sort()
+  // Sustituir por nombre canónico si existe en DISPLAY_NAMES
+  return canonical.map(n => DISPLAY_NAMES[normTeam(n)] ?? n).sort()
 }
 
 /* ── Sub-components ──────────────────────────────────────────── */
