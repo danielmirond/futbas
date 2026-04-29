@@ -340,6 +340,24 @@ function ScoreBox({ score }: { score?: Score }) {
   )
 }
 
+/** Normaliza nombre crudo WOSTI → nombre de plataforma corto */
+function toPlatform(ch: string): string {
+  const cl = ch.toLowerCase()
+  for (const p of PLATFORM_GROUPS) {
+    if (p.kw.some(k => cl.includes(k))) return p.label
+  }
+  // Fallback: quitar el paréntesis y acortar
+  return ch.split('(')[0].split(':')[0].trim().slice(0, 20)
+}
+
+/** Deduplica y normaliza la lista de canales de un partido */
+function platforms(chs: string[]): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const c of chs.map(toPlatform)) { if (!seen.has(c)) { seen.add(c); out.push(c) } }
+  return out
+}
+
 function ChTag({ name }: { name: string }) {
   const col = chColor(name)
   return <span className="ch-tag" style={{ background: col.bg, color: col.text, borderColor: col.border }}>{name}</span>
@@ -1052,13 +1070,20 @@ export default function GuiaFutbolMD() {
           <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, maxWidth: 'min(200px, 42vw)', overflow: 'hidden' }}>
             {showScores && m.score && (m.score.st !== 'FT' || past) && <ScoreBox score={m.score} />}
             <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '100%' }}>
-              {(expanded ? m.ch : m.ch.slice(0, 3)).map((c, i) => <ChTag key={i} name={c} />)}
-              {!expanded && m.ch.length > 3 && (
-                <button onClick={e => { e.stopPropagation(); setExpandedMatch(m.id) }}
-                  style={{ fontSize: 9, fontWeight: 700, color: T.red, padding: '2px 5px', border: `1px solid ${T.red}`, borderRadius: 1, whiteSpace: 'nowrap', background: T.redLight, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  +{m.ch.length - 3} canales
-                </button>
-              )}
+              {(() => {
+                const plats = platforms(m.ch)
+                const show = expanded ? plats : plats.slice(0, 2)
+                const rest = !expanded ? plats.length - 2 : 0
+                return <>
+                  {show.map((p, i) => <ChTag key={i} name={p} />)}
+                  {rest > 0 && (
+                    <button onClick={e => { e.stopPropagation(); setExpandedMatch(m.id) }}
+                      style={{ fontSize: 9, fontWeight: 700, color: T.red, padding: '2px 5px', border: `1px solid ${T.red}`, borderRadius: 1, whiteSpace: 'nowrap', background: T.redLight, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      +{rest}
+                    </button>
+                  )}
+                </>
+              })()}
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
               {/* Share button */}
@@ -1313,19 +1338,23 @@ export default function GuiaFutbolMD() {
                 style={{ width: '100%', padding: '7px 10px 7px 32px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }} />
               <svg aria-hidden="true" style={{ position: 'absolute', left: 10, top: 9, color: T.gray }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Fila 1: tabs tipo + selects */}
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6 }}>
               <button onClick={resetAll} aria-pressed={filter === 'all' && !compFilter && !teamFilter} style={tabBtn(filter === 'all' && !compFilter && !teamFilter)}>Todos</button>
               <button onClick={() => setFilter('free')} aria-pressed={filter === 'free'} style={tabBtn(filter === 'free')}>En abierto</button>
               <button onClick={() => setFilter('pay')} aria-pressed={filter === 'pay'} style={tabBtn(filter === 'pay')}>De pago</button>
+            </div>
+            {/* Fila 2: selects */}
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6 }}>
               <label className="sr-only" htmlFor="filter-comp">Filtrar por competición</label>
               <select id="filter-comp" aria-label="Filtrar por competición" value={compFilter} onChange={e => { setCompFilter(e.target.value); setTeamFilter('') }}
-                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, maxWidth: 150, fontFamily: 'inherit' }}>
+                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${compFilter ? T.red : T.border}`, borderRadius: 2, background: compFilter ? T.redLight : T.white, color: compFilter ? T.red : T.text, flex: '1 1 120px', maxWidth: 160, fontFamily: 'inherit', fontWeight: compFilter ? 700 : 400 }}>
                 <option value="">Competición</option>
                 {allComps.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <label className="sr-only" htmlFor="filter-team">Filtrar por equipo</label>
               <select id="filter-team" aria-label="Filtrar por equipo" value={teamFilter} onChange={e => { setTeamFilter(e.target.value); setCompFilter('') }}
-                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, maxWidth: 170, fontFamily: 'inherit' }}>
+                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${teamFilter ? T.red : T.border}`, borderRadius: 2, background: teamFilter ? T.redLight : T.white, color: teamFilter ? T.red : T.text, flex: '1 1 120px', maxWidth: 160, fontFamily: 'inherit', fontWeight: teamFilter ? 700 : 400 }}>
                 <option value="">Equipo</option>
                 {teamsByGroup.map(g => g.teams.length > 0 && (
                   <optgroup key={g.label} label={g.label}>
@@ -1340,21 +1369,24 @@ export default function GuiaFutbolMD() {
               </select>
               <label className="sr-only" htmlFor="filter-channel">Filtrar por canal</label>
               <select id="filter-channel" aria-label="Filtrar por canal" value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
-                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${channelFilter ? T.red : T.border}`, borderRadius: 2, background: channelFilter ? T.redLight : T.white, color: channelFilter ? T.red : T.text, maxWidth: 130, fontFamily: 'inherit', fontWeight: channelFilter ? 700 : 400 }}>
-                <option value="">Canal / Plataforma</option>
+                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${channelFilter ? T.red : T.border}`, borderRadius: 2, background: channelFilter ? T.redLight : T.white, color: channelFilter ? T.red : T.text, flex: '1 1 110px', maxWidth: 150, fontFamily: 'inherit', fontWeight: channelFilter ? 700 : 400 }}>
+                <option value="">Canal</option>
                 {PLATFORM_GROUPS.map(p => <option key={p.label} value={p.label}>{p.label}</option>)}
               </select>
               {(compFilter || teamFilter || channelFilter) && (
                 <button onClick={() => { setCompFilter(''); setTeamFilter(''); setChannelFilter('') }} aria-label="Limpiar filtros"
-                  style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.red}`, borderRadius: 2, background: T.redLight, color: T.red, cursor: 'pointer', fontFamily: 'inherit' }}>✕ Limpiar</button>
+                  style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.red}`, borderRadius: 2, background: T.redLight, color: T.red, cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
               )}
+            </div>
+            {/* Fila 3: resultados toggle + count + bell */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {favorites.length > 0 && !notifEnabled && (
-                <button onClick={enableNotifications} aria-label="Activar notificaciones para tus equipos favoritos"
+                <button onClick={enableNotifications} aria-label="Activar notificaciones"
                   style={{ display:'flex', alignItems:'center', gap:4, fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.gray, cursor: 'pointer', fontFamily: 'inherit' }}>
                   {Ic.bell} Avisos
                 </button>
               )}
-              {notifEnabled && <span aria-label="Notificaciones activas" title="Notificaciones activas" style={{ color: '#22c55e', display:'flex' }}>{Ic.bell}</span>}
+              {notifEnabled && <span title="Notificaciones activas" style={{ color: '#22c55e', display:'flex' }}>{Ic.bell}</span>}
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <button role="switch" aria-checked={showScores} onClick={() => setShowScores(!showScores)} aria-label={showScores ? 'Ocultar resultados' : 'Mostrar resultados'}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, padding: '4px 8px', border: `1px solid ${showScores ? T.red : T.border}`, borderRadius: 2, background: showScores ? T.redLight : T.white, color: showScores ? T.red : T.gray, cursor: 'pointer', fontFamily: 'inherit', fontWeight: showScores ? 700 : 500 }}>
