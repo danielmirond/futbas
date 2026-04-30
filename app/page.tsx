@@ -1173,7 +1173,7 @@ export default function GuiaFutbolMD() {
             {showScores && m.score && (m.score.st !== 'FT' || past) && <ScoreBox score={m.score} />}
             <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '100%' }}>
               {(() => {
-                const plats = platforms(m.ch)
+                const plats = m.ch
                 const show = expanded ? plats : plats.slice(0, 2)
                 const rest = !expanded ? plats.length - 2 : 0
                 return <>
