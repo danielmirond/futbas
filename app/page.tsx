@@ -631,6 +631,7 @@ export default function GuiaFutbolMD() {
   /* Loading standings */ const [loadingComp, setLoadingComp] = useState(false)
   /* Live matches from API */ const [liveMatches, setLiveMatches] = useState<Match[]>([])
   /* All week matches for selects */ const [weekMatches, setWeekMatches] = useState<Match[]>([])
+  /* Next-week matches (shown in Semana view) */ const [nextWeekMatches, setNextWeekMatches] = useState<Match[]>([])
   /* API data source indicator */ const [dataSource, setDataSource] = useState<'demo' | 'api'>('demo')
   /* Loading indicator */ const [loadingMatches, setLoadingMatches] = useState(true)
   /* Filtro de canal/plataforma */ const [channelFilter, setChannelFilter] = useState('')
@@ -695,7 +696,8 @@ export default function GuiaFutbolMD() {
   // Fetch ALL week matches for selects (competiciones, equipos, favoritos) — ESPN + WOSTI merged
   useEffect(() => {
     const fetchWeek = async () => {
-      const dates = Array.from({ length: 14 }, (_, i) => {
+      // 14 días para los tabs de día + 7 días extra para la vista Semana (días +13..+19)
+      const dates = Array.from({ length: 21 }, (_, i) => {
         const d = new Date()
         d.setDate(d.getDate() + (i - 1))
         const [dd, mm, yyyy] = new Intl.DateTimeFormat('es-ES', {
@@ -758,7 +760,10 @@ export default function GuiaFutbolMD() {
         }
       })
 
-      setWeekMatches(all)
+      // Días -1..+12 → tabs de día; días +13..+19 → vista Semana
+      const cutoff = dates[14] // día +13 (índice 14 = offset i-1=13)
+      setWeekMatches(all.filter(m => m.date < cutoff))
+      setNextWeekMatches(all.filter(m => m.date >= cutoff))
     }
     fetchWeek()
   }, [])
@@ -904,9 +909,11 @@ export default function GuiaFutbolMD() {
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
   }, [liveMatches, weekMatches, today])
 
-  const baseMatches = (viewMode === 'week' || compFilter || teamFilter || channelFilter || debouncedSearch)
-    ? mergedWeek   // today with channels + other days from weekMatches
-    : allMatches.filter(m => m.date === selectedDate)
+  const baseMatches = viewMode === 'week'
+    ? nextWeekMatches  // semana siguiente al último día desagregado
+    : (compFilter || teamFilter || channelFilter || debouncedSearch)
+      ? mergedWeek
+      : allMatches.filter(m => m.date === selectedDate)
 
   // Selects use week data so all teams/comps are always visible
   const selectSource = weekMatches.length > 0 ? weekMatches : allMatches
@@ -958,12 +965,12 @@ export default function GuiaFutbolMD() {
       return order(a) - order(b)
     })
 
-  // Canales únicos de todos los partidos cargados
+  // Canales únicos de todos los partidos cargados (semana actual + siguiente)
   const allChannels = useMemo(() => {
     const seen = new Set<string>()
-    for (const m of mergedWeek) for (const c of m.ch) if (c) seen.add(c)
+    for (const m of [...mergedWeek, ...nextWeekMatches]) for (const c of m.ch) if (c) seen.add(c)
     return Array.from(seen).sort((a, b) => a.localeCompare(b, 'es'))
-  }, [mergedWeek])
+  }, [mergedWeek, nextWeekMatches])
 
   const filtered = useMemo(() => baseMatches.filter(m => {
     if (filter === 'free') return m.ch.length === 0 || m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
@@ -1144,7 +1151,7 @@ export default function GuiaFutbolMD() {
             <div style={{ fontSize: 11, color: T.gray, marginTop: 2 }}>{m.comp}</div>
           </div>
           <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, overflow: 'hidden' }}>
-            {showScores && m.score && (m.score.st !== 'FT' || past) && <ScoreBox score={m.score} />}
+            {showScores && m.score && <ScoreBox score={m.score} />}
             <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '100%' }}>
               {(() => {
                 const plats = m.ch
@@ -1302,10 +1309,10 @@ export default function GuiaFutbolMD() {
 
       {/* HEADER */}
       <header role="banner" style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
-        <button className="md-logo" onClick={showMain} aria-label="Mundo Deportivo · Ir al inicio">
+        <a href="https://www.mundodeportivo.com" target="_blank" rel="noreferrer" aria-label="Ir a Mundo Deportivo" style={{ display: 'block', lineHeight: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-md.jpeg" alt="Mundo Deportivo" height="36" style={{ display: 'block', borderRadius: 6 }} />
-        </button>
+        </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setDarkMode(!darkMode)}
             aria-label={darkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
@@ -1363,7 +1370,7 @@ export default function GuiaFutbolMD() {
             <div style={{ width: 4, height: 36, background: '#E30613', borderRadius: 1, flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 9, fontWeight: 800, color: '#E30613', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 1 }}>Fútbol · Guía TV</div>
-              <h1 style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: T.text, lineHeight: 1.1 }}>Fútbol en la TV hoy</h1>
+              <h1 onClick={() => { setSelectedDate(today); setViewMode('day'); showMain() }} style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: T.text, lineHeight: 1.1, cursor: 'pointer' }}>Fútbol en la TV hoy</h1>
             </div>
           </div>
 
