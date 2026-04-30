@@ -86,15 +86,36 @@ interface MatchInfo {
 }
 
 /* ── Data fetching ──────────────────────────────────────────────── */
-function normalizeTeamName(name: string): string {
-  return name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+// Preposiciones y prefijos a ignorar en la comparación
+const SKIP_WORDS = new Set(['de','del','el','la','los','las','fc','cf','rc','ca','sd','ud','cd','sc','rb','bv','ac','as','ss','sv'])
+
+function normTeam(name: string): string {
+  return name.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .split(/[\s.\-]+/)
+    .filter(w => w.length > 1 && !SKIP_WORDS.has(w))
+    .join(' ')
+    .trim()
 }
+
+function teamMatch(a: string, b: string): boolean {
+  const an = normTeam(a), bn = normTeam(b)
+  if (an === bn) return true
+  if (an.includes(bn) || bn.includes(an)) return true
+  // Primera palabra significativa (≥4 chars)
+  const aw = an.split(' ').find(w => w.length >= 4)
+  const bw = bn.split(' ').find(w => w.length >= 4)
+  if (aw && bw && (aw.startsWith(bw.slice(0,5)) || bw.startsWith(aw.slice(0,5)))) return true
+  return false
+}
+
+// Solo las ligas principales para reducir requests (8 ligas × 14 días = 112)
+const MAIN_ESPN = ['esp.1','esp.2','esp.cup','uefa.champions','uefa.europa','uefa.europa.conf','eng.1','ger.1','ita.1','fra.1','ned.1','por.1','mex.1','usa.1','conmebol.libertadores']
 
 async function fetchMatchesForTeam(teamSlug: string): Promise<MatchInfo[]> {
   const teamName = slugToTeamName(teamSlug)
-  const normalizedTarget = normalizeTeamName(teamName)
 
-  const dates = Array.from({ length: 14 }, (_, i) => {
+  const dates = Array.from({ length: 30 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() + i)
     return d.toISOString().split('T')[0].replace(/-/g, '')
@@ -103,10 +124,10 @@ async function fetchMatchesForTeam(teamSlug: string): Promise<MatchInfo[]> {
   const matches: MatchInfo[] = []
 
   await Promise.allSettled(
-    COMPETITIONS.flatMap(comp =>
+    MAIN_ESPN.flatMap(espnId =>
       dates.map(async (dateStr) => {
         try {
-          const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${comp.espnId}/scoreboard?dates=${dateStr}`
+          const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${espnId}/scoreboard?dates=${dateStr}`
           const res = await fetch(url, { next: { revalidate: 3600 } })
           if (!res.ok) return
           const data = await res.json()
@@ -128,18 +149,7 @@ async function fetchMatchesForTeam(teamSlug: string): Promise<MatchInfo[]> {
             const homeName = (homeTeam.displayName ?? homeTeam.name ?? '') as string
             const awayName = (awayTeam.displayName ?? awayTeam.name ?? '') as string
 
-            const normalizedHome = normalizeTeamName(homeName)
-            const normalizedAway = normalizeTeamName(awayName)
-
-            // Fuzzy match: check if normalized target matches home or away
-            const isMatch =
-              normalizedHome.includes(normalizedTarget) ||
-              normalizedAway.includes(normalizedTarget) ||
-              normalizedTarget.includes(normalizedHome) ||
-              normalizedTarget.includes(normalizedAway) ||
-              // Also check slug match
-              teamToSlug(homeName) === teamSlug ||
-              teamToSlug(awayName) === teamSlug
+            const isMatch = teamMatch(teamName, homeName) || teamMatch(teamName, awayName) || teamToSlug(homeName) === teamSlug || teamToSlug(awayName) === teamSlug
 
             if (!isMatch) continue
 
@@ -170,14 +180,14 @@ async function fetchMatchesForTeam(teamSlug: string): Promise<MatchInfo[]> {
             const awayScore = awayComp.score !== undefined ? Number(awayComp.score) : undefined
 
             matches.push({
-              id: `${comp.espnId}-${ev.id as string}`,
+              id: `${espnId}-${ev.id as string}`,
               date: dateKey,
               time: timeStr,
               home: homeName,
               away: awayName,
               homeSlug: teamToSlug(homeName),
               awaySlug: teamToSlug(awayName),
-              competition: comp.name,
+              competition: COMPETITIONS.find(c => c.espnId === espnId)?.name ?? espnId,
               status,
               homeScore: (status === 'in' || status === 'post') ? homeScore : undefined,
               awayScore: (status === 'in' || status === 'post') ? awayScore : undefined,
