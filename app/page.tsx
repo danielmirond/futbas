@@ -281,22 +281,6 @@ const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta'
 const PAY_KW = ['dazn', 'movistar', 'laliga', 'ppv', 'm+']
 const INTL_COMPS = ['Amistoso', 'UEFA Nations League', 'Clasificación Mundial', 'Eurocopa', 'Copa América']
 
-/** Plataformas unificadas para el filtro de canal */
-const PLATFORM_GROUPS: { label: string; kw: string[] }[] = [
-  { label: 'Movistar+',        kw: ['m+', 'movistar plus', 'movistar+'] },
-  { label: 'DAZN',             kw: ['dazn'] },
-  { label: 'LaLiga TV',        kw: ['laliga tv', 'laliga+', 'laliga+ plus'] },
-  { label: 'GOL',              kw: ['gol'] },
-  { label: 'Orange Fútbol',    kw: ['orange fútbol', 'orange futbol'] },
-  { label: 'Teledeporte/RTVE', kw: ['teledeporte', 'rtve', 'tdp'] },
-  { label: 'TV autonómica',    kw: ['tv3', 'canal sur', 'tv canaria', 'aragón', 'aragon', 'esport3', 'ten tv'] },
-  { label: 'YouTube / Gratis', kw: ['youtube', 'fifa+', 'uefa tv', 'conmebol', 'concacaf', 'fanatiz'] },
-  { label: 'OneFootball',      kw: ['onefootball'] },
-]
-function matchesPlatform(ch: string[], platform: string): boolean {
-  const kws = PLATFORM_GROUPS.find(p => p.label === platform)?.kw ?? []
-  return ch.some(c => kws.some(k => c.toLowerCase().includes(k)))
-}
 
 /**
  * Fuzzy team name match: cubre abreviaciones ESPN vs nombres completos WOSTI
@@ -436,23 +420,6 @@ function ScoreBox({ score }: { score?: Score }) {
   )
 }
 
-/** Normaliza nombre crudo WOSTI → nombre de plataforma corto */
-function toPlatform(ch: string): string {
-  const cl = ch.toLowerCase()
-  for (const p of PLATFORM_GROUPS) {
-    if (p.kw.some(k => cl.includes(k))) return p.label
-  }
-  // Fallback: quitar el paréntesis y acortar
-  return ch.split('(')[0].split(':')[0].trim().slice(0, 20)
-}
-
-/** Deduplica y normaliza la lista de canales de un partido */
-function platforms(chs: string[]): string[] {
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const c of chs.map(toPlatform)) { if (!seen.has(c)) { seen.add(c); out.push(c) } }
-  return out
-}
 
 function ChTag({ name }: { name: string }) {
   const col = chColor(name)
@@ -991,6 +958,13 @@ export default function GuiaFutbolMD() {
       return order(a) - order(b)
     })
 
+  // Canales únicos presentes en los partidos de la semana
+  const allChannels = useMemo(() => {
+    const seen = new Set<string>()
+    for (const m of selectSource) for (const c of m.ch) if (c) seen.add(c)
+    return Array.from(seen).sort((a, b) => a.localeCompare(b, 'es'))
+  }, [selectSource])
+
   const filtered = useMemo(() => baseMatches.filter(m => {
     if (filter === 'free') return m.ch.length === 0 || m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
     if (filter === 'pay')  return m.ch.length === 0 || m.ch.some(c => PAY_KW.some(k => c.toLowerCase().includes(k)))
@@ -999,7 +973,7 @@ export default function GuiaFutbolMD() {
   }).filter(m => {
     if (compFilter && m.comp !== compFilter) return false
     if (teamFilter && !fuzzyTeam(m.home, teamFilter) && !fuzzyTeam(m.away, teamFilter)) return false
-    if (channelFilter && !matchesPlatform(m.ch, channelFilter)) return false
+    if (channelFilter && !m.ch.includes(channelFilter)) return false
     if (debouncedSearch) {
       const q = normalize(debouncedSearch)
       return (
@@ -1476,7 +1450,7 @@ export default function GuiaFutbolMD() {
               <select id="filter-channel" aria-label="Filtrar por canal" value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
                 style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${channelFilter ? T.red : T.border}`, borderRadius: 2, background: channelFilter ? T.redLight : T.white, color: channelFilter ? T.red : T.text, flex: '1 1 110px', maxWidth: 150, fontFamily: 'inherit', fontWeight: channelFilter ? 700 : 400 }}>
                 <option value="">Canal</option>
-                {PLATFORM_GROUPS.map(p => <option key={p.label} value={p.label}>{p.label}</option>)}
+                {allChannels.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               {(compFilter || teamFilter || channelFilter) && (
                 <button onClick={() => { setCompFilter(''); setTeamFilter(''); setChannelFilter('') }} aria-label="Limpiar filtros"
