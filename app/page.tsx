@@ -1785,7 +1785,7 @@ export default function GuiaFutbolMD() {
                             </div>
                             <div style={{ minWidth: 0 }}>
                               <div style={{ fontWeight: 700, fontSize: 13, color: T.text }}>{m.home} <span style={{ color: T.gray, fontWeight: 400 }}>vs</span> {m.away}</div>
-                              {showScores && m.score && (m.score.st !== 'FT' || past) && (
+                              {showScores && m.score && (
                                 <div style={{ fontSize: 11, fontWeight: 900, color: m.score.st === 'LIVE' ? '#22c55e' : T.gray, marginTop: 2 }}>
                                   {m.score.h} – {m.score.a} {m.score.st === 'LIVE' ? `🔴 ${m.score.min ? m.score.min + "'" : 'EN VIVO'}` : m.score.st === 'FT' ? '(FT)' : ''}
                                 </div>
