@@ -958,12 +958,12 @@ export default function GuiaFutbolMD() {
       return order(a) - order(b)
     })
 
-  // Canales únicos presentes en los partidos de la semana
+  // Canales únicos de todos los partidos cargados
   const allChannels = useMemo(() => {
     const seen = new Set<string>()
-    for (const m of selectSource) for (const c of m.ch) if (c) seen.add(c)
+    for (const m of mergedWeek) for (const c of m.ch) if (c) seen.add(c)
     return Array.from(seen).sort((a, b) => a.localeCompare(b, 'es'))
-  }, [selectSource])
+  }, [mergedWeek])
 
   const filtered = useMemo(() => baseMatches.filter(m => {
     if (filter === 'free') return m.ch.length === 0 || m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
