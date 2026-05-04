@@ -6,6 +6,22 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   themeColor: '#CC0000',
   icons: { apple: '/logo-md.png' },
+  openGraph: {
+    title: 'Fútbol en la TV — Guía de partidos televisados',
+    description: 'Todos los partidos de fútbol televisados hoy. Horarios y canales.',
+    url: 'https://musing-snyder.vercel.app',
+    siteName: 'Fútbol en la TV',
+    locale: 'es_ES',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Fútbol en la TV',
+    description: 'Horarios y canales de fútbol televisado',
+  },
+  alternates: {
+    canonical: 'https://musing-snyder.vercel.app',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

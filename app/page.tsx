@@ -281,24 +281,121 @@ const FREE_KW = ['gol', 'la 1', 'la1', 'teledeporte', 'tdp', 'antena', 'lasexta'
 const PAY_KW = ['dazn', 'movistar', 'laliga', 'ppv', 'm+']
 const INTL_COMPS = ['Amistoso', 'UEFA Nations League', 'Clasificación Mundial', 'Eurocopa', 'Copa América']
 
+
 /**
  * Fuzzy team name match: cubre abreviaciones ESPN vs nombres completos WOSTI
  * ej. "C Palace" → "Crystal Palace", "Man United" → "Manchester United"
  */
+// Mapa de alias ESPN/SportMonks → nombre canónico (WOSTI es la fuente de verdad)
+const TEAM_ALIASES: Record<string, string> = {
+  // Atlético de Madrid
+  'atletico':            'atletico de madrid',
+  'atletico madrid':     'atletico de madrid',
+  'at. madrid':          'atletico de madrid',
+  'at madrid':           'atletico de madrid',
+  'atl madrid':          'atletico de madrid',
+  'atletico de madrid':  'atletico de madrid',
+  // Manchester
+  'man city':            'manchester city',
+  'man. city':           'manchester city',
+  'man united':          'manchester united',
+  'man utd':             'manchester united',
+  'man. united':         'manchester united',
+  // Madrid
+  'real madrid cf':      'real madrid',
+  // Bayern
+  'b. munich':           'fc bayern munchen',
+  'b munich':            'fc bayern munchen',
+  'bayer munich':        'fc bayern munchen',
+  'fc bayern munich':    'fc bayern munchen',
+  'bayern munich':       'fc bayern munchen',
+  'fc bayern munchen':   'fc bayern munchen',
+  // PSG
+  'psg':                 'paris saint-germain',
+  'paris sg':            'paris saint-germain',
+  'paris saint germain': 'paris saint-germain',
+  // Inter
+  'inter':               'inter milan',
+  'fc internazionale':   'inter milan',
+  'internazionale':      'inter milan',
+  // Crystal Palace
+  'c palace':            'crystal palace',
+  // Dortmund
+  'bvb':                 'borussia dortmund',
+  'borussia dortm':      'borussia dortmund',
+  // Sociedad
+  'real sociedad cf':    'real sociedad',
+  // Betis
+  'real betis balompie': 'real betis',
+  // Villarreal
+  'villarreal cf':       'villarreal',
+  // Athletic
+  'athletic bilbao':     'athletic club',
+}
+
+/** Normaliza un nombre de equipo: sin acentos, sin puntuación extra, con alias resuelto */
+function normTeam(s: string): string {
+  const base = s.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')  // quitar tildes
+    .replace(/\./g, ' ').replace(/\s+/g, ' ').trim()
+  return TEAM_ALIASES[base] ?? base
+}
+
+// Nombres canónicos a mostrar (WOSTI como fuente de verdad)
+// clave = resultado de normTeam(), valor = nombre a mostrar en UI
+const DISPLAY_NAMES: Record<string, string> = {
+  'atletico de madrid':        'Atlético de Madrid',
+  'real madrid':               'Real Madrid',
+  'fc barcelona':              'FC Barcelona',
+  'athletic club':             'Athletic Club',
+  'real sociedad':             'Real Sociedad',
+  'villarreal':                'Villarreal CF',
+  'real betis':                'Real Betis',
+  'manchester city':           'Manchester City',
+  'manchester united':         'Manchester United',
+  'paris saint-germain':       'Paris Saint-Germain',
+  'inter milan':               'Inter Milán',
+  'fc bayern munchen':         'FC Bayern München',
+  'borussia dortmund':         'Borussia Dortmund',
+  'crystal palace':            'Crystal Palace',
+  'tottenham hotspur':         'Tottenham Hotspur',
+  'wolverhampton wanderers':   'Wolverhampton',
+  'borussia monchengladbach':  'B. Mönchengladbach',
+}
+
+/** Aplica el nombre canónico de display si existe, si no devuelve el original */
+function applyDisplayName(name: string): string {
+  return DISPLAY_NAMES[normTeam(name)] ?? name
+}
+
 function fuzzyTeam(a: string, b: string): boolean {
-  const al = a.toLowerCase(), bl = b.toLowerCase()
+  const al = normTeam(a), bl = normTeam(b)
   if (al === bl) return true
   if (al.includes(bl) || bl.includes(al)) return true
-  const aParts = al.split(/[\s.]+/)
-  const bParts = bl.split(/[\s.]+/)
+  const aParts = al.split(/\s+/)
+  const bParts = bl.split(/\s+/)
   const af = aParts[0], bf = bParts[0]
-  // Coincidencia por prefijo de 3 chars en la primera palabra
+  // Prefijo de 3 chars en la primera palabra
   if (Math.min(af.length, bf.length) >= 3 && (af.startsWith(bf.slice(0, 3)) || bf.startsWith(af.slice(0, 3)))) return true
-  // Coincidencia por última palabra significativa (≥4 chars): "C Palace" → "Crystal Palace"
+  // Última palabra significativa (≥4 chars): "C Palace" → "Crystal Palace"
   const al_last = aParts[aParts.length - 1]
   const bl_last = bParts[bParts.length - 1]
   if (al_last.length >= 4 && al_last === bl_last) return true
   return false
+}
+
+/** Deduplica nombres de equipo: fusiona variantes ESPN/WOSTI y aplica DISPLAY_NAMES */
+function dedupeTeams(rawNames: string[]): string[] {
+  // Preferir el nombre más largo (WOSTI suele ser más completo que ESPN)
+  const seen = new Set<string>(); const uniqArr: string[] = []
+  for (const n of rawNames) { if (!seen.has(n)) { seen.add(n); uniqArr.push(n) } }
+  uniqArr.sort((a, b) => b.length - a.length)  // más largo primero
+  const canonical: string[] = []
+  for (const name of uniqArr) {
+    if (!canonical.some(c => fuzzyTeam(c, name))) canonical.push(name)
+  }
+  // Sustituir por nombre canónico si existe en DISPLAY_NAMES
+  return canonical.map(n => DISPLAY_NAMES[normTeam(n)] ?? n).sort()
 }
 
 /* ── Sub-components ──────────────────────────────────────────── */
@@ -322,6 +419,7 @@ function ScoreBox({ score }: { score?: Score }) {
     </div>
   )
 }
+
 
 function ChTag({ name }: { name: string }) {
   const col = chColor(name)
@@ -359,7 +457,7 @@ function FavStar({ team, favorites, toggle }: { team: string; favorites: string[
   return (
     <button onClick={e => { e.stopPropagation(); toggle(team) }} title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 1px', fontSize: 12, color: isFav ? '#f59e0b' : '#ccc', transition: 'color .15s', lineHeight: 1 }}>
-      {isFav ? '★' : '☆'}
+      {Ic.star(isFav)}
     </button>
   )
 }
@@ -489,6 +587,27 @@ function MatchPreview({ m, T, polls, votePoll, interests, trackInterest }: {
   )
 }
 
+/* ── Icon system (SVG, MD-friendly, no emoji) ────────────────── */
+const S = 'currentColor'
+const ico = (w=14,h=14) => ({ width:w, height:h, viewBox:`0 0 ${w} ${h}`, fill:'none', stroke:S, strokeWidth:1.6, strokeLinecap:'round' as const, strokeLinejoin:'round' as const })
+const Ic = {
+  chart:  <svg {...ico()}><rect x="1"  y="9"  width="3" height="4" rx=".5"/><rect x="5.5" y="5.5" width="3" height="7.5" rx=".5"/><rect x="10" y="2" width="3" height="11" rx=".5"/></svg>,
+  star:   (on:boolean) => <svg {...ico()} fill={on?S:'none'}><polygon points="7,1 8.8,5.2 13.5,5.7 10.2,8.8 11.2,13.4 7,11 2.8,13.4 3.8,8.8 .5,5.7 5.2,5.2"/></svg>,
+  bell:   <svg {...ico()}><path d="M7 1.5A4 4 0 0 1 11 5.5v2.5l1.5 2.5H1.5L3 8V5.5A4 4 0 0 1 7 1.5z"/><path d="M5.5 11.5a1.5 1.5 0 0 0 3 0"/></svg>,
+  info:   <svg {...ico()}><circle cx="7" cy="7" r="6"/><line x1="7" y1="6.5" x2="7" y2="10.5"/><circle cx="7" cy="4" r=".6" fill={S} stroke="none"/></svg>,
+  share:  <svg {...ico()}><circle cx="11.5" cy="2.5" r="1.5"/><circle cx="2.5" cy="7" r="1.5"/><circle cx="11.5" cy="11.5" r="1.5"/><line x1="4" y1="6.2" x2="10" y2="3.3"/><line x1="4" y1="7.8" x2="10" y2="10.7"/></svg>,
+  cal:    <svg {...ico()}><rect x="1" y="2.5" width="12" height="10.5" rx="1"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4.5" y1="1" x2="4.5" y2="4"/><line x1="9.5" y1="1" x2="9.5" y2="4"/></svg>,
+  table:  <svg {...ico()}><rect x="1" y="1" width="12" height="12" rx="1"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="1" y1="9" x2="13" y2="9"/><line x1="5" y1="5" x2="5" y2="13"/></svg>,
+  menu:   <svg {...ico()}><line x1="1" y1="4" x2="13" y2="4"/><line x1="1" y1="7" x2="13" y2="7"/><line x1="1" y1="10" x2="13" y2="10"/></svg>,
+  tv:     <svg {...ico()}><rect x="1" y="3" width="12" height="8" rx="1"/><line x1="4.5" y1="11" x2="4.5" y2="13"/><line x1="9.5" y1="11" x2="9.5" y2="13"/><line x1="3" y1="13" x2="11" y2="13"/></svg>,
+  live:   <svg {...ico()}><path d="M8 1.5 4.5 7.5H8l-2 5L12.5 6H8z"/></svg>,
+  trophy: <svg {...ico()}><path d="M3.5 1.5h7v4a3.5 3.5 0 0 1-7 0z"/><path d="M1.5 1.5h2M10.5 1.5h2"/><path d="M2.5 2c0 2 .5 3.5 1 4M11.5 2c0 2-.5 3.5-1 4"/><line x1="7" y1="9" x2="7" y2="11"/><line x1="4.5" y1="12.5" x2="9.5" y2="12.5"/></svg>,
+  h2h:    <svg {...ico()}><polyline points="10,3 12,5 10,7"/><line x1="2" y1="5" x2="12" y2="5"/><polyline points="4,11 2,9 4,7"/><line x1="12" y1="9" x2="2" y2="9"/></svg>,
+  moon:   <svg {...ico()}><path d="M11.5 8.5A5 5 0 1 1 5.5 2.5a3.5 3.5 0 0 0 6 6z"/></svg>,
+  target: <svg {...ico(16,16)}><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="2.5"/><line x1="8" y1="1" x2="8" y2="5.5"/><line x1="8" y1="10.5" x2="8" y2="15"/></svg>,
+  bulb:   <svg {...ico()}><path d="M7 1.5a3.5 3.5 0 0 1 2 6.3L8.5 9.5h-3L5 7.8A3.5 3.5 0 0 1 7 1.5z"/><line x1="5.5" y1="11" x2="8.5" y2="11"/><line x1="6" y1="12.5" x2="8" y2="12.5"/></svg>,
+}
+
 /* ── Main Component ──────────────────────────────────────────── */
 export default function GuiaFutbolMD() {
   const [clock, setClock] = useState(nowStr())
@@ -512,8 +631,10 @@ export default function GuiaFutbolMD() {
   /* Loading standings */ const [loadingComp, setLoadingComp] = useState(false)
   /* Live matches from API */ const [liveMatches, setLiveMatches] = useState<Match[]>([])
   /* All week matches for selects */ const [weekMatches, setWeekMatches] = useState<Match[]>([])
+  /* Next-week matches (shown in Semana view) */ const [nextWeekMatches, setNextWeekMatches] = useState<Match[]>([])
   /* API data source indicator */ const [dataSource, setDataSource] = useState<'demo' | 'api'>('demo')
   /* Loading indicator */ const [loadingMatches, setLoadingMatches] = useState(true)
+  /* Filtro de canal/plataforma */ const [channelFilter, setChannelFilter] = useState('')
   /* New: polls */ const [polls, setPolls] = useState<Record<number, 'home' | 'away'>>({})
   /* New: interest counters */ const [interests, setInterests] = useState<Record<number, number>>({})
   /* New: notifications */ const [notifEnabled, setNotifEnabled] = useState(false)
@@ -575,7 +696,8 @@ export default function GuiaFutbolMD() {
   // Fetch ALL week matches for selects (competiciones, equipos, favoritos) — ESPN + WOSTI merged
   useEffect(() => {
     const fetchWeek = async () => {
-      const dates = Array.from({ length: 14 }, (_, i) => {
+      // 14 días para los tabs de día + 7 días extra para la vista Semana (días +13..+19)
+      const dates = Array.from({ length: 21 }, (_, i) => {
         const d = new Date()
         d.setDate(d.getDate() + (i - 1))
         const [dd, mm, yyyy] = new Intl.DateTimeFormat('es-ES', {
@@ -634,11 +756,14 @@ export default function GuiaFutbolMD() {
               break
             }
           }
-          all.push({ id: m.id as number, time: mTime, date: String(m.date || ''), home, away, comp: String(m.comp || ''), ch, score: m.score as Match['score'] })
+          all.push({ id: m.id as number, time: mTime, date: String(m.date || ''), home: applyDisplayName(home), away: applyDisplayName(away), comp: String(m.comp || ''), ch, score: m.score as Match['score'] })
         }
       })
 
-      setWeekMatches(all)
+      // Días -1..+12 → tabs de día; días +13..+19 → vista Semana
+      const cutoff = dates[14] // día +13 (índice 14 = offset i-1=13)
+      setWeekMatches(all.filter(m => m.date < cutoff))
+      setNextWeekMatches(all.filter(m => m.date >= cutoff))
     }
     fetchWeek()
   }, [])
@@ -687,17 +812,17 @@ export default function GuiaFutbolMD() {
             if (timeDiff <= 30 && fuzzyTeam(m.home, w.home)) {
               usedWosti.add(i)
               // Normalizar: nombres de WOSTI son la fuente de verdad
-              return { ...m, home: w.home, away: w.away, ch: w.chs }
+              return { ...m, home: applyDisplayName(w.home), away: applyDisplayName(w.away), ch: w.chs }
             }
           }
-          return m
+          // Sin match WOSTI: aplicar displayName igual para normalizar nombre ESPN
+          return { ...m, home: applyDisplayName(m.home), away: applyDisplayName(m.away) }
         })
 
         // Add WOSTI-only matches not matched to ESPN
         const wostiOnly: Match[] = wostiList
           .filter((_w, i) => !usedWosti.has(i))
           .filter(w => {
-            // Skip if ESPN already has this match
             return !merged.some(em => fuzzyTeam(em.home, w.home) && Math.abs(
               parseInt(em.time.split(':')[0]) * 60 + parseInt(em.time.split(':')[1]) -
               parseInt(w.time.split(':')[0]) * 60 - parseInt(w.time.split(':')[1])
@@ -707,8 +832,8 @@ export default function GuiaFutbolMD() {
             id: 3000 + i,
             time: String(wm.time || '??:??'),
             date: selectedDate,
-            home: String(wm.home || '?'),
-            away: String(wm.away || '?'),
+            home: applyDisplayName(String(wm.home || '?')),
+            away: applyDisplayName(String(wm.away || '?')),
             comp: String(wm.comp || ''),
             ch: wm.chs,
           }))
@@ -784,39 +909,51 @@ export default function GuiaFutbolMD() {
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
   }, [liveMatches, weekMatches, today])
 
-  const baseMatches = (viewMode === 'week' || compFilter || teamFilter || debouncedSearch)
-    ? mergedWeek   // today with channels + other days from weekMatches
-    : allMatches.filter(m => m.date === selectedDate)
+  const baseMatches = viewMode === 'week'
+    ? nextWeekMatches  // semana siguiente al último día desagregado
+    : (compFilter || teamFilter || channelFilter || debouncedSearch)
+      ? mergedWeek
+      : allMatches.filter(m => m.date === selectedDate)
 
   // Selects use week data so all teams/comps are always visible
   const selectSource = weekMatches.length > 0 ? weekMatches : allMatches
 
   // Ligas que aparecen en el selector de equipos (evita equipos de ligas menores/desconocidas)
   const TEAM_COMP_GROUPS: { label: string; comps: string[] }[] = [
-    { label: 'España', comps: ['LaLiga EA Sports', 'LaLiga Hypermotion', 'Copa del Rey', 'Supercopa', 'Liga F', 'Primera Federación'] },
-    { label: 'Champions League', comps: ['Champions League'] },
-    { label: 'Europa League', comps: ['Europa League'] },
-    { label: 'Conference League', comps: ['Conference League'] },
-    { label: 'Premier / Bundesliga / Serie A / Ligue 1', comps: ['Premier League', 'FA Cup', 'Bundesliga', '2. Bundesliga', 'Serie A', 'Ligue 1', 'Eredivisie', 'Primeira Liga', 'Süper Lig', 'Scottish Premiership'] },
-    { label: 'América', comps: ['MLS', 'Liga MX', 'Primera División Argentina', 'Serie A Brasil', 'Copa Libertadores', 'Copa Sudamericana'] },
-    { label: 'Resto del mundo', comps: ['Saudi Pro League'] },
+    { label: 'LaLiga EA Sports',     comps: ['LaLiga EA Sports'] },
+    { label: 'LaLiga Hypermotion',   comps: ['LaLiga Hypermotion'] },
+    { label: 'Copa del Rey',         comps: ['Copa del Rey'] },
+    { label: 'Liga F',               comps: ['Liga F'] },
+    { label: 'Primera Federación',   comps: ['Primera Federación'] },
+    { label: 'Champions League',     comps: ['Champions League'] },
+    { label: 'Europa League',        comps: ['Europa League'] },
+    { label: 'Conference League',    comps: ['Conference League'] },
+    { label: 'Premier League',       comps: ['Premier League', 'FA Cup'] },
+    { label: 'Bundesliga',           comps: ['Bundesliga', '2. Bundesliga'] },
+    { label: 'Serie A',              comps: ['Serie A'] },
+    { label: 'Ligue 1',              comps: ['Ligue 1'] },
+    { label: 'Otras ligas europeas', comps: ['Eredivisie', 'Primeira Liga', 'Süper Lig', 'Scottish Premiership'] },
+    { label: 'MLS',                  comps: ['MLS'] },
+    { label: 'Liga MX',              comps: ['Liga MX'] },
+    { label: 'Sudamérica',           comps: ['Primera División Argentina', 'Serie A Brasil', 'Copa Libertadores', 'Copa Sudamericana'] },
+    { label: 'Resto del mundo',      comps: ['Saudi Pro League'] },
   ]
   const TEAM_MAJOR_COMPS = new Set(TEAM_COMP_GROUPS.flatMap(g => g.comps))
   const teamsByGroup = TEAM_COMP_GROUPS.map(g => ({
     label: g.label,
-    teams: Array.from(new Set(
+    teams: dedupeTeams(
       selectSource.filter(m => g.comps.includes(m.comp) && !INTL_COMPS.includes(m.comp))
         .flatMap(m => [m.home, m.away])
-    )).sort(),
+    ),
   })).filter(g => g.teams.length > 0)
   const nationalTeamsByGroup = TEAM_COMP_GROUPS.filter(g =>
     g.comps.some(c => INTL_COMPS.includes(c))
   ).map(g => ({
     label: g.label,
-    teams: Array.from(new Set(
+    teams: dedupeTeams(
       selectSource.filter(m => g.comps.includes(m.comp) && INTL_COMPS.includes(m.comp))
         .flatMap(m => [m.home, m.away])
-    )).sort(),
+    ),
   })).filter(g => g.teams.length > 0)
   // Backward-compat (still used in some places)
   const allComps = Array.from(new Set(selectSource.filter(m => TEAM_MAJOR_COMPS.has(m.comp)).map(m => m.comp))).filter(Boolean)
@@ -828,15 +965,22 @@ export default function GuiaFutbolMD() {
       return order(a) - order(b)
     })
 
+  // Canales únicos de todos los partidos cargados (semana actual + siguiente)
+  const allChannels = useMemo(() => {
+    const seen = new Set<string>()
+    for (const m of [...mergedWeek, ...nextWeekMatches]) for (const c of m.ch) if (c) seen.add(c)
+    return Array.from(seen).sort((a, b) => a.localeCompare(b, 'es'))
+  }, [mergedWeek, nextWeekMatches])
+
   const filtered = useMemo(() => baseMatches.filter(m => {
-    // Si el partido no tiene datos de canal, se deja pasar en todos los filtros (canal desconocido)
     if (filter === 'free') return m.ch.length === 0 || m.ch.some(c => FREE_KW.some(k => c.toLowerCase().includes(k)))
     if (filter === 'pay')  return m.ch.length === 0 || m.ch.some(c => PAY_KW.some(k => c.toLowerCase().includes(k)))
-    if (filter === 'favs') return favorites.includes(m.home) || favorites.includes(m.away)
+    if (filter === 'favs') return favorites.some(f => fuzzyTeam(m.home, f) || fuzzyTeam(m.away, f))
     return true
   }).filter(m => {
     if (compFilter && m.comp !== compFilter) return false
-    if (teamFilter && m.home !== teamFilter && m.away !== teamFilter) return false
+    if (teamFilter && !fuzzyTeam(m.home, teamFilter) && !fuzzyTeam(m.away, teamFilter)) return false
+    if (channelFilter && !m.ch.includes(channelFilter)) return false
     if (debouncedSearch) {
       const q = normalize(debouncedSearch)
       return (
@@ -847,7 +991,7 @@ export default function GuiaFutbolMD() {
       )
     }
     return true
-  }), [baseMatches, filter, compFilter, teamFilter, debouncedSearch, favorites])
+  }), [baseMatches, filter, compFilter, teamFilter, channelFilter, debouncedSearch, favorites])
 
   // Navegación inteligente: si hay filtro activo y no hay partidos hoy, buscar el próximo día con resultados
   const nextMatchDate = useMemo(() => {
@@ -856,7 +1000,7 @@ export default function GuiaFutbolMD() {
     if (!compFilter && !teamFilter && !debouncedSearch && filter === 'all') return null
     const applyFilter = (ms: Match[]) => ms.filter(m => {
       if (compFilter && m.comp !== compFilter) return false
-      if (teamFilter && m.home !== teamFilter && m.away !== teamFilter) return false
+      if (teamFilter && !fuzzyTeam(m.home, teamFilter) && !fuzzyTeam(m.away, teamFilter)) return false
       if (debouncedSearch) {
         const q = normalize(debouncedSearch)
         return normalize(m.home).includes(q) || normalize(m.away).includes(q) || normalize(m.comp).includes(q)
@@ -912,8 +1056,8 @@ export default function GuiaFutbolMD() {
     })[0]
   }, [cmsFeatured, allMatches])
 
-  const selectDay = (d: string) => { setSelectedDate(d); setFilter('all'); setCompFilter(''); setTeamFilter(''); setViewMode('day') }
-  const resetAll = () => { setFilter('all'); setCompFilter(''); setTeamFilter(''); setSelectedDate(today); setSearchQuery(''); setViewMode('day') }
+  const selectDay = (d: string) => { setSelectedDate(d); setFilter('all'); setCompFilter(''); setTeamFilter(''); setChannelFilter(''); setViewMode('day') }
+  const resetAll = () => { setFilter('all'); setCompFilter(''); setTeamFilter(''); setChannelFilter(''); setSelectedDate(today); setSearchQuery(''); setViewMode('day') }
   const showComp = async (name: string) => {
     setCurrentComp(name); setPage('comp'); setMenuOpen(false); setLoadingComp(true); setLiveComp(null)
     setCompTab('partidos')   // siempre abre en Partidos y TV
@@ -1006,16 +1150,23 @@ export default function GuiaFutbolMD() {
             </div>
             <div style={{ fontSize: 11, color: T.gray, marginTop: 2 }}>{m.comp}</div>
           </div>
-          <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, maxWidth: 'min(200px, 42vw)', overflow: 'hidden' }}>
-            {showScores && m.score && (m.score.st !== 'FT' || past) && <ScoreBox score={m.score} />}
+          <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, overflow: 'hidden' }}>
+            {showScores && m.score && <ScoreBox score={m.score} />}
             <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '100%' }}>
-              {(expanded ? m.ch : m.ch.slice(0, 3)).map((c, i) => <ChTag key={i} name={c} />)}
-              {!expanded && m.ch.length > 3 && (
-                <button onClick={e => { e.stopPropagation(); setExpandedMatch(m.id) }}
-                  style={{ fontSize: 9, fontWeight: 700, color: T.red, padding: '2px 5px', border: `1px solid ${T.red}`, borderRadius: 1, whiteSpace: 'nowrap', background: T.redLight, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  +{m.ch.length - 3} canales
-                </button>
-              )}
+              {(() => {
+                const plats = m.ch
+                const show = expanded ? plats : plats.slice(0, 2)
+                const rest = !expanded ? plats.length - 2 : 0
+                return <>
+                  {show.map((p, i) => <ChTag key={i} name={p} />)}
+                  {rest > 0 && (
+                    <button onClick={e => { e.stopPropagation(); setExpandedMatch(m.id) }}
+                      style={{ fontSize: 9, fontWeight: 700, color: T.red, padding: '2px 5px', border: `1px solid ${T.red}`, borderRadius: 1, whiteSpace: 'nowrap', background: T.redLight, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      +{rest}
+                    </button>
+                  )}
+                </>
+              })()}
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
               {/* Share button */}
@@ -1076,11 +1227,14 @@ export default function GuiaFutbolMD() {
         .soon-badge{animation:pulse-soon 1.5s infinite;color:#E30613!important}
         .featured-hero{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:12px 14px;background:#000;border-bottom:3px solid #E30613}
         .featured-hero-cta{white-space:nowrap}
-        @media(max-width:540px){
+        @media(max-width:900px){
           .featured-hero{grid-template-columns:auto 1fr;grid-template-rows:auto auto}
           .featured-hero-cta{grid-column:1/-1;text-align:center;padding:8px 0}
           .match-row{grid-template-columns:46px 1fr;grid-template-rows:auto auto;gap:5px}
-          .match-right{grid-column:2;flex-direction:row;justify-content:flex-start;flex-wrap:wrap}
+          .match-right{grid-column:2;flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap;max-width:100%;overflow:visible}
+        }
+        @media(min-width:901px){
+          .match-right{max-width:220px}
         }
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
         .skip-nav{position:absolute;top:-44px;left:0;padding:8px 14px;background:#E30613;color:#fff;font-size:12px;font-weight:700;z-index:1000;transition:top .2s;border-radius:0 0 4px 0;text-decoration:none}
@@ -1109,7 +1263,7 @@ export default function GuiaFutbolMD() {
         .ob-logo{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:18px}
         .ob-feat{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left}
         .ob-feat li{display:flex;align-items:center;gap:10px;color:#ddd;font-size:12px;list-style:none}
-        .ob-feat li span:first-child{font-size:18px;flex-shrink:0}
+        .ob-feat li span:first-child{font-size:18px;flex-shrink:0;display:flex;align-items:center}
         .ob-btn{width:100%;background:#E30613;color:#fff;border:none;padding:12px;border-radius:5px;font-size:13px;font-weight:900;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;font-family:inherit;transition:opacity .15s}
         .ob-btn:hover{opacity:.9}
         .ob-coach-wrap{position:fixed;inset:0;z-index:950;pointer-events:none}
@@ -1128,7 +1282,7 @@ export default function GuiaFutbolMD() {
         .ob-link{background:none;border:none;color:#999;font-size:11px;cursor:pointer;font-family:inherit;padding:4px;text-decoration:underline}
         .ob-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
         .ob-cell{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:10px 10px 8px;text-align:left}
-        .ob-cell-icon{font-size:20px;margin-bottom:4px}
+        .ob-cell-icon{font-size:20px;margin-bottom:6px;display:flex;align-items:center;color:#E30613}
         .ob-cell-title{font-size:11px;font-weight:700;color:#fff;display:block;margin-bottom:2px}
         .ob-cell-desc{font-size:10px;color:#666;line-height:1.4}
         .ob-pager{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
@@ -1155,10 +1309,10 @@ export default function GuiaFutbolMD() {
 
       {/* HEADER */}
       <header role="banner" style={{ background: '#000', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `3px solid #E30613` }}>
-        <button className="md-logo" onClick={showMain} aria-label="Mundo Deportivo · Ir al inicio">
+        <a href="https://www.mundodeportivo.com" target="_blank" rel="noreferrer" aria-label="Ir a Mundo Deportivo" style={{ display: 'block', lineHeight: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-md.jpeg" alt="Mundo Deportivo" height="36" style={{ display: 'block', borderRadius: 6 }} />
-        </button>
+        </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setDarkMode(!darkMode)}
             aria-label={darkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
@@ -1216,7 +1370,7 @@ export default function GuiaFutbolMD() {
             <div style={{ width: 4, height: 36, background: '#E30613', borderRadius: 1, flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 9, fontWeight: 800, color: '#E30613', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 1 }}>Fútbol · Guía TV</div>
-              <h1 style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: T.text, lineHeight: 1.1 }}>Fútbol en la TV hoy</h1>
+              <h1 onClick={() => { setSelectedDate(today); setViewMode('day'); showMain() }} style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: T.text, lineHeight: 1.1, cursor: 'pointer' }}>Fútbol en la TV hoy</h1>
             </div>
           </div>
 
@@ -1270,19 +1424,23 @@ export default function GuiaFutbolMD() {
                 style={{ width: '100%', padding: '7px 10px 7px 32px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }} />
               <svg aria-hidden="true" style={{ position: 'absolute', left: 10, top: 9, color: T.gray }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Fila 1: tabs tipo + selects */}
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6 }}>
               <button onClick={resetAll} aria-pressed={filter === 'all' && !compFilter && !teamFilter} style={tabBtn(filter === 'all' && !compFilter && !teamFilter)}>Todos</button>
               <button onClick={() => setFilter('free')} aria-pressed={filter === 'free'} style={tabBtn(filter === 'free')}>En abierto</button>
               <button onClick={() => setFilter('pay')} aria-pressed={filter === 'pay'} style={tabBtn(filter === 'pay')}>De pago</button>
+            </div>
+            {/* Fila 2: selects */}
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6 }}>
               <label className="sr-only" htmlFor="filter-comp">Filtrar por competición</label>
               <select id="filter-comp" aria-label="Filtrar por competición" value={compFilter} onChange={e => { setCompFilter(e.target.value); setTeamFilter('') }}
-                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, maxWidth: 150, fontFamily: 'inherit' }}>
+                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${compFilter ? T.red : T.border}`, borderRadius: 2, background: compFilter ? T.redLight : T.white, color: compFilter ? T.red : T.text, flex: '1 1 120px', maxWidth: 160, fontFamily: 'inherit', fontWeight: compFilter ? 700 : 400 }}>
                 <option value="">Competición</option>
                 {allComps.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <label className="sr-only" htmlFor="filter-team">Filtrar por equipo</label>
               <select id="filter-team" aria-label="Filtrar por equipo" value={teamFilter} onChange={e => { setTeamFilter(e.target.value); setCompFilter('') }}
-                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.text, maxWidth: 170, fontFamily: 'inherit' }}>
+                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${teamFilter ? T.red : T.border}`, borderRadius: 2, background: teamFilter ? T.redLight : T.white, color: teamFilter ? T.red : T.text, flex: '1 1 120px', maxWidth: 160, fontFamily: 'inherit', fontWeight: teamFilter ? 700 : 400 }}>
                 <option value="">Equipo</option>
                 {teamsByGroup.map(g => g.teams.length > 0 && (
                   <optgroup key={g.label} label={g.label}>
@@ -1295,17 +1453,26 @@ export default function GuiaFutbolMD() {
                   </optgroup>
                 ))}
               </select>
-              {(compFilter || teamFilter) && (
-                <button onClick={() => { setCompFilter(''); setTeamFilter('') }} aria-label="Limpiar filtros de competición y equipo"
-                  style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.red}`, borderRadius: 2, background: T.redLight, color: T.red, cursor: 'pointer', fontFamily: 'inherit' }}>✕ Limpiar</button>
+              <label className="sr-only" htmlFor="filter-channel">Filtrar por canal</label>
+              <select id="filter-channel" aria-label="Filtrar por canal" value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
+                style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${channelFilter ? T.red : T.border}`, borderRadius: 2, background: channelFilter ? T.redLight : T.white, color: channelFilter ? T.red : T.text, flex: '1 1 110px', maxWidth: 150, fontFamily: 'inherit', fontWeight: channelFilter ? 700 : 400 }}>
+                <option value="">Canal</option>
+                {allChannels.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {(compFilter || teamFilter || channelFilter) && (
+                <button onClick={() => { setCompFilter(''); setTeamFilter(''); setChannelFilter('') }} aria-label="Limpiar filtros"
+                  style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.red}`, borderRadius: 2, background: T.redLight, color: T.red, cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
               )}
+            </div>
+            {/* Fila 3: resultados toggle + count + bell */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {favorites.length > 0 && !notifEnabled && (
-                <button onClick={enableNotifications} aria-label="Activar notificaciones para tus equipos favoritos"
-                  style={{ fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.gray, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  <span aria-hidden="true">🔔</span> Avisos
+                <button onClick={enableNotifications} aria-label="Activar notificaciones"
+                  style={{ display:'flex', alignItems:'center', gap:4, fontSize: 11, padding: '4px 7px', border: `1px solid ${T.border}`, borderRadius: 2, background: T.white, color: T.gray, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {Ic.bell} Avisos
                 </button>
               )}
-              {notifEnabled && <span aria-label="Notificaciones activas" role="img" style={{ fontSize: 10, color: '#22c55e' }}>🔔</span>}
+              {notifEnabled && <span title="Notificaciones activas" style={{ color: '#22c55e', display:'flex' }}>{Ic.bell}</span>}
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <button role="switch" aria-checked={showScores} onClick={() => setShowScores(!showScores)} aria-label={showScores ? 'Ocultar resultados' : 'Mostrar resultados'}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, padding: '4px 8px', border: `1px solid ${showScores ? T.red : T.border}`, borderRadius: 2, background: showScores ? T.redLight : T.white, color: showScores ? T.red : T.gray, cursor: 'pointer', fontFamily: 'inherit', fontWeight: showScores ? 700 : 500 }}>
@@ -1320,7 +1487,7 @@ export default function GuiaFutbolMD() {
           </div>
 
           {/* Active filters breadcrumb */}
-          {(filter !== 'all' || compFilter || teamFilter || debouncedSearch || viewMode === 'week' || groupBy === 'channel') && (
+          {(filter !== 'all' || compFilter || teamFilter || channelFilter || debouncedSearch || viewMode === 'week' || groupBy === 'channel') && (
             <div style={{ padding: '6px 14px', display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', borderBottom: `1px solid ${T.border}`, background: T.cardBg }}>
               <span style={{ fontSize: 10, color: T.gray }}>Filtros:</span>
               {filter === 'favs' && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#f59e0b22', color: '#f59e0b', fontWeight: 600 }}>★ Mis equipos</span>}
@@ -1328,6 +1495,7 @@ export default function GuiaFutbolMD() {
               {filter === 'pay' && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#3b82f622', color: '#3b82f6', fontWeight: 600 }}>De pago</span>}
               {compFilter && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: T.redLight, color: T.red, fontWeight: 600 }}>{compFilter}</span>}
               {teamFilter && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: T.redLight, color: T.red, fontWeight: 600 }}>{teamFilter}</span>}
+              {channelFilter && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#06b6d422', color: '#06b6d4', fontWeight: 600 }}>📺 {channelFilter}</span>}
               {debouncedSearch && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: T.redLight, color: T.red, fontWeight: 600 }}>"{debouncedSearch}"</span>}
               {viewMode === 'week' && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#8b5cf622', color: '#8b5cf6', fontWeight: 600 }}>Semana</span>}
               {groupBy === 'channel' && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 2, background: '#06b6d422', color: '#06b6d4', fontWeight: 600 }}>Por canal</span>}
@@ -1336,15 +1504,19 @@ export default function GuiaFutbolMD() {
           )}
 
           {/* Match list */}
-          <div style={{ padding: '8px 14px 40px', maxWidth: 880, margin: '0 auto' }}>
+          <div style={{ padding: '8px 14px 40px' }}>
             {loadingMatches ? (
               <div style={{ textAlign: 'center', padding: 48, color: T.gray }}>
-                <div style={{ fontSize: 24, marginBottom: 12, animation: 'pulse-soon 1.2s infinite' }}>⚽</div>
+                <div style={{ display:'flex', justifyContent:'center', marginBottom: 12, animation: 'pulse-soon 1.2s infinite' }}>
+                  <svg width="28" height="28" viewBox="0 0 14 14" fill="none" stroke={T.red} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="6"/><path d="M7 1a6 6 0 0 1 4.2 10.2M7 13a6 6 0 0 1-4.2-10.2"/><circle cx="7" cy="7" r="2"/></svg>
+                </div>
                 <p style={{ fontSize: 13, fontWeight: 600, color: T.text }}>Cargando partidos…</p>
               </div>
             ) : filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 40, color: T.gray }}>
-                <p style={{ fontSize: 28, marginBottom: 8 }}>📅</p>
+                <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}>
+                  <svg width="32" height="32" viewBox="0 0 14 14" fill="none" stroke={T.gray} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="2.5" width="12" height="10.5" rx="1"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="4.5" y1="1" x2="4.5" y2="4"/><line x1="9.5" y1="1" x2="9.5" y2="4"/></svg>
+                </div>
                 <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: T.text }}>No hay partidos</p>
                 <p style={{ fontSize: 12, marginBottom: 14 }}>
                   {compFilter || teamFilter || debouncedSearch ? 'No hay partidos con ese filtro este día' : 'Sin partidos programados'}
@@ -1378,7 +1550,8 @@ export default function GuiaFutbolMD() {
                         {/* Acceso rápido a clasificación / tabla */}
                         {COMPS[comp] && (
                           <button onClick={() => showComp(comp)} title="Ver tabla y resultados"
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: T.gray, padding: '0 6px', fontFamily: 'inherit' }}>📊</button>
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.gray, padding: '0 6px', display:'inline-flex', alignItems:'center' }}>
+                              {Ic.chart}</button>
                         )}
                         <span style={{ fontSize: 10, color: T.gray, marginLeft: 'auto', fontWeight: 600 }}>{matches.length}p</span>
                       </div>
@@ -1400,9 +1573,9 @@ export default function GuiaFutbolMD() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={() => setPage('features')}
-                style={{ fontSize: 9, color: '#555', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                style={{ display:'flex', alignItems:'center', gap:4, fontSize: 9, color: '#555', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
                 title="Ver todas las funciones">
-                ℹ️ Funciones
+                {Ic.info} Funciones
               </button>
               <span style={{ fontSize: 9, color: '#555' }}>{dateStr}</span>
             </div>
@@ -1565,7 +1738,7 @@ export default function GuiaFutbolMD() {
               })}
             </div>
           </div>
-          <div style={{ padding: '10px 14px 32px', maxWidth: 860, margin: '0 auto' }}>
+          <div style={{ padding: '10px 14px 32px' }}>
 
             {/* ── PARTIDOS Y TV ── */}
             {compTab === 'partidos' && (() => {
@@ -1612,13 +1785,13 @@ export default function GuiaFutbolMD() {
                             </div>
                             <div style={{ minWidth: 0 }}>
                               <div style={{ fontWeight: 700, fontSize: 13, color: T.text }}>{m.home} <span style={{ color: T.gray, fontWeight: 400 }}>vs</span> {m.away}</div>
-                              {showScores && m.score && (m.score.st !== 'FT' || past) && (
+                              {showScores && m.score && (
                                 <div style={{ fontSize: 11, fontWeight: 900, color: m.score.st === 'LIVE' ? '#22c55e' : T.gray, marginTop: 2 }}>
                                   {m.score.h} – {m.score.a} {m.score.st === 'LIVE' ? `🔴 ${m.score.min ? m.score.min + "'" : 'EN VIVO'}` : m.score.st === 'FT' ? '(FT)' : ''}
                                 </div>
                               )}
                             </div>
-                            <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, maxWidth: 'min(180px, 42vw)', overflow: 'hidden' }}>
+                            <div className="match-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, minWidth: 0, overflow: 'hidden' }}>
                               {m.ch.length > 0
                                 ? <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                     {m.ch.map((c, i) => <ChTag key={i} name={c} />)}
@@ -1729,17 +1902,17 @@ export default function GuiaFutbolMD() {
               <p style={{ color: '#666', fontSize: 11, marginBottom: 14 }}>Todo lo que necesitas para seguir el fútbol en TV</p>
               <div className="ob-grid">
                 {([
-                  ['📺','Guía TV','Qué canal emite cada partido'],
-                  ['⚡','En directo','Resultados actualizados al minuto'],
-                  ['📅','Por días','Agenda de cualquier día de la semana'],
-                  ['⭐','Favoritos','Acceso rápido a tus equipos'],
-                  ['🏆','Competiciones','+50 ligas y copas internacionales'],
-                  ['📊','Clasificaciones','Tabla actualizada de cualquier liga'],
-                  ['🔁','H2H','Historial entre dos equipos'],
-                  ['🌙','Modo oscuro','Cuida tus ojos de noche'],
-                ] as [string,string,string][]).map(([icon,title,desc],i) => (
+                  [Ic.tv,        'Guía TV',        'Qué canal emite cada partido'],
+                  [Ic.live,      'En directo',      'Resultados al minuto'],
+                  [Ic.cal,       'Por días',        'Agenda de la semana'],
+                  [Ic.star(true),'Favoritos',       'Acceso rápido a tus equipos'],
+                  [Ic.trophy,    'Competiciones',   '+50 ligas y copas'],
+                  [Ic.chart,     'Clasificaciones', 'Tabla de cualquier liga'],
+                  [Ic.h2h,       'H2H',             'Historial entre dos equipos'],
+                  [Ic.moon,      'Modo oscuro',     'Cuida tus ojos de noche'],
+                ] as [React.ReactNode,string,string][]).map(([icon,title,desc],i) => (
                   <div key={i} className="ob-cell">
-                    <div className="ob-cell-icon">{icon}</div>
+                    <div className="ob-cell-icon" style={{transform:'scale(1.4)',transformOrigin:'left center'}}>{icon}</div>
                     <span className="ob-cell-title">{title}</span>
                     <span className="ob-cell-desc">{desc}</span>
                   </div>
@@ -1752,13 +1925,13 @@ export default function GuiaFutbolMD() {
 
             {/* ── PÁGINA 3: LISTO ── */}
             {obModalPage === 3 && (<>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🎯</div>
+              <div style={{ display:'flex',justifyContent:'center',marginBottom:12,color:'#E30613' }}><svg width="48" height="48" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="2.5"/><line x1="8" y1="1" x2="8" y2="5.5"/><line x1="8" y1="10.5" x2="8" y2="15"/></svg></div>
               <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 900, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 8 }}>¡Todo listo!</h2>
               <p style={{ color: '#aaa', fontSize: 12, lineHeight: 1.6, marginBottom: 18 }}>
                 Te enseñamos los elementos clave de la app en 3 pasos rápidos para que saques el máximo partido.
               </p>
               <div className="ob-step3-msg">
-                <p style={{ color: '#E30613', fontSize: 11, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: .5 }}>💡 Consejo</p>
+                <p style={{ color: '#E30613', fontSize: 11, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: .5, display:'flex', alignItems:'center', gap:5 }}><span style={{color:'#E30613'}}>{Ic.bulb}</span>Consejo</p>
                 <p style={{ color: '#bbb', fontSize: 11, lineHeight: 1.5 }}>
                   Usa el filtro de favoritos ⭐ para ver solo los partidos de tus equipos. Activa notificaciones para que te avisemos 15 minutos antes de cada partido.
                 </p>
@@ -1786,7 +1959,11 @@ export default function GuiaFutbolMD() {
           c2: { className: 'ob-card arrow-down', style: { bottom: 68 } },
           c3: { className: 'ob-card', style: { top: '50%', marginTop: 44 } },
         }
-        const titles: Record<string, string> = { c1: '📅 Navega por días', c2: '🏆 Competiciones', c3: '⭐ Detalles del partido' }
+        const titles: Record<string, React.ReactNode> = {
+          c1: <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{color:'#E30613'}}>{Ic.cal}</span>Navega por días</span>,
+          c2: <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{color:'#E30613'}}>{Ic.trophy}</span>Competiciones</span>,
+          c3: <span style={{display:'flex',alignItems:'center',gap:5}}><span style={{color:'#E30613'}}>{Ic.star(true)}</span>Detalles del partido</span>,
+        }
         const texts: Record<string, string> = {
           c1: 'Desliza la barra para cambiar de día y ver todos los partidos programados.',
           c2: 'Toca aquí para abrir el menú y filtrar por liga o competición favorita.',
