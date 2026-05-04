@@ -706,30 +706,33 @@ export default function GuiaFutbolMD() {
         return `${yyyy}-${mm}-${dd}`
       })
 
-      // Fuente de partidos: SportMonks (primario) → ESPN (fallback) — NUNCA aportan canales
-      // Fuente de canales: EXCLUSIVAMENTE WOSTI (/api/matches)
-      const [espnResults, wostiResults] = await Promise.all([
-        Promise.allSettled(dates.map(d => fetch(`/api/allmatches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))),
-        Promise.allSettled(dates.map(d => fetch(`/api/matches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))),
-      ])
-
-      // Construir mapa WOSTI por fecha — incluye home/away de WOSTI para normalizar nombres
+      // Fuente de partidos: ESPN — NUNCA aportan canales
+      // Fuente de canales: WOSTI — UNA sola llamada para todos los días (evita 429)
       type WE = { time: string; home: string; away: string; chs: string[] }
       const wostiByDate: Record<string, WE[]> = {}
-      wostiResults.forEach((r, i) => {
-        if (r.status === 'fulfilled' && Array.isArray(r.value.matches)) {
-          wostiByDate[dates[i]] = (r.value.matches as Record<string, unknown>[])
-            .map(m => ({
-              time: String(m.time || ''),
-              home: String(m.home || ''),
-              away: String(m.away || ''),
-              chs: Array.isArray(m.channels)
-                ? (m.channels as { name: string }[]).map(c => c.name)
-                : [],
-            }))
-            .filter((w: WE) => w.chs.length > 0)
+
+      const [espnResults, wostiAll] = await Promise.all([
+        Promise.allSettled(dates.map(d => fetch(`/api/allmatches?date=${d}`).then(r => r.json()).catch(() => ({ matches: [] })))),
+        fetch('/api/wosti').then(r => r.json()).catch(() => ({ matches: [] })),
+      ])
+
+      // Construir mapa WOSTI por fecha desde la respuesta única
+      for (const m of (wostiAll.matches ?? []) as Record<string, unknown>[]) {
+        const localDate = String(m.localDate || '')
+        if (!localDate) continue
+        if (!wostiByDate[localDate]) wostiByDate[localDate] = []
+        const chs = Array.isArray(m.channels)
+          ? (m.channels as { name: string }[]).map(c => c.name).filter(Boolean)
+          : []
+        if (chs.length > 0) {
+          wostiByDate[localDate].push({
+            time: String(m.time || ''),
+            home: String(m.home || ''),
+            away: String(m.away || ''),
+            chs,
+          })
         }
-      })
+      }
 
       const all: Match[] = []
       espnResults.forEach((r, i) => {
